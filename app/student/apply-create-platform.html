@@ -248,15 +248,15 @@ button.is-done{opacity:.6;cursor:default;pointer-events:none}
 
 /* ===== 弹窗 / 抽屉 ===== */
 .mask{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px}
-.modal{width:600px;max-width:100%;background:#fff;border-radius:12px;box-shadow:0 10px 20px 10px rgba(0,0,0,.05);display:flex;flex-direction:column;max-height:calc(100vh - 40px)}
+.modal{width:600px;max-width:100%;background:#fff;border-radius:12px;box-shadow:0 10px 20px 10px rgba(0,0,0,.05);display:flex;flex-direction:column;max-height:calc(100vh / var(--z, 1) - 40px)}
 .modal.lg{width:900px}.modal.sm{width:480px}
-.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #C8CAD1;font-size:18px;font-weight:700;color:var(--c-text)}
-.modal-bd{padding:20px;overflow:auto}
-.modal-ft{display:flex;justify-content:flex-end;gap:12px;padding:12px 20px 20px}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #C8CAD1;font-size:18px;font-weight:700;color:var(--c-text);flex:none}
+.modal-bd{padding:20px;overflow:auto;flex:1;min-height:0}
+.modal-ft{display:flex;justify-content:flex-end;gap:12px;padding:12px 20px 20px;flex:none}
 .x-btn{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;color:var(--c-text-3)}.x-btn:hover{color:var(--c-primary)}
 .drawer-mask{justify-content:flex-end;padding:0}
 .drawer{width:640px;max-width:100%;height:100%;background:#fff;box-shadow:-8px 0 24px rgba(0,0,0,.12);display:flex;flex-direction:column}
-.drawer .modal-bd{flex:1}
+.drawer .modal-bd{flex:1;min-height:0}
 .backdrop{pointer-events:none;user-select:none}
 
 /* ===== Toast（Element Message 样式）与原型悬浮导航 ===== */
@@ -282,9 +282,11 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .nav-r .link,.nav-r a,.nav-r button{color:#fff}
 .nav-l .i{width:24px;height:24px}
 .blue-top .status,.blue-top .navbar{background:transparent}
-.scroll{flex:1;overflow-y:auto;padding:12px 16px 24px;position:relative}
+.scroll{flex:1;min-height:0;overflow-y:auto;padding:12px 16px 40px;position:relative}
+.phone:has(.tabbar) .scroll{padding-bottom:88px}
+.phone:has(.bottom-bar):not(:has(.tabbar)) .scroll{padding-bottom:28px}
 .scroll::-webkit-scrollbar{width:0}
-/* 底部 TabBar：服务大厅 / 首页（校徽） / 个人中心 */
+/* 底部 TabBar：学生为服务大厅 / 首页（校徽） / 我的申请；教师与学院为待审 / 首页 / 个人中心；学校为待审 / 首页 / 消息 */
 .tabbar{height:92px;flex:none;margin-top:-14px;padding:16px 0 22px;background:url(../../assets/m-tabbar.webp) top center/100% 92px no-repeat;display:flex;z-index:30;position:relative}
 .tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;color:#696F7D;position:relative}
 .tabbar a .i{width:24px;height:24px;stroke-width:1.5}
@@ -294,6 +296,7 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .tabbar a.tab-c{flex:none;width:92px;justify-content:flex-end}
 .tabbar a.tab-c img{position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:52px;height:52px;border-radius:50%;box-shadow:0 4px 12px rgba(0,87,240,.3)}
 .tabbar .badge{position:absolute;top:2px;left:calc(50% + 6px);transform:scale(.85)}
+.tabbar .tab-pad{flex:1;pointer-events:none}
 .home-ind{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#1E2530;z-index:50}
 .bottom-bar{flex:none;background:#fff;padding:10px 16px 30px;box-shadow:0 -2px 10px rgba(0,0,0,.05);display:flex;gap:10px;z-index:30}
 .bottom-bar .btn{flex:1;height:44px;border-radius:22px;font-size:16px}
@@ -303,9 +306,20 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .phone .btn-primary:hover{background:linear-gradient(270deg,#5AAAFF,#1A6BFA)}
 .phone .btn-ghost{border-color:#0057F0;color:#0057F0}
 .phone .btn-default{border-color:#DCDEE0;color:#333}
-.phone .alert{border:none;border-radius:8px;font-size:13px;padding:9px 12px}
-.phone .alert-warning{background:#FFFBE6;color:#D46B08;box-shadow:0 2px 8px rgba(212,107,8,.08)}
-.phone .alert-info{background:#E6EFFF;color:#0057F0}
+.phone .alert{border:none;border-radius:8px;font-size:13px;line-height:1.65;padding:10px 12px;color:#333}
+.phone .alert .grow{min-width:0;color:#333;line-height:1.65;overflow-wrap:anywhere}
+.phone .alert-warning{background:#FFFBE6;color:#333;box-shadow:0 2px 8px rgba(212,107,8,.08)}
+.phone .alert-warning .i{color:#D46B08}
+.phone .alert-info{background:#E6EFFF;color:#333}
+.phone .alert-info .i{color:#0057F0}
+.phone .alert-danger,.phone .alert-success{color:#333}
+.phone .alert-danger .i{color:#F56C6C}
+.phone .alert-success .i{color:#67C23A}
+.phone .btn,.phone .pick-act{white-space:nowrap}
+.phone .pick-item{align-items:center;gap:10px}
+.phone .pick-item>span:first-child{flex:1;min-width:0;line-height:1.5;overflow-wrap:anywhere}
+.phone .pick-act{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:28px;padding:0 10px;border-radius:8px;line-height:1}
+.phone .tc-ft .btn,.phone .claim-row>.btn{flex:none;white-space:nowrap}
 .phone .seg{background:#E6EFFF}.phone .seg button{color:#0057F0}.phone .seg button.on{background:linear-gradient(270deg,#469FFF,#065CF8);color:#fff}
 .phone .toast{top:70px}
 /* 移动端组件 */
@@ -327,12 +341,22 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .cell.invalid{background:var(--c-danger-bg)}.cell.invalid .err-msg{display:block}
 .m-hero{background:linear-gradient(270deg,#469FFF 0%,#065CF8 100%);color:#fff;border-radius:8px;padding:16px;position:relative;overflow:hidden;box-shadow:0 6px 16px rgba(6,92,248,.25)}
 .m-hero::after{content:"";position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.1)}
-.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
-.quick a{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;font-size:12px;color:#333}
-.quick .qi{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#E8F1FF,#C9DCFF);color:#0057F0}
-.quick .qi .i{width:22px;height:22px;stroke-width:1.8}
-.quick .qi.green{background:linear-gradient(135deg,#E2F9EF,#C2EFDB);color:#12A866}.quick .qi.orange{background:linear-gradient(135deg,#FFF1E3,#FFDAB9);color:#F2761B}
-.quick .qi.red{background:linear-gradient(135deg,#FFE9EE,#FFCAD5);color:#EE3F66}.quick .qi.purple{background:linear-gradient(135deg,#EFEBFF,#D9D0FF);color:#6E4FF0}
+/* 图标宫格：按数量套 packN，避免末行左贴留白 */
+.quick,.m-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.quick a,.m-grid a{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;font-size:12px;color:#333;white-space:nowrap;min-width:0;box-sizing:border-box}
+.quick.pack3,.m-grid.pack3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.quick.pack4,.m-grid.pack4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.quick.pack5,.m-grid.pack5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.quick.pack6,.m-grid.pack6{grid-template-columns:repeat(3,minmax(0,1fr))}
+.quick.pack7,.m-grid.pack7{grid-template-columns:repeat(8,minmax(0,1fr))}
+.quick.pack7>a,.m-grid.pack7>a{grid-column:span 2}
+.quick .qi,.m-grid .qi{position:relative;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#E8F1FF,#C9DCFF);color:#0057F0}
+.quick .qi .i,.m-grid .qi .i{width:22px;height:22px;stroke-width:1.8}
+.quick .qi .badge,.m-grid .qi .badge{position:absolute;top:-5px;right:-7px;transform:scale(.85)}
+.quick .qi.green,.m-grid .qi.green{background:linear-gradient(135deg,#E2F9EF,#C2EFDB);color:#12A866}
+.quick .qi.orange,.m-grid .qi.orange{background:linear-gradient(135deg,#FFF1E3,#FFDAB9);color:#F2761B}
+.quick .qi.red,.m-grid .qi.red{background:linear-gradient(135deg,#FFE9EE,#FFCAD5);color:#EE3F66}
+.quick .qi.purple,.m-grid .qi.purple{background:linear-gradient(135deg,#EFEBFF,#D9D0FF);color:#6E4FF0}
 .todo-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #EBEDF0}
 .todo-item:last-child{border-bottom:none}
 .m-tabs{display:flex;background:linear-gradient(180deg,#F0F6FF,#E6EFFF);margin:-12px -16px 12px;padding:0 8px;position:sticky;top:-12px;z-index:10}
@@ -383,7 +407,7 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .st4>div{background:#F7F9FB;border-radius:8px;padding:8px 10px}
 .st4 small{display:block;font-size:11px;color:var(--c-text-3);margin-bottom:4px}
 .bb-grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr)}
-.bb-grid a{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--c-text-2)}
+.bb-grid a{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--c-text-2);white-space:nowrap}
 .bb-grid a .mi{width:36px;height:36px;border-radius:11px}
 .flow-hint{display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;font-size:12px;color:var(--c-text-3);margin-top:10px;padding-top:10px;border-top:1px dashed var(--c-line)}
 .flow-hint .i{width:12px;height:12px}
@@ -416,18 +440,25 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .msg-txt{font-size:13px;color:var(--c-text-2);margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .hl{border:1px solid var(--c-danger-bd);background:#FFF8F8}
 .intro-box{font-size:13px;line-height:1.7;color:var(--c-text-2);background:#F7F8FA;border-radius:8px;padding:10px}
+.intro-box.warn{background:#FFF1F1;color:var(--c-danger)}
 .wide-btn .btn{width:100%;height:46px;border-radius:10px;font-size:16px}
 .biz{display:flex;gap:12px;align-items:flex-start}
 .biz .mi{width:42px;height:42px;border-radius:12px}.biz .mi .i{width:22px;height:22px}
-.lv-tip{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px;color:var(--c-text-2);background:#F7F9FB;border-radius:8px;padding:10px 12px}
+.lv-tip{display:grid;grid-template-columns:72px 1fr;gap:6px 10px;font-size:12px;color:var(--c-text-2);background:#F7F9FB;border-radius:8px;padding:10px 12px;line-height:1.6}
 .lv-tip b{color:var(--c-text);font-weight:600}
+.mech-item{padding:12px 0;border-bottom:1px solid #F0F2F5}
+.mech-item:last-child{border-bottom:none}
+.mech-item .t{font-weight:600;font-size:14px;line-height:1.5}
+.mech-item .d{font-size:12px;color:var(--c-text-2);line-height:1.7;margin:6px 0 8px}
+.dlg-bd{padding:18px 16px 8px}.dlg-bd b{font-size:16px}.dlg-bd p{font-size:13px;color:var(--c-text-2);margin-top:8px;line-height:1.6}
+.dlg-ft{display:flex;gap:10px;padding:8px 16px 16px}.dlg-ft .btn{flex:1;height:40px;border-radius:10px}
 .id-card{display:flex;align-items:center;gap:12px}
 .acct-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .mini-kv{display:flex;gap:14px;font-size:12px;color:var(--c-text-3);margin-top:10px;padding-top:10px;border-top:1px solid #F0F2F5}
 .mini-kv b{color:var(--c-text);font-weight:600;margin-left:2px}
 .m-search{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-radius:19px;background:#fff;color:var(--c-text-3);margin-bottom:12px}
 .m-search input{flex:1;min-width:0;border:none;outline:none;background:none;font-size:14px}
-.m-card .alert,.m-group .alert{font-size:12.5px}
+.m-card .alert,.m-group .alert{font-size:13px;line-height:1.65;color:#333}
 .logout{display:block;text-align:center;padding:14px;color:var(--c-danger);font-size:15px}
 .me-hero .avatar{border:2px solid rgba(255,255,255,.6)}
 /* 登录页 */
@@ -441,6 +472,25 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .lg-card .wide-btn .btn{height:46px;border-radius:23px;font-size:16px}
 .lg-tip{display:flex;gap:6px;align-items:flex-start;font-size:12px;color:var(--c-text-3);margin-top:12px;line-height:1.6}
 .lg-tip .i{margin-top:2px;color:var(--c-success)}
+.pick-list{display:grid;gap:8px}
+.pick-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:12px;border:1px solid var(--c-line);border-radius:12px;background:#fff;text-align:left}
+.pick-item:active{border-color:var(--c-primary)}
+.pick-item>span:first-child{flex:1;min-width:0;line-height:1.5}
+.pick-item .pick-act{flex:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:28px;padding:0 10px;border:1px solid var(--c-primary);border-radius:8px;background:#fff;font-size:13px;line-height:1}
+.acct-ops{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #F0F2F5}
+.acct-ops .btn{flex:none;white-space:nowrap;min-width:52px;height:32px;padding:0 10px;font-size:13px}
+.hall-hero{background:linear-gradient(270deg,#469FFF,#065CF8);color:#fff;border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.hall-hero b{display:block;font-size:16px;line-height:1.3}
+.hall-hero p{font-size:12px;line-height:1.4;margin-top:2px;opacity:.92}
+.hall-list{display:flex;flex-direction:column;gap:6px}
+.hall-row{display:flex;align-items:center;gap:8px;background:#fff;border-radius:8px;padding:8px 10px;color:inherit}
+.hall-row .mi{width:28px;height:28px;border-radius:8px}
+.hall-row .mi .i{width:16px;height:16px}
+.hall-row b{display:block;font-size:14px;line-height:1.25}
+.hall-row .one{display:block;margin-top:1px;font-size:12px;line-height:1.35;color:#666}
+.hall-note{margin-top:8px}
+.claim-row .name{font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+.claim-row>.btn{flex:none;white-space:nowrap;min-width:52px}
 </style>
 </head>
 <body class="app-stage">
@@ -449,18 +499,18 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
   <div class="scroll">
 <div class="m-steps"><div class="m-step done"><b>✓</b><span>归属</span></div><div class="m-step now"><b>2</b><span>平台</span></div><div class="m-step "><b>3</b><span>运行负责人</span></div><div class="m-step "><b>4</b><span>审核人</span></div></div>
 <div data-form>
-<div class="sec"><span>平台基本信息</span></div>
-<div class="m-group"><div class="cell"><span class="cell-label"><span class="req">*</span>平台类型</span><select class="m-input" style="appearance:none;direction:rtl" required><option value="">请选择</option><option selected>微信公众号</option><option>视频号</option><option>微博</option><option>QQ</option><option>抖音</option><option>快手</option><option>哔哩哔哩</option><option>小红书</option><option>知乎</option><option>网站</option><option>APP</option><option>其他</option></select><svg class="i arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></div><div class="cell"><span class="cell-label"><span class="req">*</span>账号名称</span><input class="m-input" type="text" placeholder="请输入平台上显示的名称" value="中南计算机青年" required></div><div class="cell"><span class="cell-label">曾用名</span><input class="m-input" type="text" placeholder="无则不填"></div><div class="cell"><span class="cell-label"><span class="req">*</span>平台 ID</span><input class="m-input" type="text" placeholder="唯一标识，如微信号" value="csu_cs_youth" required></div><div class="cell"><span class="cell-label">头像</span><span class="ml-auto flex gap8"><span class="pf pf-wx">团</span><label class="upload" style="width:36px;height:36px;padding:0;display:grid;place-items:center;border-radius:9px"><svg class="i " viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><input type="file" accept="image/*"></label></span></div><div class="cell"><span class="cell-label wrap">是否认证</span><span class="yn"><label><input type="radio" name="auth">已认证</label><label><input type="radio" name="auth" checked>否</label></span></div><div class="cell"><span class="cell-label">粉丝数</span><input class="m-input" type="number" placeholder="新开通账号可填 0" value="0"></div><div class="cell"><span class="cell-label"><span class="req">*</span>主页链接</span><input class="m-input" type="text" placeholder="请输入主页链接" value="https://mp.weixin.qq.com/csu_cs_youth" required></div><div class="cell"><span class="cell-label">运营团队规模</span><input class="m-input" type="text" placeholder="人数" value="6 人"></div><div class="cell"><span class="cell-label"><span class="req">*</span>开通时间</span><input class="m-input" type="text" placeholder="" value="2026-09-20" required></div></div>
-<div class="sec"><span>四项机制</span><span class="small">未建立的机制须在备案后 30 日内补齐</span></div>
-<div class="m-group"><div class="cell"><span class="cell-label wrap">宣传联动机制</span><span class="yn"><label><input type="radio" name="m1" checked>是</label><label><input type="radio" name="m1">否</label></span></div><div class="cell"><span class="cell-label wrap">信息发布审查机制</span><span class="yn"><label><input type="radio" name="m2" checked>是</label><label><input type="radio" name="m2">否</label></span></div><div class="cell"><span class="cell-label wrap">应急处置预案</span><span class="yn"><label><input type="radio" name="m3" checked>是</label><label><input type="radio" name="m3">否</label></span></div><div class="cell"><span class="cell-label wrap">信息安全管理制度</span><span class="yn"><label><input type="radio" name="m4" checked>是</label><label><input type="radio" name="m4">否</label></span></div></div>
+<div class="sec"><span>平台信息</span></div>
+<div class="m-group"><div class="cell"><span class="cell-label"><span class="req">*</span>平台类型</span><select class="m-input" style="appearance:none;direction:rtl" required><option value="">请选择</option><option selected>微信公众号</option><option>视频号</option><option>微博</option><option>QQ</option><option>抖音</option><option>快手</option><option>哔哩哔哩</option><option>小红书</option><option>知乎</option><option>网站</option><option>APP</option><option>其他</option></select><svg class="i arrow" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></div><div class="cell col-cell"><span class="small muted">微信公众号、抖音、微博、B 站、小红书、视频号等（平台类型后台字典配置，不硬编码）</span></div><div class="cell"><span class="cell-label"><span class="req">*</span>账号名称</span><input class="m-input" type="text" placeholder="如“中南小团子”" value="中南计算机青年" required></div><div class="cell"><span class="cell-label">曾用名</span><input class="m-input" type="text" placeholder="如“中南团学”，历史使用账号名称，多个使用分号隔开"></div><div class="cell col-cell"><span class="small muted">非必填。如“中南团学”，历史使用账号名称，多个使用分号隔开</span></div><div class="cell"><span class="cell-label"><span class="req">*</span>平台ID</span><input class="m-input" type="text" placeholder="公众号ID、微博UID等，如zhongnanxiaotuanzi" value="csu_cs_youth" required></div><div class="cell"><span class="cell-label"><span class="req">*</span>平台头像</span><span class="ml-auto flex gap8"><span class="pf pf-wx">团</span><label class="upload" style="width:36px;height:36px;padding:0;display:grid;place-items:center;border-radius:9px"><svg class="i " viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><input type="file" accept="image/*"></label></span></div><div class="cell"><span class="cell-label wrap">是否认证</span><span class="yn"><label><input type="radio" name="auth">是</label><label><input type="radio" name="auth" checked>否</label></span></div><div class="cell col-cell"><span class="small muted">单选，是 / 否</span></div><div class="cell"><span class="cell-label"><span class="req">*</span>粉丝数</span><input class="m-input" type="number" placeholder="限整数" value="0" required></div><div class="cell"><span class="cell-label"><span class="req">*</span>主页链接</span><input class="m-input" type="text" placeholder="https://" value="https://mp.weixin.qq.com/csu_cs_youth" required></div><div class="cell"><span class="cell-label">运营团队规模（单位：人）</span><input class="m-input" type="number" placeholder="请输入人数" value="6"></div><div class="cell col-cell"><span class="cell-label">二维码</span><label class="upload"><svg class="i " viewBox="0 0 24 24" style="width:22px;height:22px"><path d="M12 16V5"/><path d="m7 10 5-5 5 5"/><path d="M4 20h16"/></svg><div class="mt4">点击上传文件或拍照</div><div class="small muted">非必填</div><input type="file" multiple></label><div class="upload-list"></div></div><div class="cell"><span class="cell-label"><span class="req">*</span>开通时间</span><input class="m-input" type="text" placeholder="" value="2026-09-20" required></div></div>
+<div class="sec"><span>平台信息确认</span><span class="small">（10）至（13）</span></div>
+<div class="m-card" style="padding:4px 14px"><div class="mech-item"><div class="t"><span class="req">*</span>（10）是否建立团学组织宣传联动工作机制。</div><div class="d">在涉及学校重大事项或突发事件应对时，全校团学组织新媒体公众平台应按照学校要求，统一发布相关信息，正确引导舆论氛围。</div><div class="radios"><label class="radio"><input type="radio" name="m1" checked required>是</label><label class="radio"><input type="radio" name="m1">否</label></div></div><div class="mech-item"><div class="t"><span class="req">*</span>（11）是否建立信息发布审查机制</div><div class="d">各团学组织要对所属新媒体公众平台建立信息发布审查机制。按照“先审后发”的原则，开设新媒体公众平台的单位要对所发布的信息内容负责，确保信息政治方向正确，内容健康向上、准确真实可靠，并预判可能造成的社会影响。</div><div class="radios"><label class="radio"><input type="radio" name="m2" checked required>是</label><label class="radio"><input type="radio" name="m2">否</label></div></div><div class="mech-item"><div class="t"><span class="req">*</span>（12）是否建立应急预案处理机制</div><div class="d">在特殊敏感时期、重点时段、重大舆情处置时，各团学组织要做好舆情监测和研判，并制定应急预案，发现不良信息和错误言论时，各团学组织要带头斗争、勇于发声，并将工作开展情况报校团委备案</div><div class="radios"><label class="radio"><input type="radio" name="m3" checked required>是</label><label class="radio"><input type="radio" name="m3">否</label></div></div><div class="mech-item"><div class="t"><span class="req">*</span>（13）是否建立信息安全管理制度</div><div class="d">各团学组织要对所属新媒体公众平台建立信息安全管理制度。学校团学组织新媒体公众平台应严格对信息发布进行审查和监督，确保发布信息的真实性、准确性、安全性。不得在网页上或者利用网络的服务功能，制作、复制、发布、传播、链接以下信息：①反对宪法所确定的基本原则的；②危害国家安全，泄露国家秘密，颠覆国家政权，破坏国家统一的；③损害国家荣誉和利益的；④煽动民族仇恨、民族歧视，破坏民族团结的；⑤破坏国家宗教政策，宣扬邪教和封建迷信的；⑥散布谣言，扰乱社会秩序，破坏社会稳定的：⑦散布淫秽、色情、赌博、暴力、凶杀、恐怖或者教唆犯罪的；⑧侮辱或者诽谤他人，侵害他人合法权益的；⑨含有法律、行政法规禁止的其他内容的；⑩有损学校形象或给学校带来负面影响的。</div><div class="radios"><label class="radio"><input type="radio" name="m4" checked required>是</label><label class="radio"><input type="radio" name="m4">否</label></div></div></div>
 <div class="sec"><span>平台介绍与发布范围</span></div>
-<div class="m-group"><div class="cell col-cell"><span class="cell-label"><span class="req">*</span>平台介绍</span><textarea class="m-textarea" placeholder="请介绍内容定位、栏目设置、信息发布范围与审核机制（不少于 100 字）" required maxlength="800" data-count>中南计算机青年是计算机学院团委新媒体中心主办的微信公众号，主要发布学院团学活动通知、青年风采展示和学术科创资讯，欢迎广大师生们积极关注。</textarea><div class="count-tip">68 / 800</div><div class="err-msg">此项为必填项</div></div><div class="cell col-cell"><span class="cell-label">信息发布范围</span><div class="radios"><label class="radio"><input type="radio" name="scope" checked>面向校内师生</label><label class="radio"><input type="radio" name="scope">面向社会公众</label></div></div></div>
+<div class="m-group"><div class="cell col-cell"><span class="cell-label"><span class="req">*</span>平台介绍</span><textarea class="m-textarea" placeholder="内容发布、平台特色等，不少于100字" required maxlength="800" data-count>中南计算机青年是计算机学院团委新媒体中心主办的微信公众号，主要发布学院团学活动通知、青年风采展示和学术科创资讯，欢迎广大师生们积极关注。</textarea><div class="count-tip">68 / 800</div><div class="err-msg">此项为必填项</div></div><div class="cell col-cell"><span class="cell-label"><span class="req">*</span>信息发布范围</span><textarea class="m-textarea" placeholder="请填写信息发布范围" required>学院团学活动相关信息。</textarea><div class="err-msg">此项为必填项</div></div><div class="cell"><span class="cell-label">备注</span><input class="m-input" type="text" placeholder=""></div></div>
 </div></div>
   <div class="bottom-bar"><button class="btn btn-default" type="button" data-back="apply-create-basic.html"><svg class="i " viewBox="0 0 24 24"><path d="M20 12H4"/><path d="m10 6-6 6 6 6"/></svg>上一步</button><button class="btn btn-primary" type="button" data-submit="apply-duplicate.html" data-toast="正在进行重复检查…">下一步</button></div><span class="home-ind"></span>
 </div>
 <aside class="notes">
   <div class="card"><div class="small muted">学生用户 · 李明 · 移动端</div><h3>新建 ② 平台信息</h3>
-  <div class="small muted mb12">app/student/apply-create-platform.html</div><ul><li>平台类型、名称、平台 ID、主页链接、开通时间、平台介绍为必填</li><li>四项机制（宣传联动 / 信息发布审查 / 应急预案 / 信息安全制度）逐项选择是否建立</li><li>平台介绍限 800 字并实时计数；此处为第一次提交的简短版本（68 字），后续将被指导教师退回</li><li>点击“下一步”后系统自动做重复检查（同平台同 ID、主页链接、相似名称）</li></ul></div>
+  <div class="small muted mb12">app/student/apply-create-platform.html</div><ul><li>平台类型、账号名称、平台ID、平台头像、是否认证、粉丝数、主页链接、开通时间、平台介绍、信息发布范围为必填</li><li>曾用名、二维码为非必填；第 10 至 13 项确认须展示说明原文并选择是或否</li><li>平台介绍限 800 字并实时计数；此处为第一次提交的简短版本，后续将被指导教师退回</li><li>点击“下一步”后系统自动做重复检查（同平台同 ID、主页链接、相似名称）</li></ul></div>
   <div class="card flow"><div class="bold">业务链路 · 下一步</div><a href="apply-duplicate.html"><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M4 12h16"/><path d="m14 6 6 6-6 6"/></svg>剧本一下一步：重复检查结果</a><a href="apply-create-basic.html"><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M4 12h16"/><path d="m14 6 6 6-6 6"/></svg>上一步：归属信息</a></div>
   <a class="btn btn-default" href="../../index.html"><svg class="i " viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>返回原型导航</a>
 </aside>
@@ -500,7 +550,9 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
     if(t.dataset.seg!==undefined){
       var g=t.parentElement;g.querySelectorAll('[data-seg]').forEach(function(b){b.classList.remove('on');});t.classList.add('on');
       var target=g.dataset.target&&document.querySelector(g.dataset.target);
-      if(target){var v=t.dataset.seg;target.querySelectorAll('[data-cat]').forEach(function(row){row.classList.toggle('hidden',!(v==='all'||(' '+row.dataset.cat+' ').indexOf(' '+v+' ')>-1));});}
+      if(target){var v=t.dataset.seg;var catHide=function(row){return !(v==='all'||(' '+(row.dataset.cat||'')+' ').indexOf(' '+v+' ')>-1);};
+        target.querySelectorAll('[data-cat]').forEach(function(row){row.classList.toggle('hidden',catHide(row));});
+        document.querySelectorAll('.zx-main>.actbar[data-cat],.wf-dialog>.actbar[data-cat]').forEach(function(row){if(!target.contains(row))row.classList.toggle('hidden',catHide(row));});}
       if(!t.dataset.toast)return;
     }
     if(t.dataset.choice!==undefined){
@@ -521,7 +573,9 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
     if(t.dataset.copy){if(navigator.clipboard)navigator.clipboard.writeText(t.dataset.copy);toast('已复制到剪贴板');return;}
     if(t.dataset.back!==undefined){e.preventDefault();if(history.length>1&&document.referrer){history.back();}else{go(t.dataset.back);}return;}
     if(t.dataset.submit){
-      e.preventDefault();var scope=t.closest('[data-form]')||document;
+      e.preventDefault();var scope=t.closest('[data-form]');
+      if(!scope){var own=t.closest('[data-form-owner]');if(own)scope=document.querySelector('[data-form-id="'+own.getAttribute('data-form-owner')+'"]');}
+      if(!scope)scope=document;
       if(!validate(scope))return;
       if(t.dataset.toast){toast(t.dataset.toast);go(t.dataset.submit,700);}else{go(t.dataset.submit);}
       return;
@@ -586,6 +640,40 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
     }
     var box=el.closest('.field.invalid,.cell.invalid');if(box&&String(el.value).trim())box.classList.remove('invalid');
   });
+
+  // 把表单操作条挪到滚动区外面：PC 贴在主内容区底部，流程弹窗贴在弹窗底部，内容单独滚
+  (function pinBars(){
+    var seq=0;
+    function mark(bar){
+      var form=bar.closest('[data-form]');
+      if(!form)return;
+      if(!form.getAttribute('data-form-id')){seq+=1;form.setAttribute('data-form-id','dock-'+seq);}
+      bar.setAttribute('data-form-owner',form.getAttribute('data-form-id'));
+    }
+    function carry(bar, host){
+      var node=bar.parentElement, hide=bar.classList.contains('hidden');
+      while(node&&node!==host){
+        if(node.classList.contains('hidden'))hide=true;
+        if(node.hasAttribute('data-cat')&&!bar.hasAttribute('data-cat'))bar.setAttribute('data-cat',node.getAttribute('data-cat'));
+        node=node.parentElement;
+      }
+      if(hide)bar.classList.add('hidden');
+      mark(bar);
+      host.appendChild(bar);
+    }
+    document.querySelectorAll('.wf-dialog').forEach(function(dlg){
+      Array.prototype.slice.call(dlg.querySelectorAll('.actbar')).forEach(function(bar){
+        if(bar.parentElement===dlg||bar.closest('.modal,.drawer'))return;
+        carry(bar, dlg);
+      });
+    });
+    document.querySelectorAll('.zx-main>.content').forEach(function(content){
+      Array.prototype.slice.call(content.querySelectorAll('.actbar')).forEach(function(bar){
+        if(bar.closest('.wf-dialog,.modal,.drawer,.mask'))return;
+        carry(bar, content.parentNode);
+      });
+    });
+  })();
 })();
 </script>
 </body>

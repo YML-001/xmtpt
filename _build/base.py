@@ -256,15 +256,15 @@ button.is-done{opacity:.6;cursor:default;pointer-events:none}
 
 /* ===== 弹窗 / 抽屉 ===== */
 .mask{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px}
-.modal{width:600px;max-width:100%;background:#fff;border-radius:12px;box-shadow:0 10px 20px 10px rgba(0,0,0,.05);display:flex;flex-direction:column;max-height:calc(100vh - 40px)}
+.modal{width:600px;max-width:100%;background:#fff;border-radius:12px;box-shadow:0 10px 20px 10px rgba(0,0,0,.05);display:flex;flex-direction:column;max-height:calc(100vh / var(--z, 1) - 40px)}
 .modal.lg{width:900px}.modal.sm{width:480px}
-.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #C8CAD1;font-size:18px;font-weight:700;color:var(--c-text)}
-.modal-bd{padding:20px;overflow:auto}
-.modal-ft{display:flex;justify-content:flex-end;gap:12px;padding:12px 20px 20px}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #C8CAD1;font-size:18px;font-weight:700;color:var(--c-text);flex:none}
+.modal-bd{padding:20px;overflow:auto;flex:1;min-height:0}
+.modal-ft{display:flex;justify-content:flex-end;gap:12px;padding:12px 20px 20px;flex:none}
 .x-btn{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;color:var(--c-text-3)}.x-btn:hover{color:var(--c-primary)}
 .drawer-mask{justify-content:flex-end;padding:0}
 .drawer{width:640px;max-width:100%;height:100%;background:#fff;box-shadow:-8px 0 24px rgba(0,0,0,.12);display:flex;flex-direction:column}
-.drawer .modal-bd{flex:1}
+.drawer .modal-bd{flex:1;min-height:0}
 .backdrop{pointer-events:none;user-select:none}
 
 /* ===== Toast（Element Message 样式）与原型悬浮导航 ===== */
@@ -341,8 +341,10 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
 .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
 .split{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start}
 .sticky{position:sticky;top:0}
-.actbar{position:sticky;bottom:0;z-index:20;background:#fff;border-radius:8px;box-shadow:0 -4px 16px rgba(42,141,199,.10);padding:12px 24px;display:flex;align-items:center;gap:12px;margin-top:16px}
-.actbar .grow{font-size:14px;color:var(--c-text-3)}
+.actbar{position:static;z-index:20;background:#fff;border-radius:8px;box-shadow:0 -4px 16px rgba(42,141,199,.10);padding:12px 24px;display:flex;align-items:center;gap:12px;margin-top:16px;flex:none}
+.actbar .grow{font-size:14px;color:var(--c-text-3);min-width:0}
+.zx-main>.actbar{margin:10px 0 0}
+.zx-main:has(>.actbar)>.content{padding-bottom:16px}
 .cm-content{width:100%}
 .zx-body.is-full .zx-main{max-width:1600px;margin:0 auto}
 /* 详情表格（低代码表单栅格） */
@@ -416,7 +418,8 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
 .wf-pane{padding-bottom:16px}
 .wf-pane .page-hd{padding:0 0 12px;border-radius:0;border-bottom:1px dashed #E4E7ED;margin-bottom:14px}
 .wf-pane .page-hd h1{font-size:16px}
-.wf-pane .actbar{margin:16px -24px 0;border-radius:0;box-shadow:0 -4px 16px rgba(42,141,199,.12)}
+.wf-dialog>.actbar{margin:0;border-radius:0;box-shadow:0 -4px 16px rgba(42,141,199,.12)}
+.wf-dialog:has(>.actbar)>.wf-bd{padding-bottom:16px}
 .wf-empty{text-align:center;color:var(--c-text-3);height:120px}
 .wf-cm{display:inline-block;max-width:420px;text-align:left}
 .wf-chart{position:relative;border:1px solid #E4E7ED;border-radius:6px;min-height:420px;background:#FAFCFE radial-gradient(#E4ECF3 1px,transparent 1px) 0 0/16px 16px;overflow:auto;padding:80px 40px}
@@ -459,9 +462,11 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .nav-r .link,.nav-r a,.nav-r button{color:#fff}
 .nav-l .i{width:24px;height:24px}
 .blue-top .status,.blue-top .navbar{background:transparent}
-.scroll{flex:1;overflow-y:auto;padding:12px 16px 24px;position:relative}
+.scroll{flex:1;min-height:0;overflow-y:auto;padding:12px 16px 40px;position:relative}
+.phone:has(.tabbar) .scroll{padding-bottom:88px}
+.phone:has(.bottom-bar):not(:has(.tabbar)) .scroll{padding-bottom:28px}
 .scroll::-webkit-scrollbar{width:0}
-/* 底部 TabBar：服务大厅 / 首页（校徽） / 个人中心 */
+/* 底部 TabBar：学生为服务大厅 / 首页（校徽） / 我的申请；教师与学院为待审 / 首页 / 个人中心；学校为待审 / 首页 / 消息 */
 .tabbar{height:92px;flex:none;margin-top:-14px;padding:16px 0 22px;background:url(../../assets/m-tabbar.webp) top center/100% 92px no-repeat;display:flex;z-index:30;position:relative}
 .tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;color:#696F7D;position:relative}
 .tabbar a .i{width:24px;height:24px;stroke-width:1.5}
@@ -471,6 +476,7 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .tabbar a.tab-c{flex:none;width:92px;justify-content:flex-end}
 .tabbar a.tab-c img{position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:52px;height:52px;border-radius:50%;box-shadow:0 4px 12px rgba(0,87,240,.3)}
 .tabbar .badge{position:absolute;top:2px;left:calc(50% + 6px);transform:scale(.85)}
+.tabbar .tab-pad{flex:1;pointer-events:none}
 .home-ind{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#1E2530;z-index:50}
 .bottom-bar{flex:none;background:#fff;padding:10px 16px 30px;box-shadow:0 -2px 10px rgba(0,0,0,.05);display:flex;gap:10px;z-index:30}
 .bottom-bar .btn{flex:1;height:44px;border-radius:22px;font-size:16px}
@@ -480,9 +486,20 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .phone .btn-primary:hover{background:linear-gradient(270deg,#5AAAFF,#1A6BFA)}
 .phone .btn-ghost{border-color:#0057F0;color:#0057F0}
 .phone .btn-default{border-color:#DCDEE0;color:#333}
-.phone .alert{border:none;border-radius:8px;font-size:13px;padding:9px 12px}
-.phone .alert-warning{background:#FFFBE6;color:#D46B08;box-shadow:0 2px 8px rgba(212,107,8,.08)}
-.phone .alert-info{background:#E6EFFF;color:#0057F0}
+.phone .alert{border:none;border-radius:8px;font-size:13px;line-height:1.65;padding:10px 12px;color:#333}
+.phone .alert .grow{min-width:0;color:#333;line-height:1.65;overflow-wrap:anywhere}
+.phone .alert-warning{background:#FFFBE6;color:#333;box-shadow:0 2px 8px rgba(212,107,8,.08)}
+.phone .alert-warning .i{color:#D46B08}
+.phone .alert-info{background:#E6EFFF;color:#333}
+.phone .alert-info .i{color:#0057F0}
+.phone .alert-danger,.phone .alert-success{color:#333}
+.phone .alert-danger .i{color:#F56C6C}
+.phone .alert-success .i{color:#67C23A}
+.phone .btn,.phone .pick-act{white-space:nowrap}
+.phone .pick-item{align-items:center;gap:10px}
+.phone .pick-item>span:first-child{flex:1;min-width:0;line-height:1.5;overflow-wrap:anywhere}
+.phone .pick-act{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:28px;padding:0 10px;border-radius:8px;line-height:1}
+.phone .tc-ft .btn,.phone .claim-row>.btn{flex:none;white-space:nowrap}
 .phone .seg{background:#E6EFFF}.phone .seg button{color:#0057F0}.phone .seg button.on{background:linear-gradient(270deg,#469FFF,#065CF8);color:#fff}
 .phone .toast{top:70px}
 /* 移动端组件 */
@@ -504,12 +521,22 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .cell.invalid{background:var(--c-danger-bg)}.cell.invalid .err-msg{display:block}
 .m-hero{background:linear-gradient(270deg,#469FFF 0%,#065CF8 100%);color:#fff;border-radius:8px;padding:16px;position:relative;overflow:hidden;box-shadow:0 6px 16px rgba(6,92,248,.25)}
 .m-hero::after{content:"";position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.1)}
-.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
-.quick a{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;font-size:12px;color:#333}
-.quick .qi{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#E8F1FF,#C9DCFF);color:#0057F0}
-.quick .qi .i{width:22px;height:22px;stroke-width:1.8}
-.quick .qi.green{background:linear-gradient(135deg,#E2F9EF,#C2EFDB);color:#12A866}.quick .qi.orange{background:linear-gradient(135deg,#FFF1E3,#FFDAB9);color:#F2761B}
-.quick .qi.red{background:linear-gradient(135deg,#FFE9EE,#FFCAD5);color:#EE3F66}.quick .qi.purple{background:linear-gradient(135deg,#EFEBFF,#D9D0FF);color:#6E4FF0}
+/* 图标宫格：按数量套 packN，避免末行左贴留白 */
+.quick,.m-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.quick a,.m-grid a{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;font-size:12px;color:#333;white-space:nowrap;min-width:0;box-sizing:border-box}
+.quick.pack3,.m-grid.pack3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.quick.pack4,.m-grid.pack4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.quick.pack5,.m-grid.pack5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.quick.pack6,.m-grid.pack6{grid-template-columns:repeat(3,minmax(0,1fr))}
+.quick.pack7,.m-grid.pack7{grid-template-columns:repeat(8,minmax(0,1fr))}
+.quick.pack7>a,.m-grid.pack7>a{grid-column:span 2}
+.quick .qi,.m-grid .qi{position:relative;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#E8F1FF,#C9DCFF);color:#0057F0}
+.quick .qi .i,.m-grid .qi .i{width:22px;height:22px;stroke-width:1.8}
+.quick .qi .badge,.m-grid .qi .badge{position:absolute;top:-5px;right:-7px;transform:scale(.85)}
+.quick .qi.green,.m-grid .qi.green{background:linear-gradient(135deg,#E2F9EF,#C2EFDB);color:#12A866}
+.quick .qi.orange,.m-grid .qi.orange{background:linear-gradient(135deg,#FFF1E3,#FFDAB9);color:#F2761B}
+.quick .qi.red,.m-grid .qi.red{background:linear-gradient(135deg,#FFE9EE,#FFCAD5);color:#EE3F66}
+.quick .qi.purple,.m-grid .qi.purple{background:linear-gradient(135deg,#EFEBFF,#D9D0FF);color:#6E4FF0}
 .todo-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #EBEDF0}
 .todo-item:last-child{border-bottom:none}
 .m-tabs{display:flex;background:linear-gradient(180deg,#F0F6FF,#E6EFFF);margin:-12px -16px 12px;padding:0 8px;position:sticky;top:-12px;z-index:10}
@@ -577,7 +604,9 @@ BASE_JS = r"""
     if(t.dataset.seg!==undefined){
       var g=t.parentElement;g.querySelectorAll('[data-seg]').forEach(function(b){b.classList.remove('on');});t.classList.add('on');
       var target=g.dataset.target&&document.querySelector(g.dataset.target);
-      if(target){var v=t.dataset.seg;target.querySelectorAll('[data-cat]').forEach(function(row){row.classList.toggle('hidden',!(v==='all'||(' '+row.dataset.cat+' ').indexOf(' '+v+' ')>-1));});}
+      if(target){var v=t.dataset.seg;var catHide=function(row){return !(v==='all'||(' '+(row.dataset.cat||'')+' ').indexOf(' '+v+' ')>-1);};
+        target.querySelectorAll('[data-cat]').forEach(function(row){row.classList.toggle('hidden',catHide(row));});
+        document.querySelectorAll('.zx-main>.actbar[data-cat],.wf-dialog>.actbar[data-cat]').forEach(function(row){if(!target.contains(row))row.classList.toggle('hidden',catHide(row));});}
       if(!t.dataset.toast)return;
     }
     if(t.dataset.choice!==undefined){
@@ -598,7 +627,9 @@ BASE_JS = r"""
     if(t.dataset.copy){if(navigator.clipboard)navigator.clipboard.writeText(t.dataset.copy);toast('已复制到剪贴板');return;}
     if(t.dataset.back!==undefined){e.preventDefault();if(history.length>1&&document.referrer){history.back();}else{go(t.dataset.back);}return;}
     if(t.dataset.submit){
-      e.preventDefault();var scope=t.closest('[data-form]')||document;
+      e.preventDefault();var scope=t.closest('[data-form]');
+      if(!scope){var own=t.closest('[data-form-owner]');if(own)scope=document.querySelector('[data-form-id="'+own.getAttribute('data-form-owner')+'"]');}
+      if(!scope)scope=document;
       if(!validate(scope))return;
       if(t.dataset.toast){toast(t.dataset.toast);go(t.dataset.submit,700);}else{go(t.dataset.submit);}
       return;
@@ -663,6 +694,40 @@ BASE_JS = r"""
     }
     var box=el.closest('.field.invalid,.cell.invalid');if(box&&String(el.value).trim())box.classList.remove('invalid');
   });
+
+  // 把表单操作条挪到滚动区外面：PC 贴在主内容区底部，流程弹窗贴在弹窗底部，内容单独滚
+  (function pinBars(){
+    var seq=0;
+    function mark(bar){
+      var form=bar.closest('[data-form]');
+      if(!form)return;
+      if(!form.getAttribute('data-form-id')){seq+=1;form.setAttribute('data-form-id','dock-'+seq);}
+      bar.setAttribute('data-form-owner',form.getAttribute('data-form-id'));
+    }
+    function carry(bar, host){
+      var node=bar.parentElement, hide=bar.classList.contains('hidden');
+      while(node&&node!==host){
+        if(node.classList.contains('hidden'))hide=true;
+        if(node.hasAttribute('data-cat')&&!bar.hasAttribute('data-cat'))bar.setAttribute('data-cat',node.getAttribute('data-cat'));
+        node=node.parentElement;
+      }
+      if(hide)bar.classList.add('hidden');
+      mark(bar);
+      host.appendChild(bar);
+    }
+    document.querySelectorAll('.wf-dialog').forEach(function(dlg){
+      Array.prototype.slice.call(dlg.querySelectorAll('.actbar')).forEach(function(bar){
+        if(bar.parentElement===dlg||bar.closest('.modal,.drawer'))return;
+        carry(bar, dlg);
+      });
+    });
+    document.querySelectorAll('.zx-main>.content').forEach(function(content){
+      Array.prototype.slice.call(content.querySelectorAll('.actbar')).forEach(function(bar){
+        if(bar.closest('.wf-dialog,.modal,.drawer,.mask'))return;
+        carry(bar, content.parentNode);
+      });
+    });
+  })();
 })();
 """
 
@@ -935,6 +1000,23 @@ def field(label, control, req=False, hint="", cls="", err="此项为必填项"):
     return f'<div class="field {cls}"><label>{r}{label}</label>{control}{h}{e}</div>'
 
 
+def mechanism_blocks(bad=()):
+    """审核页、档案页展示平台信息确认项：标题与说明段落使用需求文档原文。"""
+    from data import MECHANISMS
+    parts = []
+    for m in MECHANISMS:
+        missed = any(b and (b == m["no"] or b in m["title"]) for b in bad)
+        mark = tag("否", "danger") if missed else tag("是", "success")
+        parts.append(
+            '<div style="border:1px solid var(--c-line);border-radius:8px;padding:12px 14px;background:#fff">'
+            '<div class="flex between top-align gap12">'
+            f'<div class="grow"><div class="bold fs13">（{m["no"]}）{m["title"]}</div>'
+            f'<div class="small sub mt6" style="line-height:1.75">{m["body"]}</div></div>'
+            f'<div style="flex:none">{mark}</div></div></div>'
+        )
+    return '<div style="display:grid;gap:10px">' + "".join(parts) + "</div>"
+
+
 def inp(ph="", val="", req=False, typ="text", attrs="", readonly=False):
     r = " required" if req else ""
     ro = " readonly" if readonly else ""
@@ -951,11 +1033,12 @@ def sel(options, val=None, req=False, ph="请选择"):
     return f'<select class="select"{r}>{opts}</select>'
 
 
-def textarea(ph="", val="", req=False, maxlen=0, rows=4):
+def textarea(ph="", val="", req=False, maxlen=0, rows=4, attrs=""):
     r = " required" if req else ""
     m = f' maxlength="{maxlen}" data-count' if maxlen else ""
     tip = f'<div class="count-tip">{len(val)} / {maxlen}</div>' if maxlen else ""
-    return f'<textarea class="textarea" rows="{rows}" placeholder="{esc(ph)}"{r}{m}>{esc(val)}</textarea>{tip}'
+    extra = (" " + attrs) if attrs else ""
+    return f'<textarea class="textarea" rows="{rows}" placeholder="{esc(ph)}"{r}{m}{extra}>{esc(val)}</textarea>{tip}'
 
 
 def radios(name, options, checked=None, req=False):
@@ -1176,11 +1259,10 @@ PC_ROLES = {
         "menu": [
             ("工作台", [("dashboard", "数据驾驶舱", "dashboard", "dashboard.html", 0), ("messages", "消息待办", "bell", "messages.html", 6)]),
             ("账号管理", [("accounts", "全校账号库", "database", "accounts.html", 0), ("organizations", "组织管理", "hierarchy", "organizations.html", 0)]),
-            ("业务审核", [("approvals", "审核待办", "file-check", "approvals.html", 13),
-                        ("annual", "年度年审", "calendar", "annual-tasks.html", 0)]),
+            ("业务审核", [("annual", "年度年审", "calendar", "annual-tasks.html", 0)]),
             ("风险治理", [("zombie", "僵尸号排查", "ghost", "zombie.html", 47), ("anomalies", "数据异常", "alert", "anomalies.html", 0),
                         ("rectify", "整改管理", "wrench", "rectify.html", 0)]),
-            ("数据中心", [("import", "数据导入", "upload", "import.html", 0), ("export", "数据导出", "download", "export.html", 0)]),
+            ("数据中心", [("export", "数据导出", "download", "export.html", 0)]),
             ("系统管理", [("users", "用户权限", "users", "users.html", 0), ("settings", "系统配置", "settings", "settings-workflow.html", 0),
                         ("logs", "操作日志", "log", "logs.html", 0)]),
         ],
@@ -1190,10 +1272,10 @@ PC_ROLES = {
         "menu": [
             ("工作台", [("workbench", "学院工作台", "dashboard", "workbench.html", 0), ("messages", "消息待办", "bell", "messages.html", 5)]),
             ("账号管理", [("accounts", "本院账号", "database", "accounts.html", 0), ("organizations", "本院组织", "hierarchy", "organizations.html", 0)]),
-            ("业务审核", [("approvals", "审核待办", "file-check", "approvals.html", 6), ("annual", "年审统筹", "calendar", "annual-progress.html", 0)]),
+            ("业务审核", [("annual", "年审统筹", "calendar", "annual-progress.html", 0)]),
             ("任务与人员", [("assign", "任务分派", "route", "assign.html", 0), ("teachers", "教师工作量", "users", "teachers.html", 0)]),
             ("风险治理", [("zombie", "僵尸号核实", "ghost", "zombie.html", 3), ("rectify", "整改管理", "wrench", "rectify.html", 0)]),
-            ("数据与系统", [("import", "导入数据确认", "upload", "import-confirm.html", 0), ("export", "数据导出", "download", "export.html", 0),
+            ("数据与系统", [("export", "数据导出", "download", "export.html", 0),
                           ("users", "本院授权", "key", "users.html", 0), ("logs", "操作日志", "log", "logs.html", 0)]),
         ],
     },
@@ -1201,16 +1283,23 @@ PC_ROLES = {
         "name": "王晓琳", "role": "业务教师", "org": "计算机学院 · 宣传工作辅导员", "msg": "messages.html",
         "menu": [
             ("工作台", [("workbench", "教师工作台", "dashboard", "workbench.html", 0), ("messages", "消息提醒", "bell", "messages.html", 3)]),
-            ("审核办理", [("todo", "审核待办", "inbox", "todo.html", 9), ("done", "审核已办", "file-check", "done.html", 0)]),
-            ("账号管理", [("accounts", "我负责的账号", "database", "accounts.html", 0), ("proxy", "代办中心", "hand", "proxy.html", 0),
-                        ("apply", "发起申请", "file-add", "../common/apply-create-basic.html", 0)]),
+            ("账号管理", [("accounts", "我负责的账号", "database", "accounts.html", 0), ("proxy", "代办中心", "hand", "proxy.html", 0)]),
+        ],
+    },
+    "student": {
+        "name": "李明", "role": "学生用户", "org": "计算机学院 · 2023级软件工程2班", "msg": "messages.html",
+        "menu": [
+            ("工作台", [("home", "学生首页", "dashboard", "home.html", 0), ("messages", "消息", "bell", "messages.html", 4)]),
+            ("业务办理", [("apply", "业务申请", "file-add", "apply.html", 2)]),
+            ("账号与年审", [("accounts", "我的账号", "database", "accounts.html", 0), ("annual", "我的年审", "calendar", "annual.html", 3),
+                          ("rectify", "整改任务", "wrench", "rectify.html", 2)]),
         ],
     },
 }
 
 
-ROLE_HOME = {"school": "dashboard.html", "college": "workbench.html", "teacher": "workbench.html"}
-ROLE_TODO = {"school": "approvals.html", "college": "approvals.html", "teacher": "todo.html"}
+ROLE_HOME = {"school": "dashboard.html", "college": "workbench.html", "teacher": "workbench.html", "student": "home.html"}
+ROLE_TODO = {"school": "approvals.html", "college": "approvals.html", "teacher": "todo.html", "student": "todo.html"}
 # 正式系统“我的待办”模块侧栏：业务审核统一在此办理
 WF_MENU = {
     role: [("todo", "待办", "inbox", ROLE_TODO[role], n),
@@ -1218,9 +1307,9 @@ WF_MENU = {
            ("started", "已发起", "send", "wf-started.html", 0),
            ("cc", "催办/抄送", "bell", "wf-cc.html", m),
            ("batch", "批量审批", "layers", "wf-batch.html", 0)]
-    for role, n, m in (("school", 13, 2), ("college", 6, 2), ("teacher", 9, 3))
+    for role, n, m in (("school", 13, 2), ("college", 6, 2), ("teacher", 9, 3), ("student", 5, 3))
 }
-ROLE_BY_NAME = {"学校管理员": "school", "学院管理员": "college", "业务教师": "teacher"}
+ROLE_BY_NAME = {"学校管理员": "school", "学院管理员": "college", "业务教师": "teacher", "学生用户": "student"}
 TOP_NAV = ["首页", "我的待办", "个人信息", "数据统计", "学生事务管理", "学工队伍建设", "第二课堂", "新媒体平台"]
 OUT_OF_SCOPE = "原型仅包含「团学新媒体平台」模块，其他模块为正式系统已有功能"
 
@@ -1378,12 +1467,14 @@ def pc_common_page(rel_path, title, crumbs, content, css="", js="", back="../tea
 
 # ---------------------------------------------------------------- APP 外壳
 APP_TABS = {
-    "student": [("apply", "服务大厅", "grid", "apply.html", 0), ("home", "首页", None, "home.html", 0), ("mine", "个人中心", "user", "mine.html", 0)],
+    "student": [("apply", "服务大厅", "grid", "apply.html", 0), ("home", "首页", None, "home.html", 0), ("records", "我的申请", "clipboard", "my-apply.html", 0)],
     "teacher": [("todo", "待我审核", "inbox", "todo.html", 9), ("home", "工作台", None, "home.html", 0), ("mine", "个人中心", "user", "mine.html", 0)],
     "college": [("todo", "学院审核", "inbox", "todo.html", 4), ("home", "看板", None, "home.html", 0), ("mine", "个人中心", "user", "mine.html", 0)],
+    "school": [("todo", "待审", "inbox", "todo.html", 13), ("home", "首页", None, "home.html", 0), ("messages", "消息", "bell", "messages.html", 6)],
 }
 APP_TAB_ALIAS = {"annual": "apply"}
-APP_ROLE_NAME = {"student": "学生用户 · 李明", "teacher": "业务教师 · 王晓琳", "college": "学院管理员 · 周建华", "common": "全部角色"}
+APP_ROLE_NAME = {"student": "学生用户 · 李明", "teacher": "业务教师 · 王晓琳", "college": "学院管理员 · 周建华",
+                 "school": "学校管理员 · 陈静", "common": "全部角色"}
 
 
 def app_page(rel_path, role, title, content, tab=None, back=None, right="", bottom="", overlay="",
@@ -1409,6 +1500,8 @@ def app_page(rel_path, role, title, content, tab=None, back=None, right="", bott
                 items.append(f'<a class="tab-c{on}" href="{href}"><img src="../../assets/m-center-logo.png" alt="中南大学"><span>{text}</span></a>')
             else:
                 items.append(f'<a class="{on.strip()}" href="{href}">{icon(ic)}<span>{text}</span>{b}</a>')
+        if APP_TABS[role][-1][2] is None:
+            items.append('<span class="tab-pad"></span>')
         tabbar = f'<nav class="tabbar">{"".join(items)}</nav>'
     bb = f'<div class="bottom-bar">{bottom}</div>' if bottom else ""
     note_items = "".join(f"<li>{n}</li>" for n in (notes or []))
@@ -1440,11 +1533,12 @@ def cell(label, value="", href=None, arrow=None, attrs=""):
     return f'<div class="cell" {attrs}>{inner}</div>'
 
 
-def m_input(label, ph="请输入", val="", req=False, typ="text"):
+def m_input(label, ph="请输入", val="", req=False, typ="text", attrs=""):
     r = '<span class="req">*</span>' if req else ""
     rq = " required" if req else ""
     v = f' value="{esc(val)}"' if val else ""
-    return (f'<div class="cell"><span class="cell-label">{r}{label}</span><input class="m-input" type="{typ}" placeholder="{ph}"{v}{rq}>'
+    extra = (" " + attrs) if attrs else ""
+    return (f'<div class="cell"><span class="cell-label">{r}{label}</span><input class="m-input" type="{typ}" placeholder="{ph}"{v}{rq}{extra}>'
             f'</div>')
 
 
@@ -1456,13 +1550,14 @@ def m_select(label, options, val=None, req=False):
             f'<select class="m-input" style="appearance:none;direction:rtl"{rq}>{opts}</select>{icon("chevron-right", cls="arrow")}</div>')
 
 
-def m_textarea(label, ph="请输入", val="", req=False, maxlen=0):
+def m_textarea(label, ph="请输入", val="", req=False, maxlen=0, attrs=""):
     r = '<span class="req">*</span>' if req else ""
     rq = " required" if req else ""
     m = f' maxlength="{maxlen}" data-count' if maxlen else ""
     tip = f'<div class="count-tip">{len(val)} / {maxlen}</div>' if maxlen else ""
+    extra = (" " + attrs) if attrs else ""
     return (f'<div class="cell col-cell"><span class="cell-label">{r}{label}</span>'
-            f'<textarea class="m-textarea" placeholder="{ph}"{rq}{m}>{esc(val)}</textarea>{tip}<div class="err-msg">此项为必填项</div></div>')
+            f'<textarea class="m-textarea" placeholder="{ph}"{rq}{m}{extra}>{esc(val)}</textarea>{tip}<div class="err-msg">此项为必填项</div></div>')
 
 
 def m_radios(label, name, options, checked=None):

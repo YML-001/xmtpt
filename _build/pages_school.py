@@ -4,7 +4,8 @@
 """
 from base import *  # noqa: F401,F403
 from data import (ACCOUNTS, SCHOOL_STATS as S, PLATFORM_STATS, COLLEGES, ANNUAL_TASK as T, FLOWS, PEOPLE,
-                  PLATFORM_TYPES, ORG_TYPES, LEVELS, RUN_STATUS, FILING_STATUS, ANNUAL_STATUS, CANCEL_REASONS, UPDATE_FREQ)
+                  PLATFORM_TYPES, ORG_TYPES, LEVELS, RUN_STATUS, FILING_STATUS, ANNUAL_STATUS, CANCEL_REASONS, UPDATE_FREQ,
+                  MECHANISMS)
 
 D = "pc/school/"
 
@@ -99,8 +100,8 @@ CSS = """
 
 
 # ---------------------------------------------------------------- 通用小组件
-def page(file, menu, title, crumbs, content, css=""):
-    pc_page(D + file, "school", menu, title, [("首页", "dashboard.html")] + crumbs, content, css=CSS + css)
+def page(file, menu, title, crumbs, content, css="", js=""):
+    pc_page(D + file, "school", menu, title, [("首页", "dashboard.html")] + crumbs, content, css=CSS + css, js=js)
 
 
 def go(text, href, kind="primary", ic=None, toast=None, size=""):
@@ -296,7 +297,7 @@ def messages():
                 (f"系统通知 {counts['sys']}", "sys")], target="#msgList")
     content = f"""
 {page_hd('消息待办', f'按学校管理员身份生成的待审核、待处置事项与系统通知 · 未读 {unread} 条',
-         btn('全部已读', None, 'default', 'check', toast='已将全部消息标记为已读') + btn('消息设置', None, 'default', 'settings', toast='消息推送：站内信 + 企业微信，已开启'))}
+         btn('全部已读', None, 'default', 'check', toast='已将全部消息标记为已读'))}
 <div class="grid g4 mb16">
   {stat('待审核', counts['audit'], '新建 · 变更 · 注销 · 年审', 'file-check', href='approvals.html')}
   {stat('待处置', counts['handle'], '僵尸号 · 整改 · 异常 · 导入', 'alert', 'orange', href='zombie.html')}
@@ -357,7 +358,7 @@ def accounts_content():
     tbl = table(["账号", "学院 / 组织", "层级", "负责教师", "学生负责人", "运行状态", "备案状态", "年审状态", "最近发布", "操作"], rows, check=True, id_="acctTable")
     return f"""
 {page_hd('全校账号库', f'全校在册 {S["total"]} 个账号，覆盖 {S["colleges"]} 个二级团组织 · 一账号一档案，支持 16 个条件组合查询',
-         btn('高级筛选', 'accounts-filter.html', 'default', 'filter') + btn('导入账号', 'import.html', 'default', 'upload') + btn('导出台账', 'export.html', 'primary', 'download'))}
+         btn('高级筛选', 'accounts-filter.html', 'default', 'filter') + btn('导入', 'import.html', 'default', 'upload') + btn('导入记录', 'logs.html', 'default', 'history') + btn('导出台账', 'export.html', 'primary', 'download'))}
 {alert('<b>一账号一档案：</b>每个平台账号只建立一份档案，名称、负责人、组织归属变化均在同一档案内留痕；<b>平台层级与是否疑似僵尸号均为筛选条件</b>，不拆分建库、不单独建表。', 'info')}
 <div class="mt16"></div>
 {filter_bar(fields)}
@@ -529,11 +530,12 @@ def approval_detail():
     left = f"""
 {acct_head(a, tag('新建备案', 'primary') + st('备案申请中'), f'<div class="small muted">申请编号</div><div class="bold num">{no}</div><div class="small muted mt4">提交于 2026-09-24 10:12</div>')}
 <div class="grid g2 mt16">
-  {card('归属信息', kv([('所属学院', '计算机学院'), ('团学组织', a['org']), ('组织类别', a['org_type']), ('平台层级', a['level'])], 2))}
-  {card('平台信息', kv([('平台类型', '<span class="flex gap8">' + pf(a['platform'], 'sm') + a['platform'] + '</span>'), ('账号名称', a['name']), ('平台ID', f'<span class="num">{a["pid"]}</span>'), ('开通时间', a['opened']), ('认证主体', '中南大学（已认证）'), ('四项机制', tag('已建立 4 / 4', 'success'))], 2))}
-  {card('运行信息', kv([('更新频率', UPDATE_FREQ[0]), ('主要栏目', '计院青年说 / 科创前沿 / 学业加油站 / 青春印记'), ('发布范围', '学院团学工作动态、活动、竞赛与学业信息', True)], 2))}
-  {card('责任人', kv([('第一责任人', '张卫东（党委副书记）'), ('管理教师', '王晓琳（宣传工作辅导员）'), ('学生负责人', '李明 · 8209230117'), ('联系电话', PEOPLE['李明']['phone'])], 2))}
+  {card('归属信息', kv([('所属学院', '计算机学院'), ('所属团学组织', a['org']), ('组织类别', a['org_type']), ('平台管理层级', a['level'])], 2))}
+  {card('平台信息', kv([('平台类型', '<span class="flex gap8">' + pf(a['platform'], 'sm') + a['platform'] + '</span>'), ('账号名称', a['name']), ('曾用名', '无'), ('平台ID', f'<span class="num">{a["pid"]}</span>'), ('是否认证', '否'), ('粉丝数', '0'), ('开通时间', a['opened']), ('运营团队规模（单位：人）', '6'), ('主页链接', 'mp.weixin.qq.com/csu_cs_youth'), ('平台头像', '已上传'), ('二维码', '未上传（非必填）'), ('信息发布范围', '学院团学活动相关信息。', True)], 2))}
+  {card('运行信息', kv([('最近一次公开内容发布时间', '2026-09-22'), ('更新频率', UPDATE_FREQ[0]), ('运行状态', '正常运行'), ('异常情况', '无'), ('备注', '无')], 2))}
+  {card('责任人与审核信息', kv([('当前管理教师', '王晓琳 · ' + PEOPLE['王晓琳']['no'] + ' · 宣传工作辅导员 · 专职 · ' + PEOPLE['王晓琳']['phone']), ('具体负责人', '李明 · 8209230117 · ' + PEOPLE['李明']['phone']), ('管理员', '陈可欣（8209230221）、刘子涵（8209240133）'), ('一审负责人', '王晓琳 · ' + PEOPLE['王晓琳']['no']), ('二审负责人', '周建华 · ' + PEOPLE['周建华']['no']), ('三审负责人', '陈静 · ' + PEOPLE['陈静']['no'])], 2))}
 </div>
+<div class="mt16">{card('平台信息确认', mechanism_blocks())}</div>
 <div class="mt16">{card('平台介绍', f'<p class="sub" style="line-height:1.9">{intro}</p><div class="small muted mt8">共 326 字 · 已按指导教师退回意见补充内容定位、栏目设置与信息发布范围</div>', tag('第 2 次提交', 'warning'))}</div>
 <div class="mt16">{card('重复检查结果', alert('<b>未发现同平台同ID</b>（微信公众号 · csu_cs_youth）；<b>存在 1 个相似名称</b>：“中南计科青年”（抖音 · 计算机学院 · 2019 年已注销），<b>申请人已确认不是同一账号</b>。', 'success') + '<div class="small muted mt8">检查时间 2026-09-24 10:11 · 检查范围：全校在册与已注销账号（含曾用名）</div>')}</div>
 <div class="mt16">{card('附件材料', '<div class="upload-list" style="margin:0">' + fchip('四项机制制度文件.pdf') + fchip('账号主页截图.png', 'image') + fchip('信息发布三审制度.pdf') + fchip('学院团委审批表.pdf') + '</div>')}</div>"""
@@ -701,7 +703,7 @@ def annual_task_create():
 </div>
 <div class="sticky col gap16">
   {card('年审范围', radios('scope', [f'全部在册账号（{T["total"]} 个）', '按学院选择', '按平台层级选择'], f'全部在册账号（{T["total"]} 个）') + '<div class="divider"></div>' + cb('排除已注销账号（41 个）', True) + '<div class="mt8">' + cb('包含本年度新建账号（63 个）', True) + '</div><div class="mt8">' + cb('排除备案申请中账号', False) + '</div>')}
-  {card('发布预览', kv([('年审记录', f'<b class="num">{T["total"]}</b> 条'), ('涉及学院', '35 个'), ('学生负责人', '1,124 人'), ('指导教师', '312 人')], 2) + '<div class="divider"></div><div class="small muted">发布后通过站内信与企业微信通知全部学生负责人、指导教师与学院管理员</div>')}
+  {card('发布预览', kv([('年审记录', f'<b class="num">{T["total"]}</b> 条'), ('涉及学院', '35 个'), ('学生负责人', '1,124 人'), ('指导教师', '312 人')], 2) + '<div class="divider"></div><div class="small muted">发布后通过站内信与 ITS 消息通知全部学生负责人、指导教师与学院管理员</div>')}
   <div class="flex gap8">{btn('保存草稿', None, 'default', 'file', toast='草稿已保存')}{submit_btn('发布任务', 'annual-task-detail.html', 'primary', 'send', toast='年审任务已发布，正在生成 986 条年审记录')}</div>
 </div>
 </div></div>"""
@@ -1096,7 +1098,7 @@ def rectify_create():
 </div>
 <div class="sticky col gap16">
   {card('责任人与时限', '<div class="form-grid c1">' + field('整改责任人（学生）', sel(['何雨桐（8209230509）', '李明（8209230117）', '孙悦（8209240315）'], '何雨桐（8209230509）', req=True), req=True) + field('整改责任人（教师）', sel(['王晓琳（T20180427）', '刘洋（T20200611）'], '王晓琳（T20180427）', req=True), req=True) + field('截止时间', inp('', FLOWS['rectify']['deadline'], req=True, typ='date'), req=True) + '<div class="field"><label><span class="req">*</span>审核层级</label>' + radios('lv', ['学院审核', '校级审核'], '学院审核', req=True) + '<div class="hint">校级审核：整改材料经学院初审后报校团委复核</div></div></div>')}
-  {card('通知方式', cb('站内信', True) + '<div class="mt8">' + cb('企业微信', True) + '</div><div class="mt8">' + cb('短信（截止前 3 天）', False) + '</div>')}
+  {card('通知方式', cb('站内信', True) + '<div class="mt8">' + cb('ITS 消息', True) + '</div><div class="hint mt8">截止前 3 天通过站内信与 ITS 消息提醒</div>')}
   <div class="flex gap8">{btn('取消', 'rectify.html', 'default')}{submit_btn('下发整改任务', 'rectify.html', 'primary', 'send', toast='整改任务已下发，已通知学生与指导教师')}</div>
 </div>
 </div></div>"""
@@ -1161,7 +1163,7 @@ def import_page():
     rows = [[f'<b>{c}</b>', f'<span class="node-arrow">{icon("arrow-right")}</span>', sel(sys_fields, f, ph=""), f'<span class="small sub">{v}</span>',
              tag("自动匹配", "success") if f != "（不导入）" else tag("忽略", "muted")] for c, f, v in mapping]
     content = f"""
-{page_hd('Excel 数据导入', '批量导入历史账号数据，导入后由各学院补充确认', btn('导入记录', 'logs.html', 'default', 'history'))}
+{page_hd('Excel 数据导入', '从全校账号库进入。批量导入历史账号数据，导入后由各学院补充确认', btn('导入记录', 'logs.html', 'default', 'history'))}
 {alert('<b>初始化说明：</b>以 <b>2025 年度账号数据</b>作为初始化底库（972 个平台），导入后下发各学院补充确认，确认后的数据作为 2026 年度年审的继承基础。', 'info')}
 <div class="card card-bd mt16">{steps(IMPORT_STEPS, 2)}</div>
 <div class="grid mt16" style="grid-template-columns:420px minmax(0,1fr);align-items:start">
@@ -1171,7 +1173,7 @@ def import_page():
   </div>
   {card('③ 字段映射', table(['Excel 列', '', '系统字段', '示例值', '匹配'], rows) + '<div class="flex between mt16"><span class="small muted">已自动匹配 10 / 11 列，必填字段已全部映射</span><div class="flex gap8">' + btn('保存映射方案', None, 'default', 'file', 'sm', toast='映射方案已保存为“2025 年度底库”') + go('开始校验', 'import-result.html', 'primary', 'check', toast='校验完成：成功 958 条，失败 9 条，疑似重复 5 条') + '</div></div>', tag('智能匹配', 'primary'))}
 </div>"""
-    page("import.html", "import", "Excel 数据导入", [("数据中心", "import.html"), ("数据导入", None)], content)
+    page("import.html", "accounts", "Excel 数据导入", [("全校账号库", "accounts.html"), ("数据导入", None)], content)
 
 
 def import_result():
@@ -1212,7 +1214,7 @@ def import_result():
   {btn('重新上传', 'import.html', 'default', 'upload')}
   {go('确认入库并下发学院确认', '../college/import-confirm.html', 'primary', 'send', toast='已入库 958 条，并下发 35 个学院确认')}
 </div>"""
-    page("import-result.html", "import", "导入校验结果", [("数据中心", "import.html"), ("数据导入", "import.html"), ("校验结果", None)], content)
+    page("import-result.html", "accounts", "导入校验结果", [("全校账号库", "accounts.html"), ("数据导入", "import.html"), ("校验结果", None)], content)
 
 
 LEDGERS = [
@@ -1247,7 +1249,7 @@ def export():
 {filter_bar(fields)}
 {alert('导出文件包含个人信息时默认脱敏（手机号、学号中间位隐藏）；完整导出需填写用途并经校团委负责人审批。', 'warning')}
 <div class="grid g4 mt16">{cards}</div>"""
-    page("export.html", "export", "数据导出中心", [("数据中心", "import.html"), ("数据导出", None)], content)
+    page("export.html", "export", "数据导出中心", [("数据中心", "export.html"), ("数据导出", None)], content)
 
 
 def export_records():
@@ -1278,7 +1280,7 @@ def export_records():
 {page_hd('导出记录', '导出文件保留 30 天，过期后可重新生成', back_btn('export.html', '返回导出中心'))}
 {alert('每一次导出均记录操作人、身份、导出条件、记录数与时间，并同步写入<a class="link" href="logs.html">操作日志</a>（操作类型：数据导出），用于数据安全审计。', 'info')}
 <div class="mt16">{card('导出任务', table(['文件名', '导出条件', '记录数', '操作人', '导出时间', '状态', '操作'], rows) + pager(46, 5))}</div>"""
-    page("export-records.html", "export", "导出记录", [("数据中心", "import.html"), ("数据导出", "export.html"), ("导出记录", None)], content)
+    page("export-records.html", "export", "导出记录", [("数据中心", "export.html"), ("数据导出", "export.html"), ("导出记录", None)], content)
 
 
 def filing_form():
@@ -1300,7 +1302,7 @@ def filing_form():
     <tr><td class="k">组织类别</td><td>{a['org_type']}</td><td class="k">平台层级</td><td>{a['level']}</td></tr>
     <tr><td class="k">认证主体</td><td>中南大学</td><td class="k">更新频率</td><td>每周更新（≥1次/周）</td></tr>
     <tr><td class="k">平台介绍</td><td colspan="3">{intro}</td></tr>
-    <tr><td class="k">管理机制</td><td colspan="3">已建立：信息发布审核（三审三校）机制、舆情应对机制、账号安全管理机制、应急处置机制</td></tr>
+    <tr><td class="k">平台信息确认</td><td colspan="3">{'<br>'.join('（%s）%s 是。%s' % (m['no'], m['title'], m['body']) for m in MECHANISMS)}</td></tr>
     <tr><td class="k">第一责任人</td><td>张卫东（党委副书记）</td><td class="k">联系电话</td><td>{PEOPLE['张卫东']['phone']}</td></tr>
     <tr><td class="k">管理教师</td><td>王晓琳（宣传工作辅导员）</td><td class="k">联系电话</td><td>{PEOPLE['王晓琳']['phone']}</td></tr>
     <tr><td class="k">学生负责人</td><td>李明（{PEOPLE['李明']['no']}）</td><td class="k">联系电话</td><td>{PEOPLE['李明']['phone']}</td></tr>
@@ -1324,6 +1326,21 @@ def filing_form():
 
 
 # ================================================================ 系统管理
+USER_JS = """
+function addUser(btn){
+  var no=btn.getAttribute('data-no');
+  var tb=document.querySelector('#user-table tbody');
+  if(tb.querySelector('[data-no="'+no+'"]')){toast('该用户已在列表中');return;}
+  var name=btn.getAttribute('data-name');
+  var tr=document.createElement('tr');
+  tr.innerHTML='<td><b>'+name+'</b></td><td><span class="num" data-no="'+no+'">'+no+'</span></td><td>'+btn.getAttribute('data-org')+'</td><td><span class="tag tag-primary">'+btn.getAttribute('data-job')+'</span></td><td><span class="small sub">待配置授权范围</span></td><td><span class="tag tag-success tag-dot">启用</span></td><td><a class="link" href="user-permission.html">授权</a></td>';
+  tb.insertBefore(tr,tb.firstChild);
+  document.getElementById('user-add').classList.add('hidden');
+  toast('已添加用户：'+name);
+}
+"""
+
+
 def users():
     rows_data = [
         ("陈静", "T19880012", "校团委宣传部", [("学校管理员", "primary")], "全校全部账号", True),
@@ -1342,18 +1359,32 @@ def users():
     for n, no, unit, tags, scope, on in rows_data:
         tags_html = '<div class="flex gap4 wrap">' + "".join(tag(t, k) for t, k in tags) + "</div>"
         op = ops(("授权", "user-permission.html"), ("日志", "logs.html")) if n != "陈静" else ops(("日志", "logs.html"),)
-        rows.append([person(n, PEOPLE.get(n, {}).get("job", "")), f'<span class="num">{no}</span>', unit, tags_html, f'<span class="small sub">{scope}</span>', sw(on, "账号启用"), op])
-    tbl = table(["姓名", "工号 / 学号", "单位", "身份标签", "授权范围", "状态", "操作"], rows)
+        rows.append([person(n, PEOPLE.get(n, {}).get("job", "")), f'<span class="num" data-no="{no}">{no}</span>', unit, tags_html, f'<span class="small sub">{scope}</span>', sw(on, "账号启用"), op])
+    tbl = table(["姓名", "工号 / 学号", "单位", "身份标签", "授权范围", "状态", "操作"], rows, id_="user-table")
     fields = [field("姓名 / 工号 / 学号", inp("请输入")), field("单位", sel(["校团委"] + COLLEGES)), field("身份", sel(["学校管理员", "学院管理员", "业务教师", "第一责任人", "学生负责人"])),
               field("状态", sel(["启用", "停用"]))]
     content = f"""
 {page_hd('用户管理', '用户来自学校统一身份认证；同一用户可拥有多个身份，每个身份单独授权',
-         btn('同步统一身份', None, 'default', 'refresh', toast='已从统一身份认证同步 3 名新增教职工') + btn('新增用户', None, 'primary', 'user-add', toast='请在弹出的统一身份认证中搜索并添加用户'))}
+         btn('同步统一身份', None, 'default', 'refresh', toast='已从统一身份认证同步 3 名新增教职工') + '<button class="btn btn-primary" type="button" data-toggle="#user-add">' + icon('user-add') + '新增用户</button>')}
 {alert('<b>授权原则：</b>按“组织范围 + 账号范围 + 操作权限”三维授权，<b>不得简单采用“教师 = 查看学院所有账号”</b>的方式；例如 2021 级辅导员仅可审核 2021 级各班团支部账号。', 'warning')}
 <div class="mt16"></div>
 {filter_bar(fields)}
 {card('用户列表', tbl + pager(1486, 5), seg([('全部', 'a'), ('管理员', 'b'), ('教师', 'c'), ('学生', 'd')]))}"""
-    page("users.html", "users", "用户管理", [("系统管理", "users.html"), ("用户权限", None)], content)
+    picks = "".join(
+        f'<button type="button" class="pick-item" data-cat="{esc(n)} {p["no"]}" onclick="addUser(this)" '
+        f'data-name="{esc(n)}" data-no="{p["no"]}" data-org="{esc(p["org"])}" data-job="{esc(p["job"])}" '
+        f'style="display:flex;justify-content:space-between;width:100%;padding:8px 10px;border:1px solid var(--c-line);border-radius:8px;margin-top:6px;background:#fff;text-align:left">'
+        f'<span><b>{n}</b> <span class="small muted">{p["no"]}</span></span><span class="small muted">{p["org"]}</span></button>'
+        for n, p in PEOPLE.items())
+    content += (
+        f'<div class="mask hidden" id="user-add"><div class="modal"><div class="modal-hd">从统一身份认证添加用户'
+        f'<button class="x-btn" type="button" data-toggle="#user-add" aria-label="关闭">{icon("x")}</button></div>'
+        f'<div class="modal-bd"><div class="small muted mb8">输入姓名或工号 / 学号检索，选中后加入用户列表。</div>'
+        f'<label class="top-search" style="width:100%">{icon("search")}<input placeholder="输入姓名或工号 / 学号" data-search="#user-pick"></label>'
+        f'<div id="user-pick" style="max-height:320px;overflow:auto;margin-top:8px">{picks}</div></div>'
+        f'<div class="modal-ft"><button class="btn btn-default" type="button" data-toggle="#user-add">关闭</button></div></div></div>'
+    )
+    page("users.html", "users", "用户管理", [("系统管理", "users.html"), ("用户权限", None)], content, js=USER_JS)
 
 
 def user_permission():
@@ -1386,6 +1417,29 @@ def user_permission():
     page("user-permission.html", "users", "数据范围授权", [("系统管理", "users.html"), ("用户权限", "users.html"), ("数据范围授权", None)], content)
 
 
+FLOW_JS = """
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-flow]');if(!b)return;
+  var name=b.getAttribute('data-flow');
+  var title=document.getElementById('flow-title');if(title)title.textContent=name;
+  var vt=document.getElementById('ver-title');if(vt)vt.textContent=name+' · 版本记录';
+  var nodes=b.getAttribute('data-nodes');
+  if(nodes===null)return;
+  window._flowRow=b.closest('tr');
+  document.querySelectorAll('#flow-edit input[type=checkbox]').forEach(function(c){c.checked=nodes.indexOf(c.value)>=0;});
+});
+function saveFlow(){
+  var tr=window._flowRow;if(!tr){toast('请先选择要编辑的业务');return;}
+  var picked=[].slice.call(document.querySelectorAll('#flow-edit input:checked')).map(function(c){return c.value;});
+  if(!picked.length){toast('请至少保留一个审核节点');return;}
+  var cell=tr.querySelector('[data-flow-desc]');
+  if(cell)cell.textContent='已保存：'+picked.join(' → ');
+  document.getElementById('flow-edit').classList.add('hidden');
+  toast('审核流程已保存，将对新提交的申请生效');
+}
+"""
+
+
 def settings_workflow():
     T_, C_, X_ = ("具体负责教师", ""), ("学院管理员", ""), ("校团委", "")
     rows_data = [
@@ -1399,8 +1453,14 @@ def settings_workflow():
         ("僵尸号核实", [("系统预警", "gray"), ("教师 / 学生核实", ""), C_, X_], True, False, "不自动注销，校团委确认处置"),
         ("整改反馈", [("学生提交", "gray"), T_, C_], False, True, "校级整改由校团委复核"),
     ]
-    rows = [[f'<b>{n}</b>', node_flow(nodes), sw(school, "校级节点"), sw(bycol, "按学院配置"), f'<span class="small sub">{d}</span>',
-             ops(("编辑", None, f"已打开“{n}”流程编辑"), ("版本", None, f"{n}：当前 V3（2026-09-01 生效）"))] for n, nodes, school, bycol, d in rows_data]
+    rows = []
+    for n, nodes, school, bycol, d in rows_data:
+        node_names = "、".join(x[0] for x in nodes)
+        ops_html = (f'<div class="ops"><button class="link" type="button" data-toggle="#flow-edit" data-flow="{esc(n)}" '
+                    f'data-nodes="{esc(node_names)}">编辑</button>'
+                    f'<button class="link" type="button" data-toggle="#ver-modal" data-flow="{esc(n)}">版本</button></div>')
+        rows.append([f'<b>{n}</b>', node_flow(nodes), sw(school, "校级节点"), sw(bycol, "按学院配置"),
+                     f'<span class="small sub" data-flow-desc>{d}</span>', ops_html])
     content = f"""
 {page_hd('系统配置', '审核节点、数据字典与风险规则均可配置，不在程序中写死', btn('保存配置', None, 'primary', 'check', toast='审核流程配置已保存，将对新提交的申请生效'))}
 {ptabs(SETTINGS_TABS, '审核流程')}
@@ -1411,29 +1471,113 @@ def settings_workflow():
   {card('代办规则', cb('允许教师代办负责人交接（学生毕业 / 失联）', True) + '<div class="mt8">' + cb('代办须上传说明材料', True) + '</div><div class="mt8">' + cb('代办申请须学院管理员审核', True) + '</div>')}
   {card('审核人选择', cb('学生提交时可自选一审指导教师', True) + '<div class="mt8">' + cb('仅可选择已授权该组织的教师', True) + '</div><div class="mt8">' + cb('允许学院管理员改派审核人', True) + '</div>')}
 </div>"""
-    page("settings-workflow.html", "settings", "审核流程配置", [("系统管理", "users.html"), ("系统配置", "settings-workflow.html"), ("审核流程", None)], content)
+    flow_checks = "".join(
+        f'<label class="cb" style="display:flex;margin-top:8px"><input type="checkbox" value="{esc(x)}"> {x}</label>'
+        for x in ["具体负责教师", "学院管理员", "校团委", "学生填报", "学院统一提交", "系统预警", "教师 / 学生核实"])
+    content += (
+        f'<div class="mask hidden" id="flow-edit"><div class="modal"><div class="modal-hd">编辑审核流程 · <span id="flow-title"></span>'
+        f'<button class="x-btn" type="button" data-toggle="#flow-edit" aria-label="关闭">{icon("x")}</button></div>'
+        f'<div class="modal-bd"><div class="small muted mb8">勾选需要经过的节点，保存后写入本行生效说明，新提交的申请按此执行。</div>{flow_checks}</div>'
+        f'<div class="modal-ft"><button class="btn btn-default" type="button" data-toggle="#flow-edit">取消</button>'
+        f'<button class="btn btn-primary" type="button" onclick="saveFlow()">保存</button></div></div></div>'
+        f'<div class="mask hidden" id="ver-modal"><div class="modal sm"><div class="modal-hd"><span id="ver-title">版本记录</span>'
+        f'<button class="x-btn" type="button" data-toggle="#ver-modal" aria-label="关闭">{icon("x")}</button></div>'
+        f'<div class="modal-bd">{table(["版本", "生效日期", "状态"], [["V1", "2025-09-01", tag("历史", "muted")], ["V2", "2026-03-01", tag("历史", "muted")], ["V3", "2026-09-01", tag("当前", "success")]])}</div>'
+        f'<div class="modal-ft"><button class="btn btn-primary" type="button" data-toggle="#ver-modal">知道了</button></div></div></div>'
+    )
+    page("settings-workflow.html", "settings", "审核流程配置", [("系统管理", "users.html"), ("系统配置", "settings-workflow.html"), ("审核流程", None)], content, js=FLOW_JS)
+
+
+DICT_JS = """
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-dname]');if(!b)return;
+  document.getElementById('d-code').value=b.getAttribute('data-dcode');
+  document.getElementById('d-name').value=b.getAttribute('data-dname');
+  window._dictLabel=b.closest('tr').querySelector('[data-dlabel]');
+});
+function saveDict(){
+  var name=document.getElementById('d-name').value.trim();
+  if(!name){toast('请填写名称');return;}
+  if(window._dictLabel)window._dictLabel.textContent=name;
+  var code=document.getElementById('d-code').value;
+  var btn=document.querySelector('[data-dcode="'+code+'"]');
+  if(btn)btn.setAttribute('data-dname',name);
+  document.getElementById('dict-edit').classList.add('hidden');
+  toast('已保存字典项：'+name);
+}
+function moveUp(btn){
+  var tr=btn.closest('tr');var prev=tr.previousElementSibling;
+  if(!prev){toast('已经是第一项');return;}
+  tr.parentNode.insertBefore(tr,prev);
+  toast('排序已调整');
+}
+function addDict(id){
+  var tb=document.querySelector('#'+id+' tbody');
+  if(!tb){toast('请先选择字典分类');return;}
+  var n=tb.querySelectorAll('tr').length+1;
+  var code='X'+('0'+n).slice(-2);
+  var tr=document.createElement('tr');
+  tr.innerHTML='<td><span class="num muted">'+code+'</span></td><td><b data-dlabel>未命名</b></td><td><span class="num">'+n+'</span></td><td><span class="num">0</span></td><td><span class="tag tag-success tag-dot">启用</span></td><td><div class="ops"><button class="link" type="button" data-toggle="#dict-edit" data-dcode="'+code+'" data-dname="未命名">编辑</button><button class="link" type="button" onclick="moveUp(this)">上移</button></div></td>';
+  tb.appendChild(tr);
+  document.getElementById('d-code').value=code;
+  document.getElementById('d-name').value='';
+  window._dictLabel=tr.querySelector('[data-dlabel]');
+  document.getElementById('dict-edit').classList.remove('hidden');
+}
+function addDictVisible(){
+  var pane=document.querySelector('.dict-pane:not(.hidden) table');
+  if(pane&&pane.id)addDict(pane.id);
+}
+"""
 
 
 def settings_dictionary():
-    dicts = [("平台类型", 12), ("组织类别", 4), ("平台层级", 4), ("更新频率", 7), ("注销原因", 9), ("整改问题类型", 8), ("退回原因", 6), ("年审佐证材料", 6)]
-    left = "".join(f'<button type="button" class="dict-item{" on" if i == 0 else ""}" data-toast="已切换到：{n}字典">{icon("list")}{n}<span class="cnt">{c} 项</span></button>' for i, (n, c) in enumerate(dicts))
+    groups = [
+        ("平台类型", PLATFORM_TYPES),
+        ("组织类别", ORG_TYPES),
+        ("平台层级", LEVELS),
+        ("更新频率", UPDATE_FREQ),
+        ("注销原因", CANCEL_REASONS),
+        ("整改问题类型", ["未建立信息发布审查机制", "内容未执行先审后发", "账号信息不完整", "长期未更新", "负责人信息缺失", "其他"]),
+        ("退回原因", ["信息不全", "平台介绍不足100字", "材料不清晰", "重复备案", "其他"]),
+        ("年审佐证材料", ["平台主页截图", "更新频率说明", "负责人信息", "其他"]),
+    ]
     counts = dict(PLATFORM_STATS)
-    rows = []
-    for i, n in enumerate(PLATFORM_TYPES):
-        code = f"PT{i + 1:02d}"
-        used = counts.get(n, {"快手": 9, "知乎": 4, "网站": 11, "APP": 2, "其他": 2}.get(n, 0))
-        rows.append([f'<span class="num muted">{code}</span>', f'<div class="flex gap8">{pf(n, "sm")}<b>{n}</b></div>', f'<span class="num">{i + 1}</span>',
-                     f'<span class="num">{used}</span>', sw(True, "启用"),
-                     ops(("编辑", None, f"已打开“{n}”编辑"), ("上移", None, "排序已调整"))])
+    fallback = {"快手": 9, "知乎": 4, "网站": 11, "APP": 2, "其他": 2}
+    buttons, panes = [], []
+    for i, (name, items) in enumerate(groups):
+        on = " on" if i == 0 else ""
+        buttons.append(f'<button type="button" class="dict-item{on}" data-choice=".dp-{i}">{icon("list")}{name}<span class="cnt">{len(items)}</span></button>')
+        rows = []
+        for j, item in enumerate(items):
+            code = f"{i + 1:02d}{j + 1:02d}"
+            used = counts.get(item, fallback.get(item, 0)) if name == "平台类型" else 0
+            label = f'<div class="flex gap8">{pf(item, "sm")}<b data-dlabel>{item}</b></div>' if name == "平台类型" else f'<b data-dlabel>{item}</b>'
+            ops_html = (f'<div class="ops"><button class="link" type="button" data-toggle="#dict-edit" data-dcode="{code}" data-dname="{esc(item)}">编辑</button>'
+                        f'<button class="link" type="button" onclick="moveUp(this)">上移</button></div>')
+            rows.append([f'<span class="num muted">{code}</span>', label, f'<span class="num">{j + 1}</span>',
+                         f'<span class="num">{used}</span>', sw(True, "启用"), ops_html])
+        hid = "" if i == 0 else " hidden"
+        add = f'<button class="btn btn-light btn-sm" type="button" onclick="addDict(\'dict-tb-{i}\')">{icon("plus")}新增</button>'
+        panes.append(f'<div class="dict-pane dp-{i}{hid}">{card(name + " · " + str(len(items)) + " 项", table(["编码", "名称", "排序", "引用账号数", "启用", "操作"], rows, id_=f"dict-tb-{i}"), btn("导出字典", None, "text", "download", "sm", toast="已导出" + name + "字典") + add)}</div>')
+    left = f'<div data-single=".dict-pane">{"".join(buttons)}</div>'
+    edit = (
+        f'<div class="mask hidden" id="dict-edit"><div class="modal sm"><div class="modal-hd">编辑字典项'
+        f'<button class="x-btn" type="button" data-toggle="#dict-edit" aria-label="关闭">{icon("x")}</button></div>'
+        f'<div class="modal-bd"><div class="form-grid">{field("编码", "<input class=input id=d-code readonly>")}'
+        f'{field("名称", "<input class=input id=d-name placeholder=请输入名称>", True)}</div></div>'
+        f'<div class="modal-ft"><button class="btn btn-default" type="button" data-toggle="#dict-edit">取消</button>'
+        f'<button class="btn btn-primary" type="button" onclick="saveDict()">保存</button></div></div></div>'
+    )
     content = f"""
-{page_hd('系统配置', '数据字典统一维护下拉选项，各端表单、筛选、导入模板同步引用', btn('新增字典项', None, 'primary', 'plus', toast='已新增一行字典项，请填写名称与编码'))}
+{page_hd('系统配置', '数据字典统一维护下拉选项，各端表单、筛选、导入模板同步引用', '<button class="btn btn-primary" type="button" onclick="addDictVisible()">' + icon('plus') + '新增字典项</button>')}
 {ptabs(SETTINGS_TABS, '数据字典')}
 {alert('<b>平台类型通过字典维护，不在程序中写死。</b>新增平台类型后，申请表单、筛选条件、导入模板与统计口径自动生效；已被账号引用的字典项只能停用、不能删除。', 'info')}
 <div class="grid mt16" style="grid-template-columns:260px minmax(0,1fr);align-items:start">
   {card('字典分类', left)}
-  {card('平台类型 · 12 项', table(['编码', '名称', '排序', '引用账号数', '启用', '操作'], rows), btn('导出字典', None, 'text', 'download', 'sm', toast='已导出平台类型字典') + btn('新增', None, 'light', 'plus', 'sm', toast='已新增一行，请填写平台类型名称'))}
-</div>"""
-    page("settings-dictionary.html", "settings", "数据字典", [("系统管理", "users.html"), ("系统配置", "settings-workflow.html"), ("数据字典", None)], content)
+  <div>{''.join(panes)}</div>
+</div>{edit}"""
+    page("settings-dictionary.html", "settings", "数据字典", [("系统管理", "users.html"), ("系统配置", "settings-workflow.html"), ("数据字典", None)], content, js=DICT_JS)
 
 
 def settings_rules():

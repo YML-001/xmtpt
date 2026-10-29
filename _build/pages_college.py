@@ -4,10 +4,11 @@
 数据范围：计算机学院及所属 / 直属 / 指导组织；负责学院层面审核、统筹教师审核结果并统一提交校团委。
 """
 from datetime import date
+from urllib.parse import quote
 
 from base import *  # noqa: F401,F403
 from data import (ACCOUNTS, FLOWS, PEOPLE, COLLEGE_STATS as CS, ANNUAL_TASK as T, PLATFORM_TYPES, LEVELS,
-                  RUN_STATUS, ANNUAL_STATUS)
+                  RUN_STATUS, ANNUAL_STATUS, UPDATE_FREQ)
 
 D = "pc/college/"
 HOME = ("学院工作台", "workbench.html")
@@ -93,6 +94,8 @@ button.choice{width:100%;text-align:left}
 .ledger{display:flex;flex-direction:column;gap:10px;padding:18px 20px}
 .ledger .ic-box{width:40px;height:40px;border-radius:10px}
 .tbl-sm .table td{padding:9px 12px}
+.cb{display:inline-flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;color:var(--c-text)}
+.cb input{accent-color:var(--c-primary);width:15px;height:15px;cursor:pointer}
 """
 
 # 提交承诺必须勾选：捕获阶段拦截 data-submit
@@ -204,6 +207,25 @@ def teacher_cell(name):
     return tag("未分配", "danger") if name == "未分配" else person(name)
 
 
+def teacher_href(name):
+    if name == "王晓琳":
+        return "teacher-detail.html"
+    return "teacher-detail.html?t=" + quote(name)
+
+
+def annual_open(name, cs):
+    """年审列表进入能办完的页面：整改、注销、名称变更不落到同一个无异动审核页。"""
+    if name == ACCOUNTS["zombie"]["name"]:
+        return "zombie-verify-detail.html"
+    if name == ACCOUNTS["rectify"]["name"]:
+        return "rectify-detail.html"
+    if name == ACCOUNTS["rename"]["name"]:
+        return "approval-change.html"
+    if cs == "待整改":
+        return "rectify.html"
+    return "annual-review-detail.html"
+
+
 def ic_box(ic, color=""):
     return f'<span class="ic-box {color}">{icon(ic)}</span>'
 
@@ -285,7 +307,7 @@ def workbench():
         ("名称变更 · 计算机学院学生会", "拟改名“中南计院学生会” · 教师已通过", "file-edit", "orange", "approval-change.html", "变更"),
         ("僵尸号审核 · 2021级软件工程1班团支部", "辅导员核实建议注销 · 停更 412 天", "ghost", "red", "zombie-verify-detail.html", "僵尸号"),
         ("整改审核 · 计院青年志愿者", "第 1 轮整改材料 · 何雨桐 2026-09-23 提交", "wrench", "orange", "rectify-detail.html", "整改"),
-        ("代办交接 · 计院ACM协会", "教师代办 · 赵磊（已毕业）→ 孙悦", "hand", "", "approvals.html", "交接"),
+        ("代办交接 · 计院ACM协会", "教师代办 · 赵磊（已毕业）→ 孙悦", "hand", "", "approval-proxy.html", "交接"),
     ]
     todo_html = "".join(
         f'<a class="todo-row" href="{h}">{ic_box(ic, c)}<div class="grow"><div class="bold fs13 ellipsis">{t}</div>'
@@ -293,7 +315,7 @@ def workbench():
         for t, m, ic, c, h, k in todos)
     trows = []
     for t in TEACHERS:
-        href = "teacher-detail.html" if t["name"] == "王晓琳" else "teachers.html"
+        href = teacher_href(t["name"])
         trows.append(dict(cells=[person(t["name"]), f'<span class="num">{t["total"]}</span>',
                                  f'<span class="num {"c-warning bold" if t["nodes"][1] else "muted"}">{t["nodes"][1]}</span>',
                                  pct_cell(t["nodes"][4], t["total"])], href=href))
@@ -316,7 +338,7 @@ def messages():
     items = [
         ("todo unread", "file-add", "", "【待审核】新建备案 · 中南计算机青年", "指导教师王晓琳已审核通过，请进行学院审核", "2026-09-27 11:20", "approval-detail.html"),
         ("todo unread", "file-edit", "orange", "【待审核】名称变更 · 计算机学院学生会", "拟变更为“中南计院学生会”，属重要变更，学院审核后报校团委", "2026-09-27 09:15", "approval-change.html"),
-        ("todo unread", "hand", "", "【待审核】教师代办交接 · 计院ACM协会", "王晓琳代办负责人交接：赵磊（已毕业）→ 孙悦", "2026-09-30 09:20", "approvals.html"),
+        ("todo unread", "hand", "", "【待审核】教师代办交接 · 计院ACM协会", "王晓琳代办负责人交接：赵磊（已毕业）→ 孙悦", "2026-09-30 09:20", "approval-proxy.html"),
         ("todo unread", "ghost", "red", "【待审核】僵尸号核实结果 · 2021级软件工程1班团支部", "辅导员王晓琳核实：团支部已毕业，建议注销", "2026-09-22 15:30", "zombie-verify-detail.html"),
         ("todo unread", "wrench", "orange", "【待审核】整改材料 · 计院青年志愿者", "何雨桐提交第 1 轮整改材料，请判定整改结果", "2026-09-23 22:10", "rectify-detail.html"),
         ("todo", "calendar", "green", "【待确认】年审学院审核 · 4 个账号", "教师审核已完成，待学院确认后纳入提交清单", "2026-09-29 09:00", "annual-review.html"),
@@ -368,7 +390,7 @@ def accounts():
             f'<div class="fs13">{a["org"]}</div><div class="small muted">{a["level"]}{name_extra}</div>',
             teacher_cell(a["teacher"]), a["student"], st2(a["run"]), st2(a["filing"]), st2(a["annual"]),
             ops(("档案", "../common/archive-basic.html"), ("分配教师", "assign.html")),
-        ], cat=" ".join(cats)))
+        ], href="../common/archive-basic.html", cat=" ".join(cats)))
     all_rows = college_accounts()
     n_zombie = sum(1 for a in all_rows if a["name"] in ZOMBIE_NAMES)
     n_un = sum(1 for a in all_rows if a["teacher"] == "未分配")
@@ -384,7 +406,7 @@ def accounts():
         field("年审状态", sel(ANNUAL_STATUS)),
     ])
     content = f"""{page_hd('本院账号', f'计算机学院及所属、直属、指导组织全部新媒体账号，共 {CS["total"]} 个；一账号一档案',
-                   btn('导出', 'export.html', 'default', 'download') + btn('新建账号', '../common/apply-create-basic.html', 'primary', 'plus'))}
+                   btn('导入确认', 'import-confirm.html', 'default', 'upload') + btn('导出', 'export.html', 'default', 'download') + btn('新建账号', '../common/apply-create-basic.html', 'primary', 'plus'))}
 {filters}
 <div class="card card-bd">
   <div class="toolbar">{quick}<span class="small muted">数据范围：本学院 · 更新于 2026-09-30 09:00</span></div>
@@ -397,6 +419,74 @@ def accounts():
 
 
 # ---------------------------------------------------------------- 4 本院组织
+ORG_JS = """
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-oname]');if(!b)return;
+  window._orgRow=b.closest('tr');
+  document.getElementById('f-name').value=b.getAttribute('data-oname');
+  document.getElementById('f-type').value=b.getAttribute('data-otype');
+  document.getElementById('f-parent').value=b.getAttribute('data-oparent');
+  document.getElementById('f-status').value=b.getAttribute('data-ostatus');
+  document.getElementById('f-teacher').value=b.getAttribute('data-oteacher');
+});
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-graduate]');if(!b)return;
+  var tr=b.closest('tr');var st=tr&&tr.querySelector('[data-status]');
+  if(st)st.innerHTML='<span class="tag tag-muted tag-dot">已毕业</span>';
+});
+function saveOrg(){
+  var tr=window._orgRow;if(!tr)return;
+  var name=document.getElementById('f-name').value.trim();
+  if(!name){toast('请填写组织名称');return;}
+  var nm=tr.querySelector('.bold');if(nm)nm.textContent=name;
+  var tds=tr.children;
+  tds[1].textContent=document.getElementById('f-type').value;
+  tds[2].innerHTML='<span class="sub">'+document.getElementById('f-parent').value+'</span>';
+  var status=document.getElementById('f-status').value;
+  var kind=status==='已毕业'?'tag-muted':'tag-success';
+  tds[3].innerHTML='<span data-status><span class="tag '+kind+' tag-dot">'+status+'</span></span>';
+  tds[4].textContent=document.getElementById('f-teacher').value;
+  var btn=tr.querySelector('[data-oname]');
+  if(btn){btn.setAttribute('data-oname',name);btn.setAttribute('data-otype',document.getElementById('f-type').value);
+    btn.setAttribute('data-oparent',document.getElementById('f-parent').value);btn.setAttribute('data-ostatus',status);
+    btn.setAttribute('data-oteacher',document.getElementById('f-teacher').value);}
+  document.getElementById('org-edit').classList.add('hidden');
+  toast('组织信息已保存');
+}
+function addOrg(){
+  var name=document.getElementById('n-name').value.trim();
+  if(!name){toast('请填写组织名称');return;}
+  var tb=document.querySelector('#org-table tbody');
+  var typ=document.getElementById('n-type').value,parent=document.getElementById('n-parent').value;
+  var status=document.getElementById('n-status').value,teacher=document.getElementById('n-teacher').value.trim()||'未配置';
+  var tr=document.createElement('tr');
+  tr.innerHTML='<td><div class="org-name org-d1"><span class="bold fs13">'+name+'</span></div></td><td>'+typ+'</td><td><span class="sub">'+parent+'</span></td><td><span data-status><span class="tag tag-success tag-dot">'+status+'</span></span></td><td>'+teacher+'</td><td><span class="num bold">0</span></td><td><div class="ops"><button class="link" type="button" data-toggle="#org-edit" data-oname="'+name+'" data-otype="'+typ+'" data-oparent="'+parent+'" data-ostatus="'+status+'" data-oteacher="'+teacher+'">编辑</button><a class="link" href="accounts.html">查看账号</a></div></td>';
+  tb.insertBefore(tr,tb.firstChild);
+  document.getElementById('org-new').classList.add('hidden');
+  document.getElementById('n-name').value='';
+  toast('已新增组织：'+name);
+}
+function loadImportSample(){
+  document.getElementById('import-preview').classList.remove('hidden');
+  toast('已载入模板中的 2 条组织');
+}
+function confirmImport(){
+  var box=document.getElementById('import-preview');
+  if(box.classList.contains('hidden')){toast('请先选择文件或载入模板示例');return;}
+  var tb=document.querySelector('#org-table tbody');
+  var rows=box.querySelectorAll('tbody tr');
+  rows.forEach(function(src){
+    var cells=src.children;var name=cells[0].textContent.trim();
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><div class="org-name org-d1"><span class="bold fs13">'+name+'</span></div></td><td>'+cells[1].textContent+'</td><td><span class="sub">'+cells[2].textContent+'</span></td><td><span data-status><span class="tag tag-success tag-dot">存续</span></span></td><td>'+cells[3].textContent+'</td><td><span class="num bold">0</span></td><td><span class="tag tag-success">刚导入</span></td>';
+    tb.insertBefore(tr,tb.firstChild);
+  });
+  document.getElementById('org-import').classList.add('hidden');
+  toast('已导入 '+rows.length+' 个组织');
+}
+"""
+
+
 def organizations():
     # 名称, 类别, 上级, 存续状态, 指导教师, 账号数, 层级深度, 分类, 提示
     orgs = [
@@ -426,13 +516,16 @@ def organizations():
         note = ""
         if flag == "zombie":
             note = f' <a class="tag tag-danger" href="zombie.html">{icon("alert", 12)}账号未注销 · 去核实</a>'
-        status_tag = tag(status, "muted" if status == "已毕业" else "success", True)
+        status_tag = f'<span data-status>{tag(status, "muted" if status == "已毕业" else "success", True)}</span>'
         teacher_html = tag("未配置", "warning") if teacher == "未配置" else teacher
+        edit = (f'<button class="link" type="button" data-toggle="#org-edit" data-oname="{esc(name)}" data-otype="{esc(typ)}" '
+                f'data-oparent="{esc(parent)}" data-ostatus="{esc(status)}" data-oteacher="{esc(teacher)}">编辑</button>')
+        view = '<a class="link" href="accounts.html">查看账号</a>'
         if status == "已毕业":
-            op = ops(("编辑", None, f"已打开“{name}”编辑表单"), ("查看账号", "accounts.html"))
+            op = f'<div class="ops">{edit}{view}</div>'
         else:
-            op = ops(("编辑", None, f"已打开“{name}”编辑表单"), ("标记毕业", None, f"已将“{name}”标记为已毕业，名下账号将进入僵尸号核实"),
-                     ("查看账号", "accounts.html"))
+            grad = (f'<button class="link" type="button" data-graduate data-toast="已将“{name}”标记为已毕业，名下账号将进入僵尸号核实">标记毕业</button>')
+            op = f'<div class="ops">{edit}{grad}{view}</div>'
         rows.append(dict(cells=[f'<div class="org-name{d}">{icon(ic_)}<span class="bold fs13">{name}</span>{note}</div>',
                                 typ, f'<span class="sub">{parent}</span>', status_tag, teacher_html,
                                 f'<span class="num bold">{n}</span>', op],
@@ -440,7 +533,8 @@ def organizations():
     tabs = seg([("全部", "all"), ("院级组织", "college"), ("学生社团", "club"), ("班级团支部", "branch"), ("已毕业", "grad")],
                target="#org-table")
     content = f"""{page_hd('本院组织', '学院团委—团学组织树；班级团支部毕业后标记“已毕业”，名下未注销账号自动进入僵尸号核实',
-                   btn('批量导入组织', None, 'default', 'upload', toast='已打开组织批量导入（Excel 模板）') + btn('新增组织', None, 'primary', 'plus', toast='已打开新增组织表单：组织名称、类别、上级组织、存续状态'))}
+                   '<button class="btn btn-default" type="button" data-toggle="#org-import">' + icon('upload') + '批量导入组织</button>'
+                   + '<button class="btn btn-primary" type="button" data-toggle="#org-new">' + icon('plus') + '新增组织</button>')}
 {alert('<b>2021级软件工程1班团支部</b> 已于 2025 年 6 月毕业，但名下账号“2021级软件工程1班团支部”（微信公众号）仍未注销，已停更 412 天，辅导员已核实建议注销。<a class="link" href="zombie.html">前往僵尸号核实</a>', 'warning')}
 <div class="grid g4 mt16 mb16">
   {stat('组织总数', 28, '院级 6 · 社团 9 · 团支部 13', 'hierarchy')}
@@ -453,7 +547,48 @@ def organizations():
   {table(['组织名称', '组织类别', '上级组织', '存续状态', '指导教师', '账号数', '操作'], rows, id_='org-table')}
   {pager(28, 2)}
 </div>"""
-    page("organizations.html", "organizations", "本院组织", cr(("账号管理", None), ("本院组织", None)), content)
+    types = ["院级学生组织", "社团组织", "班级团支部", "学院团委"]
+    type_opts = "".join(f"<option>{t}</option>" for t in types)
+    edit_body = f"""<div class="form-grid">
+  {field('组织名称', '<input class="input" id="f-name" required>', True)}
+  {field('组织类别', f'<select class="select" id="f-type">{type_opts}</select>', True)}
+  {field('上级组织', '<input class="input" id="f-parent">')}
+  {field('存续状态', '<select class="select" id="f-status"><option>存续</option><option>已毕业</option><option>已撤销</option></select>', True)}
+  {field('指导教师', '<input class="input" id="f-teacher">')}
+</div>"""
+    new_body = f"""<div class="form-grid">
+  {field('组织名称', '<input class="input" id="n-name" placeholder="请输入组织全称" required>', True)}
+  {field('组织类别', f'<select class="select" id="n-type">{type_opts}</select>', True)}
+  {field('上级组织', '<input class="input" id="n-parent" value="计算机学院团委">')}
+  {field('存续状态', '<select class="select" id="n-status"><option>存续</option><option>已毕业</option><option>已撤销</option></select>', True)}
+  {field('指导教师', '<input class="input" id="n-teacher" placeholder="请输入指导教师姓名">')}
+</div>"""
+    sample = table(["组织名称", "组织类别", "上级组织", "指导教师"], [
+        ["2026级人工智能1班团支部", "班级团支部", "计算机学院团委", "林雪"],
+        ["计院机器人协会", "社团组织", "计算机学院团委（指导）", "王晓琳"],
+    ])
+    import_body = f"""<div class="small sub mb12">按模板填写组织名称、组织类别、上级组织、指导教师后上传。也可先载入模板中的 2 条示例，确认后写入本院组织列表。</div>
+<label class="upload">{icon('upload', 22)}<div class="mt4">选择 Excel 文件</div><div class="small muted">支持 .xlsx</div><input type="file" accept=".xlsx,.xls,.csv" onchange="loadImportSample()"></label>
+<div class="mt12"><button type="button" class="btn btn-light btn-sm" onclick="loadImportSample()">载入模板示例</button></div>
+<div id="import-preview" class="hidden mt12"><div class="field-label mb8">待导入</div>{sample}</div>"""
+    content += (
+        f'<div class="mask hidden" id="org-edit"><div class="modal"><div class="modal-hd">编辑组织'
+        f'<button class="x-btn" type="button" data-toggle="#org-edit" aria-label="关闭">{icon("x")}</button></div>'
+        f'<div class="modal-bd">{edit_body}</div><div class="modal-ft">'
+        f'<button class="btn btn-default" type="button" data-toggle="#org-edit">取消</button>'
+        f'<button class="btn btn-primary" type="button" onclick="saveOrg()">保存</button></div></div></div>'
+        f'<div class="mask hidden" id="org-new"><div class="modal"><div class="modal-hd">新增组织'
+        f'<button class="x-btn" type="button" data-toggle="#org-new" aria-label="关闭">{icon("x")}</button></div>'
+        f'<div class="modal-bd">{new_body}</div><div class="modal-ft">'
+        f'<button class="btn btn-default" type="button" data-toggle="#org-new">取消</button>'
+        f'<button class="btn btn-primary" type="button" onclick="addOrg()">确认新增</button></div></div></div>'
+        f'<div class="mask hidden" id="org-import"><div class="modal lg"><div class="modal-hd">批量导入组织'
+        f'<button class="x-btn" type="button" data-toggle="#org-import" aria-label="关闭">{icon("x")}</button></div>'
+        f'<div class="modal-bd">{import_body}</div><div class="modal-ft">'
+        f'<button class="btn btn-default" type="button" data-toggle="#org-import">取消</button>'
+        f'<button class="btn btn-primary" type="button" onclick="confirmImport()">确认导入</button></div></div></div>'
+    )
+    page("organizations.html", "organizations", "本院组织", cr(("账号管理", None), ("本院组织", None)), content, ORG_JS)
 
 
 # ---------------------------------------------------------------- 5 学院审核列表
@@ -470,19 +605,24 @@ def approval_detail():
   <div class="quote">“{t_cmt}”</div>
   <div class="small muted mt8">首次审核（2026-09-25）曾退回修改：平台介绍不足 100 字；学生已补充至 326 字后重新提交。</div>
 </div>"""
-    belong = kv([("所属学院", "计算机学院"), ("团学组织", a["org"]), ("组织类别", a["org_type"]), ("平台层级", a["level"])], 2)
-    platform = kv([("平台类型", a["platform"]), ("账号名称", a["name"]), ("平台 ID", a["pid"]), ("认证情况", "已认证 · 订阅号（组织认证）"),
-                   ("开通时间", a["opened"]), ("认证主体", "中南大学")], 2)
-    running = kv([("更新频率", "每周更新（≥1次/周）"), ("主要栏目", "院团动态 / 青春榜样 / 学业帮"), ("运营团队", "新媒体中心 12 人"),
-                  ("信息审核人", "王晓琳")], 2)
-    staff = kv([("制度责任人", "张卫东（党委副书记）"), ("管理教师", "王晓琳（T20180427）"), ("学生负责人", "李明（8209230117）"),
-                ("学生管理员", "陈一帆、刘思琪")], 2)
+    belong = kv([("所属学院", "计算机学院"), ("所属团学组织", a["org"]), ("组织类别", a["org_type"]), ("平台管理层级", a["level"])], 2)
+    platform = kv([("平台类型", a["platform"]), ("账号名称", a["name"]), ("曾用名", "无"), ("平台ID", a["pid"]),
+                   ("是否认证", "否"), ("粉丝数", "0"), ("开通时间", a["opened"]), ( "运营团队规模（单位：人）", "6"),
+                   ("主页链接", "mp.weixin.qq.com/csu_cs_youth"), ("平台头像", "已上传"), ("二维码", "未上传（非必填）"),
+                   ("信息发布范围", "学院团学活动相关信息。")], 2)
+    running = kv([("最近一次公开内容发布时间", "2026-09-22"), ("更新频率", "每周更新（≥1次/周）"), ("运行状态", "正常运行"),
+                  ("异常情况", "无"), ("备注", "无")], 2)
+    staff = kv([("当前管理教师", "王晓琳"), ("工号", "T20180427"), ("职务", "宣传工作辅导员"), ("手机号", PEOPLE["王晓琳"]["phone"]),
+                ("是否为专职教师", "是"), ("具体负责人", "李明"), ("学号", "8209230117"), ("手机号", PEOPLE["李明"]["phone"]),
+                ("管理员", "陈可欣（8209230221）、刘子涵（8209240133）", True),
+                ("一审负责人", "王晓琳 · T20180427 · 宣传工作辅导员 · " + PEOPLE["王晓琳"]["phone"]),
+                ("二审负责人", "周建华 · " + PEOPLE["周建华"]["no"] + " · " + PEOPLE["周建华"]["job"] + " · " + PEOPLE["周建华"]["phone"]),
+                ("三审负责人", "陈静 · " + PEOPLE["陈静"]["no"] + " · " + PEOPLE["陈静"]["job"] + " · " + PEOPLE["陈静"]["phone"])], 2)
     intro = ("“中南计算机青年”是计算机学院团委新媒体中心主办的官方微信公众号，面向本院全体团员青年及校友。平台定位为学院共青团思想引领、"
              "青年服务与文化传播的主阵地，设置“院团动态”“青春榜样”“学业帮”三个固定栏目：院团动态发布团学活动通知与活动报道；"
              "青春榜样展示优秀团员、竞赛获奖与志愿服务典型；学业帮提供课程资源、竞赛信息与升学就业经验分享。信息发布范围限于学院团学工作相关内容，"
              "不发布商业推广信息。所有推文执行“学生编辑初审、新媒体中心主任复审、指导教师终审”的三审制度，涉及重大主题与敏感信息须报学院团委书记审定。")
-    mechanisms = "".join(tag(icon("check", 12) + m, "success") for m in
-                         ["信息发布审查机制", "账号安全管理机制", "舆情应急处置机制", "值班巡查机制"])
+    mechanisms = mechanism_blocks()
     files = "".join(f'<span class="file-chip">{icon("file")}{x}</span>' for x in
                     ["新媒体平台备案申请表（签字版）.pdf", "信息发布三审制度.pdf", "账号后台认证截图.png", "运营团队名单.xlsx"])
     tl = flow_items("new", 4) + [("now", "学院团委审核", "当前节点 · 周建华", ""), ("wait", "校团委审核", "待流转 · 陈静", "")]
@@ -496,7 +636,7 @@ def approval_detail():
 </div>
 {card('平台介绍', f'<p class="fs13 sub" style="line-height:1.9">{intro}</p>', tag('326 字 · 已按退回意见补充', 'success'), cls='mt16')}
 <div class="grid g2 mt16">
-  {card('四项机制', f'<div class="flex gap8 wrap">{mechanisms}</div><div class="small muted mt12">四项机制均已建立并上传制度文件</div>')}
+  {card('平台信息确认', mechanisms)}
   {card('附件材料', f'<div class="upload-list" style="margin-top:0">{files}</div>')}
 </div>
 <div class="mt16">{alert('重复检查：系统发现 1 个名称相似账号“中南大学计算机学院青年”（已注销，2023-06），申请人已确认非重复账号。', 'info')}</div>"""
@@ -565,6 +705,63 @@ def approval_change():
     page("approval-change.html", "approvals", "名称变更 · 学院审核", cr(("学院审核", "approvals.html"), ("名称变更 · " + a["name"], None)), content)
 
 
+# ---------------------------------------------------------------- 7b 教师代办交接 · 学院审核（剧本八）
+def approval_proxy():
+    a, f = ACCOUNTS["proxy"], FLOWS["proxy"]
+    zl, sy = PEOPLE["赵磊"], PEOPLE["孙悦"]
+    head = acct_head(a, st("教师代办") + tag("负责人交接", "primary") + st(a["filing"]),
+                     f'{a["platform"]} · 平台ID {a["pid"]} · {a["org"]} · 申请编号 {f["no"]}')
+    summary = kv([("申请编号", f'<span class="num">{f["no"]}</span>'), ("业务类型", "负责人交接"),
+                  ("发起方式", st("教师代办")), ("代办人", "王晓琳 · 宣传工作辅导员"),
+                  ("提交时间", f["steps"][0][0]), ("生效方式", "学院审核通过后立即生效")], 3)
+    reason = f["steps"][0][3]
+    opinion_cmt = f["steps"][1][3]
+
+    def who_box(title, name, meta, badge):
+        return (f'<div class="id-card"><div class="flex between"><span class="small muted bold">{title}</span>{badge}</div>'
+                f'<div class="flex gap12 mt8">{avatar(name)}<div><div class="bold">{name}</div><div class="small sub">{meta}</div></div></div></div>')
+
+    pair = (f'<div class="grid g2">{who_box("原负责人", "赵磊", zl["grade"] + " · " + zl["job"] + " · " + zl["no"], tag("已毕业", "muted"))}'
+            f'{who_box("新负责人", "孙悦", sy["grade"] + " · " + sy["job"] + " · " + sy["no"], tag("接任", "success"))}</div>')
+    diff = diff_table([("学生负责人", "赵磊", "孙悦"), ("学号", zl["no"], sy["no"]), ("班级", zl["grade"], sy["grade"]),
+                       ("手机号", zl["phone"], sy["phone"]), ("任期", "2023-09 ~ 2025-06", "审核通过后起"),
+                       ("管理教师", a["teacher"], a["teacher"]), ("账号名称", a["name"], a["name"])])
+    teacher_op = f"""<div class="opinion warn">
+  <div class="flex gap12">{avatar('王晓琳')}<div class="grow"><div class="bold">代办说明 · 王晓琳 {tag('教师代办', 'primary')}</div>
+  <div class="small muted">宣传工作辅导员 · {f["steps"][0][0]}</div></div></div>
+  <div class="quote">“{reason}”</div>
+</div>"""
+    files = "".join(f'<span class="file-chip">{icon("file")}{x}</span>' for x in ["赵磊学籍状态截图（已毕业）.png", "ACM协会换届决议.pdf"])
+    tl = flow_items("proxy", 1) + [("now", "学院管理员审核", "当前节点 · 周建华", ""), ("wait", "交接生效", "孙悦成为学生负责人", "")]
+    chip_js = "var t=document.getElementById('px-cmt');if(t)t.value=this.textContent.trim()"
+    chips = "".join(f'<button type="button" class="chip" onclick="{chip_js}">{x}</button>'
+                    for x in [opinion_cmt, "原负责人已毕业，同意代办交接。", "请补充换届决议"])
+    left = f"""{card('', head + '<div class="divider"></div>' + summary)}
+<div class="mt16">{alert('<b>发起方式：教师代办。</b>学生负责人赵磊已毕业无法本人办理，由指导教师王晓琳代为发起。学院审核通过后交接即时生效，原负责人任期记入历任记录，操作日志保留“教师代办”。', 'info')}</div>
+{card('交接双方', pair, cls='mt16')}
+{card('变更前后', diff, tag('负责人变更', 'warning'), cls='mt16')}
+<div class="mt16">{teacher_op}</div>
+{card('佐证材料', f'<div class="upload-list" style="margin-top:0">{files}</div>', cls='mt16')}"""
+    right = f"""<div class="sticky col gap16">
+  {card('审核流程', timeline(tl), tag(f['no'], 'muted'))}
+  {card('学院审核意见', field('审核意见', textarea('请输入学院审核意见', opinion_cmt, maxlen=200, rows=3, attrs='id="px-cmt"'), req=True)
+        + f'<div class="chips mt12">{chips}</div>')}
+</div>"""
+    content = f"""{page_hd('教师代办交接 · 学院审核', '剧本八：计院ACM协会负责人赵磊（已毕业）→ 孙悦，教师代办，学院审核通过后即时生效',
+                   back_btn('approvals.html') + scene_next('查看代办日志', '../school/log-detail.html'))}
+<div class="split" data-form>
+  <div>{left}</div>
+  {right}
+</div>
+<div class="actbar"><span class="grow">{icon('info', 14)} 通过后孙悦立即成为学生负责人；退回则回到代办教师补充材料</span>
+  {btn('驳回', '../common/modal-reject.html', 'danger', 'x-circle')}
+  {btn('退回教师', '../common/modal-return.html', 'warning', 'undo')}
+  {go('通过并生效', '../common/archive-logs.html', 'primary', 'check', toast='已通过，孙悦接任负责人，交接即时生效')}
+</div>"""
+    page("approval-proxy.html", "approvals", "教师代办交接 · 学院审核",
+         cr(("学院审核", "approvals.html"), ("代办交接 · " + a["name"], None)), content)
+
+
 # ---------------------------------------------------------------- 8 本院年审进度
 def annual_progress():
     days_left = (date(2026, 11, 5) - TODAY).days
@@ -582,7 +779,7 @@ def annual_progress():
         nd = t["nodes"]
         cells = [person(t["name"]), f'<span class="small sub">{t["job"]}</span>', t["total"]]
         cells += [f'<span class="num {"muted" if x == 0 else ""}">{x}</span>' for x in nd]
-        cells += [pct_cell(nd[4], t["total"]), ops(("查看", "teacher-detail.html" if t["name"] == "王晓琳" else "teachers.html"),
+        cells += [pct_cell(nd[4], t["total"]), ops(("查看", teacher_href(t["name"])),
                                                   ("催办", None, f'已向{t["name"]}老师发送年审催办提醒'))]
         t_rows.append(cells)
     un = UNASSIGNED_NODES
@@ -627,14 +824,23 @@ def annual_review():
     rows = []
     for name, p, org, t, chg, tr, cs, cat in items:
         tk = teacher_kind.get(tr, "success")
-        if cat in ("abn", "cancel"):
-            op = ops(("审核", "annual-review-detail.html"), ("档案", "../common/archive-audit.html"))
-        elif cs == "已确认":
-            op = ops(("查看", "annual-review-detail.html"), ("撤回确认", None, f"已撤回“{name}”的学院确认"))
+        h = annual_open(name, cs)
+        if name == ACCOUNTS["rectify"]["name"]:
+            arch = "../common/archive-rectify.html"
+        elif name == ACCOUNTS["zombie"]["name"]:
+            arch = "../common/archive-cancel.html"
+        elif name == ACCOUNTS["rename"]["name"]:
+            arch = "../common/archive-changes.html"
         else:
-            op = ops(("审核", "annual-review-detail.html"), ("确认", None, f"已确认“{name}”年审通过"))
+            arch = "../common/archive-audit.html"
+        if cat in ("abn", "cancel") or name == ACCOUNTS["rename"]["name"]:
+            op = ops(("审核", h), ("档案", arch))
+        elif cs == "已确认":
+            op = ops(("查看", h), ("撤回确认", None, f"已撤回“{name}”的学院确认"))
+        else:
+            op = ops(("审核", h), ("确认", None, f"已确认“{name}”年审通过"))
         rows.append(dict(cells=[acct(name, p, org), teacher_cell(t), st(chg), tag(tr, tk), st(cs if cs != "已确认" else "已确认"), op],
-                         href="annual-review-detail.html", cat=cat))
+                         href=h, cat=cat))
     cnt = {}
     for x in items:
         cnt[x[7]] = cnt.get(x[7], 0) + 1
@@ -686,7 +892,7 @@ def annual_review_detail():
 <div class="mt16">{teacher_op}</div>
 <div class="grid g2 mt16">
   {card('本年度运营数据', kv([('本年度发布', '86 篇'), ('月均发布', '9.6 篇'), ('粉丝增长', '+2,318'), ('最高阅读', '1.2 万')], 2))}
-  {card('四项机制', '<div class="flex gap8 wrap">' + ''.join(tag(icon('check', 12) + m, 'success') for m in ['信息发布审查', '账号安全管理', '舆情应急处置', '值班巡查']) + '</div>')}
+  {card('平台信息确认', mechanism_blocks())}
 </div>"""
     right = f"""<div class="sticky col gap16">
   {card('账号主页截图', f'<div class="shot"><img src="{PHOTOS["screenshot"]}" alt="中南计院团委公众号主页截图"></div><div class="small muted mt8">学生上传于 2026-09-18 · 截图显示最近发布 2026-09-17</div>')}
@@ -787,7 +993,7 @@ RULE_EXAMPLES = "2024级团支部 → 2024级辅导员（陈思远）；学生�
 def assign_content():
     cards = []
     for t in TEACHERS:
-        href = "teacher-detail.html" if t["name"] == "王晓琳" else "teachers.html"
+        href = teacher_href(t["name"])
         done_p = round(t["nodes"][4] / t["total"] * 100)
         av = avatar(t["name"]) if t["name"] in AVATARS else f'<span class="ini">{t["name"][0]}</span>'
         cards.append(f'<a class="t-card" href="{href}">{av}'
@@ -797,9 +1003,11 @@ def assign_content():
                  f'<div class="small muted">新建团支部、新成立社团尚未指定负责教师</div></div>{icon("chevron-right")}</a>')
     rows = []
     for name, p, org, typ, t, cat in ASSIGN_ROWS:
-        rows.append(dict(cells=[acct(name, p, org), typ, teacher_cell(t),
+        op = (f'<div class="ops"><button class="link" type="button" onclick="assignRow(this)">分配</button>'
+              f'<a class="link" href="../common/archive-staff.html">档案</a></div>')
+        rows.append(dict(cells=[acct(name, p, org), typ, f'<span data-col="teacher">{teacher_cell(t)}</span>',
                                 f'<div style="width:150px">{sel(TEACHER_NAMES, None if t == "未分配" else t, ph="选择教师")}</div>',
-                                ops(("分配", None, f"已更新“{name}”的负责教师，并通知新旧教师"), ("档案", "../common/archive-staff.html"))],
+                                op],
                          cat=cat))
     quick = chips([("全部", "all"), ("未分配 2", "unassigned"), ("院级组织", "l2"), ("学生社团", "club"), ("班级团支部", "l3")], target="#as-table")
     return f"""{page_hd('任务分派', '将本院账号分配给具体教师负责审核；支持单个调整与按规则批量分配，分配变更全程留痕',
@@ -815,8 +1023,31 @@ def assign_content():
 </div>"""
 
 
+ASSIGN_JS = r"""
+function assignRow(btn){
+  var tr=btn.closest('tr');
+  var s=tr&&tr.querySelector('select');
+  var name=s?s.value:'';
+  if(!name){toast('请先在“变更为”中选择教师');return;}
+  var cell=tr.querySelector('[data-col="teacher"]');
+  if(cell)cell.textContent=name;
+  toast('已更新负责教师为 '+name+'，并通知新旧教师');
+  btn.textContent='已分配';
+}
+function addRule(){
+  var tpl=document.querySelector('#rule-tpl .rule-row');
+  var box=document.getElementById('rule-list');
+  if(!tpl||!box)return;
+  var row=tpl.cloneNode(true);
+  row.querySelectorAll('select').forEach(function(s){s.selectedIndex=0;});
+  box.appendChild(row);
+  toast('已添加一条规则，请选择条件与教师');
+}
+"""
+
+
 def assign():
-    page("assign.html", "assign", "任务分派", cr(("任务与人员", None), ("任务分派", None)), assign_content())
+    page("assign.html", "assign", "任务分派", cr(("任务与人员", None), ("任务分派", None)), assign_content(), ASSIGN_JS)
 
 
 def assign_batch():
@@ -826,27 +1057,37 @@ def assign_batch():
         f'<button type="button" class="choice{" on" if on else ""}" data-choice=""><span class="ck"></span>'
         f'<div class="grow"><div class="bold fs13">{t}</div><div class="small muted">{d}</div></div></button>' for t, d, on in types)
     rules = [("按年级", "2024级团支部（3）", "陈思远"), ("按组织类别", "学生社团（8）", "孙浩"), ("按学生组织", "青年志愿者协会（1）", "赵敏")]
-    rule_html = "".join(
-        f'<div class="rule-row">{sel(["按年级", "按组织类别", "按学生组织", "指定账号"], k, ph="")}'
-        f'{sel(["2024级团支部（3）", "2025级团支部（4）", "学生社团（8）", "青年志愿者协会（1）", "院级学生组织（5）"], c, ph="选择条件")}'
-        f'<span class="muted">{icon("arrow-right")}</span>{sel(TEACHER_NAMES, t, ph="选择教师", req=True)}'
-        f'<button type="button" class="x-btn" data-remove=".rule-row" aria-label="删除规则">{icon("trash")}</button></div>'
-        for k, c, t in rules)
+    rule_opts_k = ["按年级", "按组织类别", "按学生组织", "指定账号"]
+    rule_opts_c = ["2024级团支部（3）", "2025级团支部（4）", "学生社团（8）", "青年志愿者协会（1）", "院级学生组织（5）"]
+
+    def rule_row(k=None, c=None, t=None, req=False):
+        return (f'<div class="rule-row">{sel(rule_opts_k, k, ph="规则类型")}'
+                f'{sel(rule_opts_c, c, ph="选择条件")}'
+                f'<span class="muted">{icon("arrow-right")}</span>{sel(TEACHER_NAMES, t, ph="选择教师", req=req)}'
+                f'<button type="button" class="x-btn" data-remove=".rule-row" aria-label="删除规则">{icon("trash")}</button></div>')
+
+    rule_html = "".join(rule_row(k, c, t, True) for k, c, t in rules)
+    preview = table(["账号范围", "数量", "将分配给"], [
+        ["2024级团支部", "3", "陈思远"], ["学生社团", "8", "孙浩"], ["青年志愿者协会", "1", "赵敏"],
+    ], cls="tbl-sm")
     body = f"""<div data-form>
   <div class="form-section">规则类型</div>
   <div class="choices g4 grid" data-single="">{choice_html}</div>
   <div class="form-section mt20">分配规则 <span class="small muted" style="font-weight:400">条件 → 负责教师，按顺序匹配</span></div>
-  <div class="col gap8">{rule_html}</div>
-  <div class="mt12">{btn('添加规则', None, 'light', 'plus', 'sm', toast='已添加一条空白规则，请选择条件与教师')}</div>
+  <div id="rule-tpl" class="hidden">{rule_row(req=True)}</div>
+  <div id="rule-list" class="col gap8">{rule_html}</div>
+  <div class="mt12"><button class="btn btn-light btn-sm" type="button" onclick="addRule()">{icon('plus')}添加规则</button></div>
+  <div id="rule-preview" class="hidden mt12"><div class="field-label mb8">受影响账号（12）</div>{preview}</div>
   <div class="divider"></div>
   <div class="flex between"><div class="flex gap12"><span class="switch on" role="switch" aria-label="覆盖已分配账号"></span><span class="fs13">覆盖已分配账号的负责教师</span></div>
   <div class="flex gap8"><span class="switch on" role="switch" aria-label="新建账号自动匹配"></span><span class="fs13">后续新建账号自动匹配规则</span></div></div>
   <div class="mt16">{alert('预览：<b>将影响 12 个账号</b> —— 2024级团支部 3 个 → 陈思远；学生社团 8 个 → 孙浩；青年志愿者协会 1 个 → 赵敏。分配完成后将通知相关教师，原负责教师的在办事项保留至办结。', 'warning')}</div>
 </div>"""
-    footer = (btn("取消", "assign.html", "default") + btn("预览明细", None, "ghost", "eye", toast="已展开 12 个受影响账号明细")
+    footer = (btn("取消", "assign.html", "default")
+              + btn("预览明细", None, "ghost", "eye", toast="已展开 12 个受影响账号", attrs='data-toggle="#rule-preview"')
               + submit_btn("确认分配", "assign.html", "primary", "check", toast="已按规则完成分配，共 12 个账号"))
     content = f'<div class="backdrop">{assign_content()}</div>' + modal("按规则批量分配", body, footer, "lg", close_href="assign.html")
-    page("assign-batch.html", "assign", "批量分配规则", cr(("任务分派", "assign.html"), ("批量分配规则", None)), content)
+    page("assign-batch.html", "assign", "批量分配规则", cr(("任务分派", "assign.html"), ("批量分配规则", None)), content, ASSIGN_JS)
 
 
 # ---------------------------------------------------------------- 13 教师工作量
@@ -854,7 +1095,7 @@ def teachers():
     rows = []
     for t in TEACHERS:
         nd = t["nodes"]
-        href = "teacher-detail.html"
+        href = teacher_href(t["name"])
         rows.append(dict(cells=[
             person(t["name"], ""), f'<div class="fs13">{t["job"]}</div><div class="small muted">{t["scope"]}</div>',
             f'<b class="num">{t["total"]}</b>',
@@ -881,6 +1122,115 @@ def teachers():
     page("teachers.html", "teachers", "教师工作量", cr(("任务与人员", None), ("教师工作量", None)), content)
 
 
+def xfer_ops(name):
+    return (f'<div class="ops"><a class="link" href="../common/archive-basic.html">档案</a>'
+            f'<button class="link" type="button" data-toggle="#xfer-modal" data-xfer="{esc(name)}">更换负责教师</button></div>')
+
+
+def other_teacher_panels():
+    parts = []
+    for t in TEACHERS:
+        if t["name"] == "王晓琳":
+            continue
+        owned = [a for a in college_accounts() if a["teacher"] == t["name"]]
+        if owned:
+            body_rows = [dict(cells=[acct(a["name"], a["platform"], a["org"]), tag(a["level"], "muted"), a["student"],
+                                     st2(a["run"]), st2(a["annual"]), xfer_ops(a["name"])]) for a in owned]
+            table_html = table(["账号", "平台层级", "学生负责人", "运行状态", "年审状态", "操作"], body_rows, check=True)
+        else:
+            table_html = alert(f'{t["name"]}老师负责范围内的账号尚未在本院清单中单列。可在任务分派中查看或调整。', "info") + '<div class="mt12">' + btn("去任务分派", "assign.html", "light", "route", "sm") + "</div>"
+        av = avatar(t["name"], "lg") if t["name"] in AVATARS else f'<span class="ini lg">{t["name"][0]}</span>'
+        nd = t["nodes"]
+        profile = f"""<div class="flex gap16">{av}<div class="grow">
+  <div class="flex gap8"><span class="fs18 bold">{t["name"]}</span>{tag("业务教师", "primary")}</div>
+  <div class="small muted mt4">{t["job"]}</div>
+  <div class="small sub mt4">{t["scope"]}</div></div>
+  <div class="flex gap8">{btn("调整授权", "users.html", "default", "key")}<button class="btn btn-ghost" type="button" data-toggle="#xfer-modal" data-xfer-batch="1">{icon("swap")}批量移交</button></div></div>"""
+        kpis = "".join([
+            stat("负责账号", t["total"], "授权范围内", "database"),
+            stat("待审核", nd[1], "年审节点", "inbox", "orange"),
+            stat("已完成年审", nd[4], "完成率 %d%%" % round(nd[4] / t["total"] * 100), "check-circle", "green"),
+            stat("疑似僵尸号", t["zombie"], "待核实或已处置", "ghost", "red", href="zombie.html"),
+            stat("待整改", t["rectify"], "整改任务", "wrench", "orange", href="rectify.html"),
+        ])
+        listed = len(owned)
+        head_n = ("清单中的账号（%d / %d）" % (listed, t["total"])) if listed else ("负责账号（%d）" % t["total"])
+        parts.append(f"""<div data-teacher-panel="{esc(t["name"])}" class="hidden">
+{page_hd("教师负责账号", t["name"] + "老师的授权范围与负责账号；可更换负责教师或批量移交", back_btn("teachers.html") + btn("任务分派", "assign.html", "primary", "route"))}
+{card("", profile)}
+<div class="grid g5 mt16">{kpis}</div>
+<div class="card card-bd mt16">
+  <div class="toolbar"><span class="card-title">{head_n}</span>
+  <div class="flex gap8"><span class="small sub">已选 <b class="c-primary" data-checked-count="#td-table">0</b> 个</span><button class="btn btn-light btn-sm" type="button" data-toggle="#xfer-modal" data-xfer-batch="1">{icon("swap")}批量移交</button></div></div>
+  {table_html}
+</div></div>""")
+    return "".join(parts)
+
+
+def xfer_modal():
+    opts = "".join(f"<option>{n}</option>" for n in TEACHER_NAMES)
+    body = f"""<div class="bold mb8" id="xfer-title">更换负责教师</div>
+<div class="small sub mb12">选择接收教师后，账号及未办结事项一并移交，操作记入日志。</div>
+{field("接收教师", f'<select class="select" id="xfer-teacher"><option value="">请选择接收教师</option>{opts}</select>', True)}"""
+    return (f'<div class="mask hidden" id="xfer-modal"><div class="modal"><div class="modal-hd">移交负责教师'
+            f'<button class="x-btn" type="button" data-toggle="#xfer-modal" aria-label="关闭">{icon("x")}</button></div>'
+            f'<div class="modal-bd">{body}</div><div class="modal-ft">'
+            f'<button class="btn btn-default" type="button" data-toggle="#xfer-modal">取消</button>'
+            f'<button class="btn btn-primary" type="button" onclick="saveXfer()">确认移交</button></div></div></div>')
+
+
+TEACHER_JS = r"""
+(function(){
+  var q=location.search.match(/[?&]t=([^&]+)/);
+  var name=q?decodeURIComponent(q[1]):'王晓琳';
+  var panels=document.querySelectorAll('[data-teacher-panel]');
+  var hit=false;
+  panels.forEach(function(p){
+    var on=p.getAttribute('data-teacher-panel')===name;
+    if(on)hit=true;
+    p.classList.toggle('hidden',!on);
+    var tb=p.querySelector('table');
+    if(tb){if(on)tb.id='td-table';else tb.removeAttribute('id');}
+  });
+  if(!hit&&panels[0]){panels[0].classList.remove('hidden');var tb0=panels[0].querySelector('table');if(tb0)tb0.id='td-table';name='王晓琳';}
+  var tab=document.querySelector('.zx-tab.on');
+  if(tab&&tab.firstChild&&tab.firstChild.nodeType===3)tab.firstChild.textContent=name;
+})();
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-xfer]');
+  if(b){window._xferRow=b.closest('tr');window._xferBatch=false;
+    var title=document.getElementById('xfer-title');if(title)title.textContent='更换负责教师 · '+b.getAttribute('data-xfer');}
+  var batch=e.target.closest('[data-xfer-batch]');
+  if(batch){window._xferRow=null;window._xferBatch=true;
+    var title2=document.getElementById('xfer-title');if(title2)title2.textContent='批量移交负责教师';}
+});
+function saveXfer(){
+  var sel=document.getElementById('xfer-teacher');
+  var who=sel?sel.value:'';
+  if(!who){toast('请选择接收教师');return;}
+  function mark(tr){
+    if(!tr)return;
+    var cb=tr.querySelector('input[type=checkbox]');
+    if(cb){cb.checked=false;cb.disabled=true;}
+    var last=tr.lastElementChild;
+    if(last)last.innerHTML='<span class="tag tag-success">已移交 '+who+'</span>';
+  }
+  if(window._xferBatch){
+    var tb=document.getElementById('td-table');
+    var rows=tb?[].slice.call(tb.querySelectorAll('tbody tr')).filter(function(tr){var c=tr.querySelector('input[type=checkbox]');return c&&c.checked;}):[];
+    if(!rows.length){toast('请先勾选要移交的账号');return;}
+    rows.forEach(mark);
+    toast('已将 '+rows.length+' 个账号移交给 '+who+'，待办同步转移');
+  }else if(window._xferRow){
+    mark(window._xferRow);
+    toast('已移交给 '+who+'，待办同步转移');
+  }else{toast('请从账号行进入移交');return;}
+  document.querySelectorAll('[data-checked-count]').forEach(function(n){n.textContent='0';});
+  document.getElementById('xfer-modal').classList.add('hidden');
+}
+"""
+
+
 def teacher_detail():
     p = PEOPLE["王晓琳"]
     scopes = [("宣传工作辅导员", "学院团委直属组织：团委、新媒体中心、学生会、研究生会、科协、青年志愿者协会", 6),
@@ -892,7 +1242,7 @@ def teacher_detail():
   <div class="flex gap8"><span class="fs18 bold">王晓琳</span>{tag('业务教师', 'primary')}{tag('一人三身份', 'warning')}</div>
   <div class="small muted mt4">工号 {p['no']} · {p['org']} · {p['phone']}</div>
   <div class="small sub mt4">{p['job']}</div></div>
-  <div class="flex gap8">{btn('调整授权', 'users.html', 'default', 'key')}{btn('批量移交', None, 'ghost', 'swap', toast='已选择移交对象：请勾选账号后选择接收教师')}</div></div>
+  <div class="flex gap8">{btn('调整授权', 'users.html', 'default', 'key')}<button class="btn btn-ghost" type="button" data-toggle="#xfer-modal" data-xfer-batch="1">{icon('swap')}批量移交</button></div></div>
 <div class="grid g3 mt16">{scope_html}</div>"""
     keys = ["annual", "new", "rename", "idchange", "rectify", "handover", "proxy", "photo", "zombie"]
     source = {"annual": "宣传工作辅导员", "new": "宣传工作辅导员", "rename": "宣传工作辅导员", "idchange": "宣传工作辅导员",
@@ -901,12 +1251,12 @@ def teacher_detail():
     for k in keys:
         a = ACCOUNTS[k]
         rows.append([acct(a["name"], a["platform"], a["org"]), tag(source[k], "muted"), a["student"], st2(a["run"]), st2(a["annual"]),
-                     ops(("档案", "../common/archive-basic.html"), ("更换负责教师", None, f'已将“{a["name"]}”移交给所选教师，待办同步转移'))])
+                     xfer_ops(a["name"])])
     for a in EXTRA_ACCTS:
         if a["teacher"] == "王晓琳":
             src = "2021级辅导员" if a["name"].startswith("2021") else "宣传工作辅导员"
             rows.append([acct(a["name"], a["platform"], a["org"]), tag(src, "muted"), a["student"], st2(a["run"]), st2(a["annual"]),
-                         ops(("档案", "../common/archive-basic.html"), ("更换负责教师", None, f'已将“{a["name"]}”移交给所选教师，待办同步转移'))])
+                         xfer_ops(a["name"])])
     t = TEACHERS[0]
     kpis = "".join([stat("负责账号", t["total"], "三类身份授权", "database"), stat("待审核", t["nodes"][1], "年审 2", "inbox", "orange"),
                     stat("已完成年审", t["nodes"][4], "完成率 %d%%" % round(t["nodes"][4] / t["total"] * 100), "check-circle", "green"),
@@ -918,10 +1268,11 @@ def teacher_detail():
 <div class="grid g5 mt16">{kpis}</div>
 <div class="card card-bd mt16">
   <div class="toolbar"><span class="card-title">负责账号（{len(rows)}）</span>
-  <div class="flex gap8"><span class="small sub">已选 <b class="c-primary" data-checked-count="#td-table">0</b> 个</span>{btn('批量移交', None, 'light', 'swap', 'sm', toast='已将所选账号批量移交，并通知接收教师')}</div></div>
+  <div class="flex gap8"><span class="small sub">已选 <b class="c-primary" data-checked-count="#td-table">0</b> 个</span><button class="btn btn-light btn-sm" type="button" data-toggle="#xfer-modal" data-xfer-batch="1">{icon('swap')}批量移交</button></div></div>
   {table(['账号', '授权来源', '学生负责人', '运行状态', '年审状态', '操作'], rows, check=True, id_='td-table')}
 </div>"""
-    page("teacher-detail.html", "teachers", "教师负责账号", cr(("教师工作量", "teachers.html"), ("王晓琳", None)), content)
+    content = f'<div data-teacher-panel="王晓琳">{content}</div>' + other_teacher_panels() + xfer_modal()
+    page("teacher-detail.html", "teachers", "教师负责账号", cr(("教师工作量", "teachers.html"), ("王晓琳", None)), content, TEACHER_JS)
 
 
 # ---------------------------------------------------------------- 14 僵尸号核实
@@ -1033,6 +1384,11 @@ def rectify():
                     '<div class="small">账号信息不完整，缺学生管理员及认证信息</div>', person("周可欣"), "2026-10-15",
                     tag("第 1 轮", "muted"), st("进行中"), ops(("催办", None, "已向周可欣发送整改催办"), ("档案", "../common/archive-rectify.html"))],
              cat="doing"),
+        dict(cells=['<span class="num">ZG20260910003</span>', acct(ACCOUNTS["photo"]["name"], ACCOUNTS["photo"]["platform"], "计院摄影协会"), tag("年审整改", "primary"),
+                    '<div class="small">停更 212 天，学生管理员信息缺失；当前在指导教师复核</div>', person("李明"), "2026-10-20",
+                    tag("第 1 轮", "muted"), tag("教师复核中", "primary", True),
+                    ops(("催办", None, "已向王晓琳老师发送复核催办"), ("查看进度", "../teacher/review-rectify.html"))],
+             href="../teacher/review-rectify.html", cat="doing"),
         dict(cells=['<span class="num">ZG20260612004</span>', acct("计院篮球协会", "抖音", "计院篮球协会"), tag("内容巡查", "warning"),
                     '<div class="small">内容未执行“先审后发”</div>', person("刘子豪"), "2026-06-30", tag("第 1 轮", "muted"), st("整改通过"),
                     ops(("查看", "../common/archive-rectify.html"))], href="../common/archive-rectify.html", cat="done"),
@@ -1046,11 +1402,14 @@ def rectify():
                     '<div class="small">未备案先运营，补办备案</div>', person("张子涵"), "2025-11-30", tag("第 1 轮", "muted"), st("整改通过"),
                     ops(("查看", "../common/archive-rectify.html"))], href="../common/archive-rectify.html", cat="done"),
     ]
-    tabs = seg([("全部 6", "all"), ("进行中 2", "doing"), ("待我审核 1", "review"), ("已完成 4", "done")], target="#rf-table")
+    def ncat(key):
+        return sum(1 for r in rows if key in r["cat"].split())
+    tabs = seg([(f"全部 {len(rows)}", "all"), (f"进行中 {ncat('doing')}", "doing"), (f"待我审核 {ncat('review')}", "review"),
+                (f"已完成 {ncat('done')}", "done")], target="#rf-table")
     content = f"""{page_hd('本院整改', '跟踪本院整改任务：下发 → 学生提交 → 学院审核（整改通过 / 继续整改 / 转注销），全部轮次永久留痕',
                    btn('导出整改台账', 'export.html', 'default', 'download') + btn('下发整改', 'rectify-create.html', 'primary', 'plus'))}
 <div class="grid g4 mb16">
-  {stat('进行中', CS['rectify'], '计院青年志愿者 · 2023网工1班', 'wrench', 'orange')}
+  {stat('进行中', ncat('doing'), '含教师复核中 1 个', 'wrench', 'orange')}
   {stat('待学院审核', 1, '第 1 轮材料已提交', 'inbox', href='rectify-detail.html')}
   {stat('临近截止', 1, '7 天内到期', 'clock', 'red')}
   {stat('本年度已整改', 4, '一次通过率 75%', 'check-circle', 'green')}
@@ -1090,7 +1449,7 @@ def rectify_create():
   {field('审核层级', radios('level', ['学院审核', '报校团委审核'], '学院审核'), hint='一般整改由学院审核办结；重大问题可报校团委')}
   {field('附件', upload('上传整改参考材料', '如制度模板、问题截图等', files=['新媒体信息发布审查制度（参考模板）.docx', '问题内容截图.png']), cls='full')}
 </div>
-<div class="flex gap12 mt16"><span class="switch on" role="switch" aria-label="短信通知"></span><span class="fs13">同步短信通知整改责任人与指导教师</span></div>"""
+<div class="mt16"><div class="field-label mb8">通知方式</div><label class="cb"><input type="checkbox" checked>站内信</label><div class="mt8"><label class="cb"><input type="checkbox" checked>ITS 消息</label></div></div>"""
     tl = flow_items("rectify", 1) + [("now", "学院下发整改任务", "当前 · 周建华", ""), ("wait", "学生提交整改材料", "何雨桐", ""),
                                      ("wait", "学院审核整改结果", "整改通过 / 继续整改 / 转注销", "")]
     right = f"""<div class="sticky col gap16">
@@ -1176,6 +1535,45 @@ def rectify_detail():
 
 
 # ---------------------------------------------------------------- 16 导入数据确认
+FILL_JS = """
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-fname]');if(!b)return;
+  window._fillRow=b.closest('tr');
+  document.getElementById('fill-title').textContent='补全 · '+b.getAttribute('data-fname');
+  document.getElementById('fill-miss').textContent='缺失：'+b.getAttribute('data-fmiss');
+  document.getElementById('fill-org').value=b.getAttribute('data-forg')||'';
+  document.getElementById('fill-teacher').value=b.getAttribute('data-fteacher')||'';
+  document.getElementById('fill-student').value=b.getAttribute('data-fstudent')||'';
+});
+function saveFill(){
+  var tr=window._fillRow;if(!tr)return;
+  var org=document.getElementById('fill-org').value.trim();
+  var teacher=document.getElementById('fill-teacher').value.trim();
+  var student=document.getElementById('fill-student').value.trim();
+  if(!org||!teacher||!student){toast('请补全所属组织、负责教师和学生负责人');return;}
+  var orgCell=tr.querySelector('[data-col="org"]');
+  var tCell=tr.querySelector('[data-col="teacher"]');
+  var sCell=tr.querySelector('[data-col="student"]');
+  var miss=tr.querySelector('[data-col="miss"]');
+  var stc=tr.querySelector('[data-st]');
+  if(orgCell)orgCell.textContent=org;
+  if(tCell)tCell.textContent=teacher;
+  if(sCell)sCell.textContent=student;
+  if(miss)miss.innerHTML='<span class="small c-success">信息完整</span>';
+  if(stc)stc.innerHTML='<span class="tag tag-warning tag-dot">待确认</span>';
+  document.getElementById('fill-modal').classList.add('hidden');
+  toast('已保存补全信息，状态改为待确认');
+}
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-mark]');if(!b)return;
+  var stc=b.closest('tr').querySelector('[data-st]');if(!stc)return;
+  stc.innerHTML=b.getAttribute('data-mark')==='ok'
+    ?'<span class="tag tag-success tag-dot">已确认</span>'
+    :'<span class="tag tag-danger tag-dot">信息有误</span>';
+});
+"""
+
+
 def import_confirm():
     items = [
         ("IM2025-CS-003", ACCOUNTS["rename"]["name"], "微博", ACCOUNTS["rename"]["pid"], "计算机学院学生会", "王晓琳", "李明", [], "待确认", "pending"),
@@ -1192,20 +1590,27 @@ def import_confirm():
     rows = []
     for no, name, p, pid, org, t, s, miss, status, cat in items:
         miss_html = '<div class="flex gap4 wrap">' + "".join(tag(m, "danger") for m in miss) + "</div>" if miss else '<span class="small c-success">信息完整</span>'
+        fill = (f'<button class="link" type="button" data-toggle="#fill-modal" data-fname="{esc(name)}" '
+                f'data-fmiss="{esc("、".join(miss) or "请核对字段")}" data-fteacher="{esc(t)}" data-fstudent="{esc(s)}" '
+                f'data-forg="{esc(org)}">补全</button>')
         if "claim" in cat:
-            op = ops(("补全", None, f"已打开“{name}”补全表单"), ("认领", "../common/apply-claim.html"))
+            op = f'<div class="ops">{fill}<a class="link" href="../common/apply-claim.html">认领</a></div>'
         elif status == "待补全":
-            op = ops(("补全", None, f"已打开“{name}”补全表单：请填写缺失字段"))
+            op = f'<div class="ops">{fill}</div>'
         elif status == "待确认":
-            op = ops(("确认", None, f"已确认“{name}”导入信息无误"), ("有误", None, "已标记为信息有误，退回校团委核对"))
+            op = (f'<div class="ops"><button class="link" type="button" data-mark="ok" data-toast="已确认“{esc(name)}”导入信息无误">确认</button>'
+                  f'<button class="link" type="button" data-mark="bad" data-toast="已标记为信息有误，退回校团委核对">有误</button></div>')
         else:
             op = ops(("档案", "../common/archive-basic.html"))
         empty = '<span class="muted">—</span>'
-        rows.append(dict(cells=[f'<span class="num small nowrap">{no}</span>', acct(name, p, pid), org or empty, t or empty, s or empty,
-                                miss_html, st(status) if status != "待补全" else tag("待补全", "danger", True), op], cat=cat))
+        st_html = st(status) if status != "待补全" else tag("待补全", "danger", True)
+        rows.append(dict(cells=[f'<span class="num small nowrap">{no}</span>', acct(name, p, pid),
+                                f'<span data-col="org">{org or empty}</span>', f'<span data-col="teacher">{t or empty}</span>',
+                                f'<span data-col="student">{s or empty}</span>', f'<span data-col="miss">{miss_html}</span>',
+                                f'<span data-st>{st_html}</span>', op], cat=cat))
     tabs = seg([("全部", "all"), ("待确认 8", "pending"), ("待补全 5", "missing"), ("已确认 23", "done")], target="#im-table")
-    content = f"""{page_hd('导入数据确认', '校团委以 2025 年度台账为基础导入的历史数据，由学院补全缺失字段并逐条确认',
-                   btn('下载本院导入明细', None, 'default', 'download', toast='已下载《计算机学院导入数据明细》Excel') + btn('批量确认', None, 'primary', 'check', toast='已批量确认所选记录'))}
+    content = f"""{page_hd('导入数据确认', '从本院账号进入。校团委以 2025 年度台账为基础导入的历史数据，由学院补全缺失字段并逐条确认',
+                   btn('下载本院导入明细', None, 'default', 'download', toast='已下载《计算机学院导入数据明细》Excel') + btn('批量确认', None, 'primary', 'check', toast='请先勾选需要确认的记录'))}
 {alert('校团委宣传部于 2026-09-16 导入 2025 年度台账，计算机学院共 36 条。请于 <b>2026-10-10</b> 前完成补全与确认；无人认领的账号可由学生或教师通过“账号认领”补录。', 'info')}
 <div class="grid g4 mt16 mb16">
   {stat('导入总数', 36, '来源：2025 年度台账', 'upload')}
@@ -1218,7 +1623,23 @@ def import_confirm():
   {table(['导入编号', '账号 / 平台ID', '所属组织', '负责教师', '学生负责人', '缺失字段', '状态', '操作'], rows, check=True, id_='im-table')}
   {pager(36, 4)}
 </div>"""
-    page("import-confirm.html", "import", "导入数据确认", cr(("数据与系统", None), ("导入数据确认", None)), content)
+    fill_body = f"""<div class="bold mb8" id="fill-title">补全导入信息</div>
+<div class="small c-danger mb12" id="fill-miss"></div>
+<div class="form-grid">
+  {field('所属组织', '<input class="input" id="fill-org" placeholder="请输入所属组织">', True)}
+  {field('负责教师', '<input class="input" id="fill-teacher" placeholder="请输入负责教师">', True)}
+  {field('学生负责人', '<input class="input" id="fill-student" placeholder="请输入学生负责人">', True)}
+  {field('更新频率', '<select class="select" id="fill-freq">' + ''.join(f'<option>{x}</option>' for x in UPDATE_FREQ) + '</select>')}
+  {field('开通时间', '<input class="input" id="fill-opened" type="date" value="2026-09-01">')}
+</div>"""
+    content += (
+        f'<div class="mask hidden" id="fill-modal"><div class="modal"><div class="modal-hd">补全缺失字段'
+        f'<button class="x-btn" type="button" data-toggle="#fill-modal" aria-label="关闭">{icon("x")}</button></div>'
+        f'<div class="modal-bd">{fill_body}</div><div class="modal-ft">'
+        f'<button class="btn btn-default" type="button" data-toggle="#fill-modal">取消</button>'
+        f'<button class="btn btn-primary" type="button" onclick="saveFill()">保存</button></div></div></div>'
+    )
+    page("import-confirm.html", "accounts", "导入数据确认", cr(("本院账号", "accounts.html"), ("导入数据确认", None)), content, FILL_JS)
 
 
 # ---------------------------------------------------------------- 17 本院数据导出
@@ -1252,6 +1673,37 @@ def export():
 
 
 # ---------------------------------------------------------------- 18 本院授权
+AUTH_JS = """
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-aname]');if(!b)return;
+  document.getElementById('auth-name').value=b.getAttribute('data-aname')||'';
+  document.getElementById('auth-no').value=b.getAttribute('data-ano')||'';
+  document.getElementById('auth-scope').value=b.getAttribute('data-ascope')||'';
+  var who=b.getAttribute('data-aname');
+  document.getElementById('auth-title').textContent=who?('授权 · '+who):'新增授权';
+  window._authRow=who?b.closest('tr'):null;
+});
+function saveAuth(){
+  var name=document.getElementById('auth-name').value.trim();
+  var no=document.getElementById('auth-no').value.trim();
+  var scope=document.getElementById('auth-scope').value.trim();
+  if(!name||!no||!scope){toast('请填写人员、工号 / 学号和授权范围');return;}
+  if(window._authRow){
+    var cell=window._authRow.querySelector('[data-col="scope"]');
+    if(cell)cell.textContent=scope;
+    toast('已保存 '+name+' 的授权范围');
+  }else{
+    var tb=document.querySelector('#us-table tbody');
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td><b>'+name+'</b></td><td><span class="num small">'+no+'</span></td><td><span class="tag tag-primary">新授权</span></td><td><span class="fs13" data-col="scope">'+scope+'</span></td><td><span class="tag tag-success tag-dot">启用</span></td><td><span class="small muted">刚刚</span></td><td><span class="small muted">已保存</span></td>';
+    if(tb)tb.insertBefore(tr,tb.firstChild);
+    toast('已新增授权：'+name);
+  }
+  document.getElementById('auth-modal').classList.add('hidden');
+}
+"""
+
+
 def users():
     data = [
         ("周建华", "T20090315", [("学院管理员", "primary")], "计算机学院全部数据（本学院及所属 / 直属 / 指导组织）", "2026-09-30 13:40"),
@@ -1272,8 +1724,11 @@ def users():
         is_student = no.startswith("82")
         cat = "student" if is_student else ("admin" if name == "周建华" else "teacher")
         id_html = '<div class="flex gap4 wrap">' + "".join(tag(t, k) for t, k in ids) + "</div>"
-        op = ops(("授权", None, f"已打开{name}的授权设置"), ("调整范围", None, f"已调整{name}的数据范围，变更已记录日志"))
-        rows.append(dict(cells=[person(name), f'<span class="num small">{no}</span>', id_html, f'<span class="fs13">{scope}</span>',
+        op = (f'<div class="ops"><button class="link" type="button" data-toggle="#auth-modal" data-aname="{esc(name)}" '
+              f'data-ano="{esc(no)}" data-ascope="{esc(scope)}">授权</button>'
+              f'<button class="link" type="button" data-toggle="#auth-modal" data-aname="{esc(name)}" '
+              f'data-ano="{esc(no)}" data-ascope="{esc(scope)}">调整范围</button></div>')
+        rows.append(dict(cells=[person(name), f'<span class="num small">{no}</span>', id_html, f'<span class="fs13" data-col="scope">{scope}</span>',
                                 st("启用"), f'<span class="small muted">{last}</span>', op], cat=cat))
     tabs = seg([("全部 11", "all"), ("学院管理员 1", "admin"), ("业务教师 6", "teacher"), ("学生负责人 4", "student")], target="#us-table")
     multi = "".join(
@@ -1284,15 +1739,30 @@ def users():
                         ("街舞社指导教师", "计院街舞社（兼指导 ACM 协会、摄影协会）", 3)])
     multi_body = (f'<div class="flex gap12 mb12">{avatar("王晓琳")}<div class="grow"><div class="bold">王晓琳 · 一人多身份示例</div>'
                   f'<div class="small muted">登录后可在“身份切换”中选择，数据范围为三个身份授权的并集</div></div>'
-                  f'{btn("身份切换演示", "../common/identity-switch.html", "default", "user-switch", "sm")}</div><div class="grid g3">{multi}</div>')
+                  f'{btn("身份切换", "../common/identity-switch.html", "default", "user-switch", "sm")}</div><div class="grid g3">{multi}</div>')
     content = f"""{page_hd('本院授权', '为本院教师与学生负责人授予身份与数据范围；授权范围不超出本学院',
-                   btn('授权记录', 'logs.html', 'default', 'history') + btn('新增授权', None, 'primary', 'user-add', toast='已打开新增授权：选择人员 → 身份 → 组织 / 账号范围 → 操作权限'))}
+                   btn('授权记录', 'logs.html', 'default', 'history') + '<button class="btn btn-primary" type="button" data-toggle="#auth-modal" data-aname="" data-ano="" data-ascope="">' + icon('user-add') + '新增授权</button>')}
 {card('多身份授权说明', multi_body)}
 <div class="card card-bd mt16">
   <div class="toolbar">{tabs}<span class="small muted">学院管理员仅可授权本学院范围；跨学院授权请联系校团委</span></div>
   {table(['用户', '工号 / 学号', '身份', '授权范围', '状态', '最近登录', '操作'], rows, id_='us-table')}
 </div>"""
-    page("users.html", "users", "本院授权", cr(("数据与系统", None), ("本院授权", None)), content)
+    auth_body = f"""<div class="bold mb8" id="auth-title">授权设置</div>
+<div class="form-grid">
+  {field('人员', '<input class="input" id="auth-name" placeholder="输入姓名检索本院人员">', True)}
+  {field('工号 / 学号', '<input class="input" id="auth-no" placeholder="输入工号或学号">', True)}
+  {field('身份', radios('auth-role', ['学院管理员', '业务教师', '学生负责人'], '业务教师'), True)}
+  {field('组织 / 账号范围', '<input class="input" id="auth-scope" placeholder="例如：2024级各班团支部">', True)}
+</div>
+<div class="mt12">{''.join(f'<label class="cb" style="display:flex;margin-top:6px"><input type="checkbox" checked> {x}</label>' for x in ['查看账号', '审核申请', '审核年审', '代办业务'])}</div>"""
+    content += (
+        f'<div class="mask hidden" id="auth-modal"><div class="modal"><div class="modal-hd">授权设置'
+        f'<button class="x-btn" type="button" data-toggle="#auth-modal" aria-label="关闭">{icon("x")}</button></div>'
+        f'<div class="modal-bd">{auth_body}</div><div class="modal-ft">'
+        f'<button class="btn btn-default" type="button" data-toggle="#auth-modal">取消</button>'
+        f'<button class="btn btn-primary" type="button" onclick="saveAuth()">保存授权</button></div></div></div>'
+    )
+    page("users.html", "users", "本院授权", cr(("数据与系统", None), ("本院授权", None)), content, AUTH_JS)
 
 
 # ---------------------------------------------------------------- 19 操作日志
@@ -1342,6 +1812,7 @@ def build():
     organizations()
     approval_detail()
     approval_change()
+    approval_proxy()
     annual_progress()
     annual_review()
     annual_review_detail()

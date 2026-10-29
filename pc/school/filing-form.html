@@ -248,15 +248,15 @@ button.is-done{opacity:.6;cursor:default;pointer-events:none}
 
 /* ===== 弹窗 / 抽屉 ===== */
 .mask{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px}
-.modal{width:600px;max-width:100%;background:#fff;border-radius:12px;box-shadow:0 10px 20px 10px rgba(0,0,0,.05);display:flex;flex-direction:column;max-height:calc(100vh - 40px)}
+.modal{width:600px;max-width:100%;background:#fff;border-radius:12px;box-shadow:0 10px 20px 10px rgba(0,0,0,.05);display:flex;flex-direction:column;max-height:calc(100vh / var(--z, 1) - 40px)}
 .modal.lg{width:900px}.modal.sm{width:480px}
-.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #C8CAD1;font-size:18px;font-weight:700;color:var(--c-text)}
-.modal-bd{padding:20px;overflow:auto}
-.modal-ft{display:flex;justify-content:flex-end;gap:12px;padding:12px 20px 20px}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #C8CAD1;font-size:18px;font-weight:700;color:var(--c-text);flex:none}
+.modal-bd{padding:20px;overflow:auto;flex:1;min-height:0}
+.modal-ft{display:flex;justify-content:flex-end;gap:12px;padding:12px 20px 20px;flex:none}
 .x-btn{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;color:var(--c-text-3)}.x-btn:hover{color:var(--c-primary)}
 .drawer-mask{justify-content:flex-end;padding:0}
 .drawer{width:640px;max-width:100%;height:100%;background:#fff;box-shadow:-8px 0 24px rgba(0,0,0,.12);display:flex;flex-direction:column}
-.drawer .modal-bd{flex:1}
+.drawer .modal-bd{flex:1;min-height:0}
 .backdrop{pointer-events:none;user-select:none}
 
 /* ===== Toast（Element Message 样式）与原型悬浮导航 ===== */
@@ -331,8 +331,10 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
 .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
 .split{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start}
 .sticky{position:sticky;top:0}
-.actbar{position:sticky;bottom:0;z-index:20;background:#fff;border-radius:8px;box-shadow:0 -4px 16px rgba(42,141,199,.10);padding:12px 24px;display:flex;align-items:center;gap:12px;margin-top:16px}
-.actbar .grow{font-size:14px;color:var(--c-text-3)}
+.actbar{position:static;z-index:20;background:#fff;border-radius:8px;box-shadow:0 -4px 16px rgba(42,141,199,.10);padding:12px 24px;display:flex;align-items:center;gap:12px;margin-top:16px;flex:none}
+.actbar .grow{font-size:14px;color:var(--c-text-3);min-width:0}
+.zx-main>.actbar{margin:10px 0 0}
+.zx-main:has(>.actbar)>.content{padding-bottom:16px}
 .cm-content{width:100%}
 .zx-body.is-full .zx-main{max-width:1600px;margin:0 auto}
 /* 详情表格（低代码表单栅格） */
@@ -406,7 +408,8 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
 .wf-pane{padding-bottom:16px}
 .wf-pane .page-hd{padding:0 0 12px;border-radius:0;border-bottom:1px dashed #E4E7ED;margin-bottom:14px}
 .wf-pane .page-hd h1{font-size:16px}
-.wf-pane .actbar{margin:16px -24px 0;border-radius:0;box-shadow:0 -4px 16px rgba(42,141,199,.12)}
+.wf-dialog>.actbar{margin:0;border-radius:0;box-shadow:0 -4px 16px rgba(42,141,199,.12)}
+.wf-dialog:has(>.actbar)>.wf-bd{padding-bottom:16px}
 .wf-empty{text-align:center;color:var(--c-text-3);height:120px}
 .wf-cm{display:inline-block;max-width:420px;text-align:left}
 .wf-chart{position:relative;border:1px solid #E4E7ED;border-radius:6px;min-height:420px;background:#FAFCFE radial-gradient(#E4ECF3 1px,transparent 1px) 0 0/16px 16px;overflow:auto;padding:80px 40px}
@@ -531,7 +534,7 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
     <a class="zx-manual" href="../../index.html"><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>原型导航</a>
   </div>
 </header>
-<div class="zx-body"><aside class="zx-aside"><div class="zx-group">工作台</div><a href="dashboard.html"><svg class="i " viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span class="ellipsis">数据驾驶舱</span></a><a href="messages.html"><svg class="i " viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span class="ellipsis">消息待办</span><span class="badge">6</span></a><div class="zx-group">账号管理</div><a href="accounts.html"><svg class="i " viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v13c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-13"/><path d="M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></svg><span class="ellipsis">全校账号库</span></a><a href="organizations.html"><svg class="i " viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/></svg><span class="ellipsis">组织管理</span></a><div class="zx-group">业务审核</div><a href="approvals.html" class="on"><svg class="i " viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 14.5 2 2 4-4"/></svg><span class="ellipsis">审核待办</span><span class="badge">13</span></a><a href="annual-tasks.html"><svg class="i " viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="ellipsis">年度年审</span></a><div class="zx-group">风险治理</div><a href="zombie.html"><svg class="i " viewBox="0 0 24 24"><path d="M5 20V10a7 7 0 0 1 14 0v10l-2.3-1.6L14.3 20 12 18.4 9.7 20l-2.4-1.6z"/><path d="M9.5 10.5v.01M14.5 10.5v.01"/></svg><span class="ellipsis">僵尸号排查</span><span class="badge">47</span></a><a href="anomalies.html"><svg class="i " viewBox="0 0 24 24"><path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5"/><path d="M12 17.5v.01"/></svg><span class="ellipsis">数据异常</span></a><a href="rectify.html"><svg class="i " viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0 5 5L21 10a6 6 0 0 1-8 1.5L6 18.5a2 2 0 1 1-2.8-2.8L10.2 8.7A6 6 0 0 1 11.7 1L10.4 2.3a4 4 0 0 0 4.3 4z"/></svg><span class="ellipsis">整改管理</span></a><div class="zx-group">数据中心</div><a href="import.html"><svg class="i " viewBox="0 0 24 24"><path d="M12 16V5"/><path d="m7 10 5-5 5 5"/><path d="M4 20h16"/></svg><span class="ellipsis">数据导入</span></a><a href="export.html"><svg class="i " viewBox="0 0 24 24"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M4 20h16"/></svg><span class="ellipsis">数据导出</span></a><div class="zx-group">系统管理</div><a href="users.html"><svg class="i " viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1.2-3.5 3.6-5.2 6.5-5.2s5.3 1.7 6.5 5.2"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.8c1.8.6 3 2.3 3.6 5.2"/></svg><span class="ellipsis">用户权限</span></a><a href="settings-workflow.html"><svg class="i " viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="ellipsis">系统配置</span></a><a href="logs.html"><svg class="i " viewBox="0 0 24 24"><path d="M8 3h9a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M5 6h3V3"/><path d="M9 11h6M9 15h6"/></svg><span class="ellipsis">操作日志</span></a></aside>
+<div class="zx-body"><aside class="zx-aside"><div class="zx-group">工作台</div><a href="dashboard.html"><svg class="i " viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span class="ellipsis">数据驾驶舱</span></a><a href="messages.html"><svg class="i " viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span class="ellipsis">消息待办</span><span class="badge">6</span></a><div class="zx-group">账号管理</div><a href="accounts.html"><svg class="i " viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v13c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-13"/><path d="M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></svg><span class="ellipsis">全校账号库</span></a><a href="organizations.html"><svg class="i " viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/></svg><span class="ellipsis">组织管理</span></a><div class="zx-group">业务审核</div><a href="annual-tasks.html"><svg class="i " viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span class="ellipsis">年度年审</span></a><div class="zx-group">风险治理</div><a href="zombie.html"><svg class="i " viewBox="0 0 24 24"><path d="M5 20V10a7 7 0 0 1 14 0v10l-2.3-1.6L14.3 20 12 18.4 9.7 20l-2.4-1.6z"/><path d="M9.5 10.5v.01M14.5 10.5v.01"/></svg><span class="ellipsis">僵尸号排查</span><span class="badge">47</span></a><a href="anomalies.html"><svg class="i " viewBox="0 0 24 24"><path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5"/><path d="M12 17.5v.01"/></svg><span class="ellipsis">数据异常</span></a><a href="rectify.html"><svg class="i " viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0 5 5L21 10a6 6 0 0 1-8 1.5L6 18.5a2 2 0 1 1-2.8-2.8L10.2 8.7A6 6 0 0 1 11.7 1L10.4 2.3a4 4 0 0 0 4.3 4z"/></svg><span class="ellipsis">整改管理</span></a><div class="zx-group">数据中心</div><a href="export.html"><svg class="i " viewBox="0 0 24 24"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M4 20h16"/></svg><span class="ellipsis">数据导出</span></a><div class="zx-group">系统管理</div><a href="users.html"><svg class="i " viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1.2-3.5 3.6-5.2 6.5-5.2s5.3 1.7 6.5 5.2"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8"/><path d="M18 14.8c1.8.6 3 2.3 3.6 5.2"/></svg><span class="ellipsis">用户权限</span></a><a href="settings-workflow.html"><svg class="i " viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="ellipsis">系统配置</span></a><a href="logs.html"><svg class="i " viewBox="0 0 24 24"><path d="M8 3h9a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M5 6h3V3"/><path d="M9 11h6M9 15h6"/></svg><span class="ellipsis">操作日志</span></a></aside>
 <section class="zx-main">
   <div class="zx-tabs"><button class="zx-back" type="button" data-back="approvals.html"><svg class="i " viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>返回上一步</button><a class="zx-tab" href="dashboard.html">首页</a><a class="zx-tab" href="approvals.html">待办</a><span class="zx-tab on">备案表<button class="zx-x" type="button" data-back="approvals.html" aria-label="关闭页签"><svg class="i " viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span><button class="zx-fold" type="button" data-toast="已收起其他页签" aria-label="页签操作"><svg class="i " viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button></div>
   <div class="content">
@@ -548,7 +551,7 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
     <tr><td class="k">组织类别</td><td>院级学生组织</td><td class="k">平台层级</td><td>二级平台</td></tr>
     <tr><td class="k">认证主体</td><td>中南大学</td><td class="k">更新频率</td><td>每周更新（≥1次/周）</td></tr>
     <tr><td class="k">平台介绍</td><td colspan="3">计算机学院团委新媒体中心主办，面向学院全体团员青年，以思想引领、学业发展、科创实践、青春风采为定位，设“计院青年说”“科创前沿”“学业加油站”“青春印记”四个栏目，每周更新不少于 2 次。</td></tr>
-    <tr><td class="k">管理机制</td><td colspan="3">已建立：信息发布审核（三审三校）机制、舆情应对机制、账号安全管理机制、应急处置机制</td></tr>
+    <tr><td class="k">平台信息确认</td><td colspan="3">（10）是否建立团学组织宣传联动工作机制。 是。在涉及学校重大事项或突发事件应对时，全校团学组织新媒体公众平台应按照学校要求，统一发布相关信息，正确引导舆论氛围。<br>（11）是否建立信息发布审查机制 是。各团学组织要对所属新媒体公众平台建立信息发布审查机制。按照“先审后发”的原则，开设新媒体公众平台的单位要对所发布的信息内容负责，确保信息政治方向正确，内容健康向上、准确真实可靠，并预判可能造成的社会影响。<br>（12）是否建立应急预案处理机制 是。在特殊敏感时期、重点时段、重大舆情处置时，各团学组织要做好舆情监测和研判，并制定应急预案，发现不良信息和错误言论时，各团学组织要带头斗争、勇于发声，并将工作开展情况报校团委备案<br>（13）是否建立信息安全管理制度 是。各团学组织要对所属新媒体公众平台建立信息安全管理制度。学校团学组织新媒体公众平台应严格对信息发布进行审查和监督，确保发布信息的真实性、准确性、安全性。不得在网页上或者利用网络的服务功能，制作、复制、发布、传播、链接以下信息：①反对宪法所确定的基本原则的；②危害国家安全，泄露国家秘密，颠覆国家政权，破坏国家统一的；③损害国家荣誉和利益的；④煽动民族仇恨、民族歧视，破坏民族团结的；⑤破坏国家宗教政策，宣扬邪教和封建迷信的；⑥散布谣言，扰乱社会秩序，破坏社会稳定的：⑦散布淫秽、色情、赌博、暴力、凶杀、恐怖或者教唆犯罪的；⑧侮辱或者诽谤他人，侵害他人合法权益的；⑨含有法律、行政法规禁止的其他内容的；⑩有损学校形象或给学校带来负面影响的。</td></tr>
     <tr><td class="k">第一责任人</td><td>张卫东（党委副书记）</td><td class="k">联系电话</td><td>0731-88830001</td></tr>
     <tr><td class="k">管理教师</td><td>王晓琳（宣传工作辅导员）</td><td class="k">联系电话</td><td>139 7481 5520</td></tr>
     <tr><td class="k">学生负责人</td><td>李明（8209230117）</td><td class="k">联系电话</td><td>151 1601 2233</td></tr>
@@ -603,7 +606,9 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
     if(t.dataset.seg!==undefined){
       var g=t.parentElement;g.querySelectorAll('[data-seg]').forEach(function(b){b.classList.remove('on');});t.classList.add('on');
       var target=g.dataset.target&&document.querySelector(g.dataset.target);
-      if(target){var v=t.dataset.seg;target.querySelectorAll('[data-cat]').forEach(function(row){row.classList.toggle('hidden',!(v==='all'||(' '+row.dataset.cat+' ').indexOf(' '+v+' ')>-1));});}
+      if(target){var v=t.dataset.seg;var catHide=function(row){return !(v==='all'||(' '+(row.dataset.cat||'')+' ').indexOf(' '+v+' ')>-1);};
+        target.querySelectorAll('[data-cat]').forEach(function(row){row.classList.toggle('hidden',catHide(row));});
+        document.querySelectorAll('.zx-main>.actbar[data-cat],.wf-dialog>.actbar[data-cat]').forEach(function(row){if(!target.contains(row))row.classList.toggle('hidden',catHide(row));});}
       if(!t.dataset.toast)return;
     }
     if(t.dataset.choice!==undefined){
@@ -624,7 +629,9 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
     if(t.dataset.copy){if(navigator.clipboard)navigator.clipboard.writeText(t.dataset.copy);toast('已复制到剪贴板');return;}
     if(t.dataset.back!==undefined){e.preventDefault();if(history.length>1&&document.referrer){history.back();}else{go(t.dataset.back);}return;}
     if(t.dataset.submit){
-      e.preventDefault();var scope=t.closest('[data-form]')||document;
+      e.preventDefault();var scope=t.closest('[data-form]');
+      if(!scope){var own=t.closest('[data-form-owner]');if(own)scope=document.querySelector('[data-form-id="'+own.getAttribute('data-form-owner')+'"]');}
+      if(!scope)scope=document;
       if(!validate(scope))return;
       if(t.dataset.toast){toast(t.dataset.toast);go(t.dataset.submit,700);}else{go(t.dataset.submit);}
       return;
@@ -689,6 +696,40 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
     }
     var box=el.closest('.field.invalid,.cell.invalid');if(box&&String(el.value).trim())box.classList.remove('invalid');
   });
+
+  // 把表单操作条挪到滚动区外面：PC 贴在主内容区底部，流程弹窗贴在弹窗底部，内容单独滚
+  (function pinBars(){
+    var seq=0;
+    function mark(bar){
+      var form=bar.closest('[data-form]');
+      if(!form)return;
+      if(!form.getAttribute('data-form-id')){seq+=1;form.setAttribute('data-form-id','dock-'+seq);}
+      bar.setAttribute('data-form-owner',form.getAttribute('data-form-id'));
+    }
+    function carry(bar, host){
+      var node=bar.parentElement, hide=bar.classList.contains('hidden');
+      while(node&&node!==host){
+        if(node.classList.contains('hidden'))hide=true;
+        if(node.hasAttribute('data-cat')&&!bar.hasAttribute('data-cat'))bar.setAttribute('data-cat',node.getAttribute('data-cat'));
+        node=node.parentElement;
+      }
+      if(hide)bar.classList.add('hidden');
+      mark(bar);
+      host.appendChild(bar);
+    }
+    document.querySelectorAll('.wf-dialog').forEach(function(dlg){
+      Array.prototype.slice.call(dlg.querySelectorAll('.actbar')).forEach(function(bar){
+        if(bar.parentElement===dlg||bar.closest('.modal,.drawer'))return;
+        carry(bar, dlg);
+      });
+    });
+    document.querySelectorAll('.zx-main>.content').forEach(function(content){
+      Array.prototype.slice.call(content.querySelectorAll('.actbar')).forEach(function(bar){
+        if(bar.closest('.wf-dialog,.modal,.drawer,.mask'))return;
+        carry(bar, content.parentNode);
+      });
+    });
+  })();
 })();
 </script>
 </body>

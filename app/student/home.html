@@ -248,15 +248,15 @@ button.is-done{opacity:.6;cursor:default;pointer-events:none}
 
 /* ===== 弹窗 / 抽屉 ===== */
 .mask{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px}
-.modal{width:600px;max-width:100%;background:#fff;border-radius:12px;box-shadow:0 10px 20px 10px rgba(0,0,0,.05);display:flex;flex-direction:column;max-height:calc(100vh - 40px)}
+.modal{width:600px;max-width:100%;background:#fff;border-radius:12px;box-shadow:0 10px 20px 10px rgba(0,0,0,.05);display:flex;flex-direction:column;max-height:calc(100vh / var(--z, 1) - 40px)}
 .modal.lg{width:900px}.modal.sm{width:480px}
-.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #C8CAD1;font-size:18px;font-weight:700;color:var(--c-text)}
-.modal-bd{padding:20px;overflow:auto}
-.modal-ft{display:flex;justify-content:flex-end;gap:12px;padding:12px 20px 20px}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #C8CAD1;font-size:18px;font-weight:700;color:var(--c-text);flex:none}
+.modal-bd{padding:20px;overflow:auto;flex:1;min-height:0}
+.modal-ft{display:flex;justify-content:flex-end;gap:12px;padding:12px 20px 20px;flex:none}
 .x-btn{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;color:var(--c-text-3)}.x-btn:hover{color:var(--c-primary)}
 .drawer-mask{justify-content:flex-end;padding:0}
 .drawer{width:640px;max-width:100%;height:100%;background:#fff;box-shadow:-8px 0 24px rgba(0,0,0,.12);display:flex;flex-direction:column}
-.drawer .modal-bd{flex:1}
+.drawer .modal-bd{flex:1;min-height:0}
 .backdrop{pointer-events:none;user-select:none}
 
 /* ===== Toast（Element Message 样式）与原型悬浮导航 ===== */
@@ -282,9 +282,11 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .nav-r .link,.nav-r a,.nav-r button{color:#fff}
 .nav-l .i{width:24px;height:24px}
 .blue-top .status,.blue-top .navbar{background:transparent}
-.scroll{flex:1;overflow-y:auto;padding:12px 16px 24px;position:relative}
+.scroll{flex:1;min-height:0;overflow-y:auto;padding:12px 16px 40px;position:relative}
+.phone:has(.tabbar) .scroll{padding-bottom:88px}
+.phone:has(.bottom-bar):not(:has(.tabbar)) .scroll{padding-bottom:28px}
 .scroll::-webkit-scrollbar{width:0}
-/* 底部 TabBar：服务大厅 / 首页（校徽） / 个人中心 */
+/* 底部 TabBar：学生为服务大厅 / 首页（校徽） / 我的申请；教师与学院为待审 / 首页 / 个人中心；学校为待审 / 首页 / 消息 */
 .tabbar{height:92px;flex:none;margin-top:-14px;padding:16px 0 22px;background:url(../../assets/m-tabbar.webp) top center/100% 92px no-repeat;display:flex;z-index:30;position:relative}
 .tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;color:#696F7D;position:relative}
 .tabbar a .i{width:24px;height:24px;stroke-width:1.5}
@@ -294,6 +296,7 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .tabbar a.tab-c{flex:none;width:92px;justify-content:flex-end}
 .tabbar a.tab-c img{position:absolute;top:-26px;left:50%;transform:translateX(-50%);width:52px;height:52px;border-radius:50%;box-shadow:0 4px 12px rgba(0,87,240,.3)}
 .tabbar .badge{position:absolute;top:2px;left:calc(50% + 6px);transform:scale(.85)}
+.tabbar .tab-pad{flex:1;pointer-events:none}
 .home-ind{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#1E2530;z-index:50}
 .bottom-bar{flex:none;background:#fff;padding:10px 16px 30px;box-shadow:0 -2px 10px rgba(0,0,0,.05);display:flex;gap:10px;z-index:30}
 .bottom-bar .btn{flex:1;height:44px;border-radius:22px;font-size:16px}
@@ -303,9 +306,20 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .phone .btn-primary:hover{background:linear-gradient(270deg,#5AAAFF,#1A6BFA)}
 .phone .btn-ghost{border-color:#0057F0;color:#0057F0}
 .phone .btn-default{border-color:#DCDEE0;color:#333}
-.phone .alert{border:none;border-radius:8px;font-size:13px;padding:9px 12px}
-.phone .alert-warning{background:#FFFBE6;color:#D46B08;box-shadow:0 2px 8px rgba(212,107,8,.08)}
-.phone .alert-info{background:#E6EFFF;color:#0057F0}
+.phone .alert{border:none;border-radius:8px;font-size:13px;line-height:1.65;padding:10px 12px;color:#333}
+.phone .alert .grow{min-width:0;color:#333;line-height:1.65;overflow-wrap:anywhere}
+.phone .alert-warning{background:#FFFBE6;color:#333;box-shadow:0 2px 8px rgba(212,107,8,.08)}
+.phone .alert-warning .i{color:#D46B08}
+.phone .alert-info{background:#E6EFFF;color:#333}
+.phone .alert-info .i{color:#0057F0}
+.phone .alert-danger,.phone .alert-success{color:#333}
+.phone .alert-danger .i{color:#F56C6C}
+.phone .alert-success .i{color:#67C23A}
+.phone .btn,.phone .pick-act{white-space:nowrap}
+.phone .pick-item{align-items:center;gap:10px}
+.phone .pick-item>span:first-child{flex:1;min-width:0;line-height:1.5;overflow-wrap:anywhere}
+.phone .pick-act{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:28px;padding:0 10px;border-radius:8px;line-height:1}
+.phone .tc-ft .btn,.phone .claim-row>.btn{flex:none;white-space:nowrap}
 .phone .seg{background:#E6EFFF}.phone .seg button{color:#0057F0}.phone .seg button.on{background:linear-gradient(270deg,#469FFF,#065CF8);color:#fff}
 .phone .toast{top:70px}
 /* 移动端组件 */
@@ -327,12 +341,22 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
 .cell.invalid{background:var(--c-danger-bg)}.cell.invalid .err-msg{display:block}
 .m-hero{background:linear-gradient(270deg,#469FFF 0%,#065CF8 100%);color:#fff;border-radius:8px;padding:16px;position:relative;overflow:hidden;box-shadow:0 6px 16px rgba(6,92,248,.25)}
 .m-hero::after{content:"";position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.1)}
-.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
-.quick a{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;font-size:12px;color:#333}
-.quick .qi{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#E8F1FF,#C9DCFF);color:#0057F0}
-.quick .qi .i{width:22px;height:22px;stroke-width:1.8}
-.quick .qi.green{background:linear-gradient(135deg,#E2F9EF,#C2EFDB);color:#12A866}.quick .qi.orange{background:linear-gradient(135deg,#FFF1E3,#FFDAB9);color:#F2761B}
-.quick .qi.red{background:linear-gradient(135deg,#FFE9EE,#FFCAD5);color:#EE3F66}.quick .qi.purple{background:linear-gradient(135deg,#EFEBFF,#D9D0FF);color:#6E4FF0}
+/* 图标宫格：按数量套 packN，避免末行左贴留白 */
+.quick,.m-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.quick a,.m-grid a{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;font-size:12px;color:#333;white-space:nowrap;min-width:0;box-sizing:border-box}
+.quick.pack3,.m-grid.pack3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.quick.pack4,.m-grid.pack4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.quick.pack5,.m-grid.pack5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.quick.pack6,.m-grid.pack6{grid-template-columns:repeat(3,minmax(0,1fr))}
+.quick.pack7,.m-grid.pack7{grid-template-columns:repeat(8,minmax(0,1fr))}
+.quick.pack7>a,.m-grid.pack7>a{grid-column:span 2}
+.quick .qi,.m-grid .qi{position:relative;width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#E8F1FF,#C9DCFF);color:#0057F0}
+.quick .qi .i,.m-grid .qi .i{width:22px;height:22px;stroke-width:1.8}
+.quick .qi .badge,.m-grid .qi .badge{position:absolute;top:-5px;right:-7px;transform:scale(.85)}
+.quick .qi.green,.m-grid .qi.green{background:linear-gradient(135deg,#E2F9EF,#C2EFDB);color:#12A866}
+.quick .qi.orange,.m-grid .qi.orange{background:linear-gradient(135deg,#FFF1E3,#FFDAB9);color:#F2761B}
+.quick .qi.red,.m-grid .qi.red{background:linear-gradient(135deg,#FFE9EE,#FFCAD5);color:#EE3F66}
+.quick .qi.purple,.m-grid .qi.purple{background:linear-gradient(135deg,#EFEBFF,#D9D0FF);color:#6E4FF0}
 .todo-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #EBEDF0}
 .todo-item:last-child{border-bottom:none}
 .m-tabs{display:flex;background:linear-gradient(180deg,#F0F6FF,#E6EFFF);margin:-12px -16px 12px;padding:0 8px;position:sticky;top:-12px;z-index:10}
@@ -374,30 +398,29 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
   </div>
   <div class="grid g3 mt16" style="position:relative;z-index:1;text-align:center;gap:0">
     <a href="accounts.html"><div class="fs18 bold num">5</div><div class="small" style="opacity:.8">我的账号</div></a>
-    <a href="applications.html" style="border-left:1px solid rgba(255,255,255,.2);border-right:1px solid rgba(255,255,255,.2)"><div class="fs18 bold num">2</div><div class="small" style="opacity:.8">进行中申请</div></a>
-    <a href="todo.html"><div class="fs18 bold num">3</div><div class="small" style="opacity:.8">待办事项</div></a>
+    <a href="my-apply.html" style="border-left:1px solid rgba(255,255,255,.2);border-right:1px solid rgba(255,255,255,.2)"><div class="fs18 bold num">2</div><div class="small" style="opacity:.8">进行中申请</div></a>
+    <a href="todo.html"><div class="fs18 bold num">5</div><div class="small" style="opacity:.8">待办事项</div></a>
   </div>
 </div>
-<div class="m-card mt12"><div class="quick">
+<div class="m-card mt12"><div class="quick pack7">
   <a href="apply-create-basic.html"><span class="qi"><svg class="i " viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9 14h6"/></svg></span>新建备案</a>
   <a href="apply-change.html"><span class="qi orange"><svg class="i " viewBox="0 0 24 24"><path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4"/><path d="M13 3v5h5v3"/><path d="m14 21 .6-2.6 5-5a1.4 1.4 0 0 1 2 2l-5 5z"/></svg></span>信息变更</a>
   <a href="apply-handover.html"><span class="qi green"><svg class="i " viewBox="0 0 24 24"><circle cx="8" cy="7" r="3"/><path d="M2.5 18c1-3 3-4.5 5.5-4.5"/><circle cx="16" cy="11" r="3"/><path d="M10.5 22c1-3 3-4.5 5.5-4.5s4.5 1.5 5.5 4.5"/><path d="M14 3h5l-1.5-1.5M19 3l-1.5 1.5"/></svg></span>负责人交接</a>
   <a href="apply-cancel.html"><span class="qi red"><svg class="i " viewBox="0 0 24 24"><path d="M12 3v8"/><path d="M6.5 6.5a8 8 0 1 0 11 0"/></svg></span>账号注销</a>
   <a href="annual.html"><span class="qi"><svg class="i " viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span>我的年审</a>
-  <a href="applications.html"><span class="qi purple"><svg class="i " viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11h6M9 15h4"/></svg></span>我的申请</a>
   <a href="rectify.html"><span class="qi orange"><svg class="i " viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0 5 5L21 10a6 6 0 0 1-8 1.5L6 18.5a2 2 0 1 1-2.8-2.8L10.2 8.7A6 6 0 0 1 11.7 1L10.4 2.3a4 4 0 0 0 4.3 4z"/></svg></span>整改任务</a>
   <a href="apply-claim.html"><span class="qi green"><svg class="i " viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12"/><path d="M11 11V4.5a1.5 1.5 0 0 1 3 0V12"/><path d="M14 11.5V6a1.5 1.5 0 0 1 3 0v8c0 4-2.5 7-6.5 7-2.5 0-4-1-5.5-3L3 14.5a1.5 1.5 0 0 1 2.5-1.8L8 15.5"/></svg></span>账号认领</a>
 </div></div>
 <div class="alert alert-info"><svg class="i " viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><div class="grow"><b>2026年度团学组织新媒体平台年审</b>进行中，学生填报截止 2026-10-15，请及时确认账号运行情况。</div></div>
 <div class="m-title mt12">我的待办<a href="todo.html">全部<svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><path d="m9 6 6 6-6 6"/></svg></a></div>
-<div class="m-card" style="padding:4px 14px"><a class="todo-item" href="annual-fill.html"><span class="stat-ic " style="width:38px;height:38px;border-radius:11px"><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span><div class="grow"><div class="bold fs13">中南计院团委 · 年度年审</div><div class="small muted">请于 2026-10-15 前完成填报</div></div><span class="tag tag-primary">待年审</span></a><a class="todo-item" href="application-returned.html"><span class="stat-ic orange" style="width:38px;height:38px;border-radius:11px"><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span><div class="grow"><div class="bold fs13">中南计算机青年 · 新建备案</div><div class="small muted">王晓琳老师退回：请补充平台介绍</div></div><span class="tag tag-danger">退回修改</span></a><a class="todo-item" href="zombie-verify.html"><span class="stat-ic red" style="width:38px;height:38px;border-radius:11px"><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M5 20V10a7 7 0 0 1 14 0v10l-2.3-1.6L14.3 20 12 18.4 9.7 20l-2.4-1.6z"/><path d="M9.5 10.5v.01M14.5 10.5v.01"/></svg></span><div class="grow"><div class="bold fs13">计院摄影协会 · 疑似僵尸号</div><div class="small muted">停更 212 天，请核实运营情况</div></div><span class="tag tag-warning">待核实</span></a></div>
+<div class="m-card" style="padding:4px 14px"><a class="todo-item" href="annual-fill.html"><span class="stat-ic " style="width:38px;height:38px;border-radius:11px"><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span><div class="grow"><div class="bold fs13">中南计院团委 · 年度年审</div><div class="small muted">请于 2026-10-15 前完成填报</div></div><span class="tag tag-primary">待年审</span></a><a class="todo-item" href="annual.html"><span class="stat-ic " style="width:38px;height:38px;border-radius:11px"><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span><div class="grow"><div class="bold fs13">计院街舞社 · 年度年审</div><div class="small muted">历史数据已继承，待确认后提交</div></div><span class="tag tag-primary">待年审</span></a><a class="todo-item" href="application-edit.html"><span class="stat-ic orange" style="width:38px;height:38px;border-radius:11px"><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></span><div class="grow"><div class="bold fs13">中南计算机青年 · 新建备案</div><div class="small muted">王晓琳老师退回：请补充平台介绍</div></div><span class="tag tag-danger">退回修改</span></a><a class="todo-item" href="rectify-submit.html"><span class="stat-ic orange" style="width:38px;height:38px;border-radius:11px"><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M14.7 6.3a4 4 0 0 0 5 5L21 10a6 6 0 0 1-8 1.5L6 18.5a2 2 0 1 1-2.8-2.8L10.2 8.7A6 6 0 0 1 11.7 1L10.4 2.3a4 4 0 0 0 4.3 4z"/></svg></span><div class="grow"><div class="bold fs13">计院青年志愿者 · 年审整改</div><div class="small muted">第 2 轮材料待提交</div></div><span class="tag tag-danger">待整改</span></a><a class="todo-item" href="zombie-verify.html"><span class="stat-ic red" style="width:38px;height:38px;border-radius:11px"><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M5 20V10a7 7 0 0 1 14 0v10l-2.3-1.6L14.3 20 12 18.4 9.7 20l-2.4-1.6z"/><path d="M9.5 10.5v.01M14.5 10.5v.01"/></svg></span><div class="grow"><div class="bold fs13">计院摄影协会 · 疑似僵尸号</div><div class="small muted">停更 212 天，请核实运营情况</div></div><span class="tag tag-warning">待核实</span></a></div>
 <div class="m-title">我负责的账号<a href="accounts.html">全部 5 个<svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><path d="m9 6 6 6-6 6"/></svg></a></div>
-<a class="m-card flex gap12" href="account-detail.html" style="margin-bottom:10px"><span class="pf pf-wx " title="微信公众号">微</span><div class="grow"><div class="bold ellipsis">中南计院团委</div><div class="small muted">微信公众号 · 二级平台</div></div><span class="tag tag-success tag-dot">正常运行</span></a><a class="m-card flex gap12" href="account-detail.html" style="margin-bottom:10px"><span class="pf pf-wb " title="微博">博</span><div class="grow"><div class="bold ellipsis">计算机学院学生会</div><div class="small muted">微博 · 二级平台</div></div><span class="tag tag-warning tag-dot">变更申请中</span></a><a class="m-card flex gap12" href="account-detail.html" style="margin-bottom:10px"><span class="pf pf-dy " title="抖音">抖</span><div class="grow"><div class="bold ellipsis">计院街舞社</div><div class="small muted">抖音 · 社团平台</div></div><span class="tag tag-success tag-dot">正常运行</span></a></div>
-  <nav class="tabbar"><a class="" href="apply.html"><svg class="i " viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><span>服务大厅</span></a><a class="tab-c on" href="home.html"><img src="../../assets/m-center-logo.png" alt="中南大学"><span>首页</span></a><a class="" href="mine.html"><svg class="i " viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>个人中心</span></a></nav><span class="home-ind"></span>
+<a class="m-card flex gap12" href="account-detail.html?acct=annual" style="margin-bottom:10px"><span class="pf pf-wx " title="微信公众号">微</span><div class="grow"><div class="bold ellipsis">中南计院团委</div><div class="small muted">微信公众号 · 二级平台</div></div><span class="tag tag-success tag-dot">正常运行</span></a><a class="m-card flex gap12" href="account-detail.html?acct=rename" style="margin-bottom:10px"><span class="pf pf-wb " title="微博">博</span><div class="grow"><div class="bold ellipsis">计算机学院学生会</div><div class="small muted">微博 · 二级平台</div></div><span class="tag tag-warning tag-dot">变更申请中</span></a><a class="m-card flex gap12" href="account-detail.html?acct=handover" style="margin-bottom:10px"><span class="pf pf-dy " title="抖音">抖</span><div class="grow"><div class="bold ellipsis">计院街舞社</div><div class="small muted">抖音 · 社团平台</div></div><span class="tag tag-success tag-dot">正常运行</span></a></div>
+  <nav class="tabbar"><a class="" href="apply.html"><svg class="i " viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg><span>服务大厅</span></a><a class="tab-c on" href="home.html"><img src="../../assets/m-center-logo.png" alt="中南大学"><span>首页</span></a><a class="" href="my-apply.html"><svg class="i " viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 11h6M9 15h4"/></svg><span>我的申请</span></a></nav><span class="home-ind"></span>
 </div>
 <aside class="notes">
   <div class="card"><div class="small muted">学生用户 · 李明 · 移动端</div><h3>首页</h3>
-  <div class="small muted mb12">app/student/home.html</div><ul><li>聚合本人待办：待年审、退回修改、疑似僵尸号核实，点击直达办理页</li><li>快捷入口覆盖新建、变更、交接、注销、认领五类业务及年审、整改</li><li>顶部统计分别跳转我的账号、我的申请、我的待办</li></ul></div>
+  <div class="small muted mb12">app/student/home.html</div><ul><li>聚合本人待办：待年审、退回修改、整改提交、疑似僵尸号核实，点击直达办理页</li><li>快捷入口覆盖新建、变更、交接、注销、认领五类业务及年审、整改</li><li>顶部统计分别跳转我的账号、我的申请、我的待办</li></ul></div>
   <div class="card flow"><div class="bold">业务链路 · 下一步</div><a href="apply-create-basic.html"><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M4 12h16"/><path d="m14 6 6 6-6 6"/></svg>剧本一：新建备案</a><a href="annual-fill.html"><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M4 12h16"/><path d="m14 6 6 6-6 6"/></svg>剧本五：年审填报</a><a href="application-returned.html"><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M4 12h16"/><path d="m14 6 6 6-6 6"/></svg>查看退回意见</a></div>
   <a class="btn btn-default" href="../../index.html"><svg class="i " viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>返回原型导航</a>
 </aside>
@@ -437,7 +460,9 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
     if(t.dataset.seg!==undefined){
       var g=t.parentElement;g.querySelectorAll('[data-seg]').forEach(function(b){b.classList.remove('on');});t.classList.add('on');
       var target=g.dataset.target&&document.querySelector(g.dataset.target);
-      if(target){var v=t.dataset.seg;target.querySelectorAll('[data-cat]').forEach(function(row){row.classList.toggle('hidden',!(v==='all'||(' '+row.dataset.cat+' ').indexOf(' '+v+' ')>-1));});}
+      if(target){var v=t.dataset.seg;var catHide=function(row){return !(v==='all'||(' '+(row.dataset.cat||'')+' ').indexOf(' '+v+' ')>-1);};
+        target.querySelectorAll('[data-cat]').forEach(function(row){row.classList.toggle('hidden',catHide(row));});
+        document.querySelectorAll('.zx-main>.actbar[data-cat],.wf-dialog>.actbar[data-cat]').forEach(function(row){if(!target.contains(row))row.classList.toggle('hidden',catHide(row));});}
       if(!t.dataset.toast)return;
     }
     if(t.dataset.choice!==undefined){
@@ -458,7 +483,9 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
     if(t.dataset.copy){if(navigator.clipboard)navigator.clipboard.writeText(t.dataset.copy);toast('已复制到剪贴板');return;}
     if(t.dataset.back!==undefined){e.preventDefault();if(history.length>1&&document.referrer){history.back();}else{go(t.dataset.back);}return;}
     if(t.dataset.submit){
-      e.preventDefault();var scope=t.closest('[data-form]')||document;
+      e.preventDefault();var scope=t.closest('[data-form]');
+      if(!scope){var own=t.closest('[data-form-owner]');if(own)scope=document.querySelector('[data-form-id="'+own.getAttribute('data-form-owner')+'"]');}
+      if(!scope)scope=document;
       if(!validate(scope))return;
       if(t.dataset.toast){toast(t.dataset.toast);go(t.dataset.submit,700);}else{go(t.dataset.submit);}
       return;
@@ -523,6 +550,40 @@ body.app-stage{min-height:100vh;display:flex;justify-content:center;align-items:
     }
     var box=el.closest('.field.invalid,.cell.invalid');if(box&&String(el.value).trim())box.classList.remove('invalid');
   });
+
+  // 把表单操作条挪到滚动区外面：PC 贴在主内容区底部，流程弹窗贴在弹窗底部，内容单独滚
+  (function pinBars(){
+    var seq=0;
+    function mark(bar){
+      var form=bar.closest('[data-form]');
+      if(!form)return;
+      if(!form.getAttribute('data-form-id')){seq+=1;form.setAttribute('data-form-id','dock-'+seq);}
+      bar.setAttribute('data-form-owner',form.getAttribute('data-form-id'));
+    }
+    function carry(bar, host){
+      var node=bar.parentElement, hide=bar.classList.contains('hidden');
+      while(node&&node!==host){
+        if(node.classList.contains('hidden'))hide=true;
+        if(node.hasAttribute('data-cat')&&!bar.hasAttribute('data-cat'))bar.setAttribute('data-cat',node.getAttribute('data-cat'));
+        node=node.parentElement;
+      }
+      if(hide)bar.classList.add('hidden');
+      mark(bar);
+      host.appendChild(bar);
+    }
+    document.querySelectorAll('.wf-dialog').forEach(function(dlg){
+      Array.prototype.slice.call(dlg.querySelectorAll('.actbar')).forEach(function(bar){
+        if(bar.parentElement===dlg||bar.closest('.modal,.drawer'))return;
+        carry(bar, dlg);
+      });
+    });
+    document.querySelectorAll('.zx-main>.content').forEach(function(content){
+      Array.prototype.slice.call(content.querySelectorAll('.actbar')).forEach(function(bar){
+        if(bar.closest('.wf-dialog,.modal,.drawer,.mask'))return;
+        carry(bar, content.parentNode);
+      });
+    });
+  })();
 })();
 </script>
 </body>

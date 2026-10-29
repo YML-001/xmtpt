@@ -29,16 +29,18 @@ body{background:#F5F7FA}
 .sec-hd p{font-size:13px;color:var(--c-text-3)}
 .entry{display:flex;flex-direction:column;overflow:hidden;border-radius:14px;background:#fff;border:1px solid #E3ECF5;box-shadow:var(--shadow-sm);transition:box-shadow .2s,border-color .2s}
 .entry:hover{box-shadow:var(--shadow-lg);border-color:var(--c-primary-border)}
-.entry-hd{display:flex;align-items:center;gap:14px;padding:18px 20px}
+.entry-hd{display:flex;align-items:flex-start;gap:10px;padding:14px 14px 12px}
 .entry-ic{width:50px;height:50px;border-radius:14px;display:grid;place-items:center;color:#fff;flex:none}
 .entry-ic .i{width:24px;height:24px}
-.entry h3{font-size:17px}
-.entry-go{margin-left:auto;color:var(--c-primary);font-weight:600;font-size:14px;display:flex;align-items:center;gap:2px}
-.preview{height:230px;overflow:hidden;position:relative;background:#EEF3F8;border-top:1px solid var(--c-line)}
-.preview iframe{position:absolute;top:0;left:0;border:0;transform-origin:0 0;pointer-events:none}
-.preview::after{content:"";position:absolute;inset:0}
-.entry-links{display:flex;flex-wrap:wrap;gap:6px;padding:12px 20px 16px;border-top:1px solid var(--c-line)}
-.entry-links a{font-size:12px;padding:3px 10px;border-radius:12px;background:var(--c-bg);color:var(--c-text-2)}
+.entry .entry-ic{width:40px;height:40px;border-radius:12px}
+.entry .entry-ic .i{width:20px;height:20px}
+.entry h3{font-size:15px;line-height:1.35}
+.entry-row{display:flex;align-items:flex-start;gap:6px}
+.entry-row h3{flex:1;min-width:0}
+.entry-desc{margin-top:4px;line-height:1.55}
+.entry-go{flex:none;color:var(--c-primary);font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:2px;white-space:nowrap;line-height:1.35}
+.entry-links{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px 12px;margin-top:auto;border-top:1px solid var(--c-line)}
+.entry-links a{font-size:12px;padding:2px 8px;border-radius:12px;background:var(--c-bg);color:var(--c-text-2);line-height:1.6}
 .entry-links a:hover{background:var(--c-primary-light);color:var(--c-primary)}
 .scn{padding:20px;display:flex;flex-direction:column;gap:12px}
 .scn-no{width:40px;height:40px;border-radius:12px;background:var(--c-primary);color:#fff;display:grid;place-items:center;font-weight:700;flex:none}
@@ -104,7 +106,7 @@ def hero():
   <img class="hero-logo" src="assets/m-center-logo.png" alt="中南大学">
   <h1>中南大学团学组织新媒体平台 · 原型页面导航</h1>
   <p class="lead">覆盖全校团学组织新媒体账号<b>全生命周期</b>的综合管理平台原型：新建备案 → 正常运行 → 人员交接 → 信息变更 → 年度年审 → 异常整改 → 账号注销 → 历史归档。<br>
-  <b>PC 管理端（学校管理员 / 学院管理员 / 业务教师）+ 移动 APP（学生 / 教师 / 学院管理员）</b>，8 条演示剧本贯穿各角色，业务逻辑闭环、按钮均可点击。</p>
+  <b>PC 端（学校管理员 / 学院管理员 / 业务教师 / 学生用户）+ 移动 APP（学生 / 教师 / 学院管理员 / 学校管理员）</b>，8 条演示剧本贯穿各角色，业务逻辑闭环、按钮均可点击。</p>
   <div class="pills">
     <span class="pill blue">{icon('file')}高保真交互原型</span>
     <span class="pill">{icon('layers')}每页独立 HTML · 样式内联</span>
@@ -132,42 +134,53 @@ def sec(id_, ic, title, desc, body):
             f'<div><h2>{title}</h2><p>{desc}</p></div></div>{body}</div></section>')
 
 
-def entries():
-    items = [
-        ("PC 端 · 学校管理员", "校团委宣传部 陈静：全校驾驶舱、校级审核、年审发起、风险监管", "building", "#006DAD",
-         "pc/school/dashboard.html", 1440, [("账号库", "pc/school/accounts.html"), ("校级审核", "pc/school/approvals.html"),
-                                            ("年审任务", "pc/school/annual-tasks.html"), ("僵尸号排查", "pc/school/zombie.html"), ("系统配置", "pc/school/settings-workflow.html")]),
-        ("PC 端 · 学院管理员", "计算机学院团委 周建华：学院审核、年审统筹提交、任务分派、整改", "hierarchy", "#67C23A",
-         "pc/college/workbench.html", 1440, [("学院审核", "pc/college/approvals.html"), ("年审统筹", "pc/college/annual-progress.html"),
-                                              ("任务分派", "pc/college/assign.html"), ("整改管理", "pc/college/rectify.html"), ("教师工作量", "pc/college/teachers.html")]),
-        ("PC 端 · 业务教师", "宣传工作辅导员 王晓琳（一人多身份）：一审、年审、核实、代办", "user", "#E6A23C",
-         "pc/teacher/workbench.html", 1440, [("待我审核", "pc/teacher/todo.html"), ("年审审核", "pc/teacher/review-annual.html"),
-                                              ("僵尸号核实", "pc/teacher/review-zombie.html"), ("代办中心", "pc/teacher/proxy.html"), ("账号档案", "pc/common/archive-basic.html")]),
-        ("移动端 · 学生用户", "新媒体中心主任 李明：发起申请、在线年审、提交整改、查看进度", "smartphone", "#2A8DC7",
-         "app/student/home.html", 1100, [("业务申请", "app/student/apply.html"), ("我的年审", "app/student/annual.html"),
-                                          ("我的申请", "app/student/applications.html"), ("整改任务", "app/student/rectify.html"), ("登录", "app/common/login.html")]),
-        ("移动端 · 业务教师", "王晓琳：随时随地移动审核，年审无异动批量通过", "inbox", "#E6A23C",
-         "app/teacher/home.html", 1100, [("待审", "app/teacher/todo.html"), ("交接审核", "app/teacher/review-handover.html"),
-                                          ("年审审核", "app/teacher/review-annual.html"), ("批量审核", "app/teacher/review-batch.html")]),
-        ("移动端 · 学院管理员", "周建华：移动审核、年审进度督办、整改复核", "dashboard", "#67C23A",
-         "app/college/home.html", 1100, [("待学院审核", "app/college/todo.html"), ("年审进度", "app/college/annual-progress.html"),
-                                          ("整改跟踪", "app/college/rectify.html"), ("提交校团委", "app/college/annual-submit.html")]),
-    ]
-    cards = []
-    for title, desc, ic, color, href, vw, links in items:
-        scale = 560 / vw
-        link_html = "".join(f'<a href="{h}">{t}</a>' for t, h in links)
-        cards.append(f"""<div class="entry">
+def entry_card(title, desc, ic, color, href, links):
+    link_html = "".join(f'<a href="{h}">{t}</a>' for t, h in links)
+    go = icon("chevron-right", 14)
+    return f"""<div class="entry">
   <a class="entry-hd" href="{href}"><span class="entry-ic" style="background:{color}">{icon(ic)}</span>
-    <div class="grow"><h3>{title}</h3><div class="small muted">{desc}</div></div><span class="entry-go">进入{icon('chevron-right', 14)}</span></a>
-  <a class="preview" href="{href}" aria-label="{title}页面预览"><iframe src="{href}" loading="lazy" tabindex="-1" title="{title}预览"
-    style="width:{vw}px;height:{int(230 / scale)}px;transform:scale({scale:.4f})"></iframe></a>
+    <div class="grow"><div class="entry-row"><h3>{title}</h3><span class="entry-go">进入{go}</span></div>
+    <div class="small muted entry-desc">{desc}</div></div></a>
   <div class="entry-links">{link_html}</div>
-</div>""")
+</div>"""
+
+
+def entries():
+    pc = [
+        ("PC 端 · 学生用户", "新媒体中心主任 李明：在 PC 端发起申请、年审填报、整改与进度查看", "user", "#2A8DC7",
+         "pc/student/home.html", [("我的待办", "pc/student/todo.html"), ("业务申请", "pc/student/apply.html"),
+                                  ("我的年审", "pc/student/annual.html"), ("整改任务", "pc/student/rectify.html")]),
+        ("PC 端 · 业务教师", "宣传工作辅导员 王晓琳（一人多身份）：一审、年审、核实、代办", "user", "#E6A23C",
+         "pc/teacher/workbench.html", [("待我审核", "pc/teacher/todo.html"), ("年审审核", "pc/teacher/review-annual.html"),
+                                       ("僵尸号核实", "pc/teacher/review-zombie.html"), ("代办中心", "pc/teacher/proxy.html"), ("账号档案", "pc/common/archive-basic.html")]),
+        ("PC 端 · 学院管理员", "计算机学院团委 周建华：学院审核、年审统筹提交、任务分派、整改", "hierarchy", "#67C23A",
+         "pc/college/workbench.html", [("学院审核", "pc/college/approvals.html"), ("年审统筹", "pc/college/annual-progress.html"),
+                                       ("任务分派", "pc/college/assign.html"), ("整改管理", "pc/college/rectify.html"), ("教师工作量", "pc/college/teachers.html")]),
+        ("PC 端 · 学校管理员", "校团委宣传部 陈静：全校驾驶舱、校级审核、年审发起、风险监管", "building", "#006DAD",
+         "pc/school/dashboard.html", [("账号库", "pc/school/accounts.html"), ("校级审核", "pc/school/approvals.html"),
+                                      ("年审任务", "pc/school/annual-tasks.html"), ("僵尸号排查", "pc/school/zombie.html"),
+                                      ("系统配置", "pc/school/settings-workflow.html"), ("移动端", "app/school/home.html")]),
+    ]
+    app = [
+        ("移动端 · 学生用户", "新媒体中心主任 李明：发起申请、在线年审、提交整改、查看进度", "smartphone", "#2A8DC7",
+         "app/student/home.html", [("业务申请", "app/student/apply.html"), ("我的年审", "app/student/annual.html"),
+                                   ("整改任务", "app/student/rectify.html"), ("登录", "app/common/login.html")]),
+        ("移动端 · 业务教师", "王晓琳：随时随地移动审核，年审无异动批量通过", "inbox", "#E6A23C",
+         "app/teacher/home.html", [("待审", "app/teacher/todo.html"), ("交接审核", "app/teacher/review-handover.html"),
+                                   ("年审审核", "app/teacher/review-annual.html"), ("批量审核", "app/teacher/review-batch.html")]),
+        ("移动端 · 学院管理员", "周建华：移动审核、年审进度督办、整改复核", "dashboard", "#67C23A",
+         "app/college/home.html", [("待学院审核", "app/college/todo.html"), ("年审进度", "app/college/annual-progress.html"),
+                                   ("整改跟踪", "app/college/rectify.html"), ("提交校团委", "app/college/annual-submit.html")]),
+        ("移动端 · 学校管理员", "校团委宣传部 陈静：校级终审，查看全校账号、组织、年审节点与僵尸号", "smartphone", "#006DAD",
+         "app/school/home.html", [("待审", "app/school/todo.html"), ("新建终审", "app/school/review-new.html"),
+                                   ("全校账号", "app/school/accounts.html"), ("消息", "app/school/messages.html")]),
+    ]
+    pc_html = "".join(entry_card(*item) for item in pc)
+    app_html = "".join(entry_card(*item) for item in app)
     login = (f'<div class="grid g2 mt16">'
              f'<a class="pg" href="pc/common/login.html"><span class="pg-no">{icon("lock", 14)}</span><div><b>PC 统一身份认证登录</b><span>工号 / 学号登录 → 选择身份进入各角色</span></div><code>pc/common/login.html</code></a>'
              f'<a class="pg" href="pc/common/identity-switch.html"><span class="pg-no">{icon("user-switch", 14)}</span><div><b>多身份选择</b><span>一人多身份，按组织 + 账号 + 操作授权</span></div><code>pc/common/identity-switch.html</code></a></div>')
-    return f'<div class="grid g2">{"".join(cards)}</div>{login}'
+    return f'<div class="grid g4">{pc_html}</div><div class="grid g4 mt16">{app_html}</div>{login}'
 
 
 def scenarios():
@@ -194,7 +207,7 @@ def roles():
         [f'<b>学校管理员</b>', "校团委宣传部负责老师及授权人员", "全校所有账号、组织、人员、年审和整改数据", "全校", "学校层面最终审核、备案、整改及注销审核", tag("PC", "primary") + " " + tag("移动", "success")],
         [f'<b>学院管理员</b>', "学院团委书记、副书记、学院指定负责教师", "本学院及所属、直属、指导组织全部数据", "本学院全部账号", "学院层面审核，统筹教师审核结果并提交学校", tag("PC", "primary") + " " + tag("移动", "success")],
         [f'<b>学院业务教师</b>', "年级辅导员、社团指导老师、宣传工作辅导员、志愿服务负责老师等", "本人被授权的组织和账号", "被授权组织或账号", "对本人负责范围内学生申请、年审、整改等进行审核", tag("PC", "primary") + " " + tag("移动", "success")],
-        [f'<b>学生用户</b>', "团支书、社团负责人、学生会负责人、志愿者协会负责人、新媒体学生骨干等", "本人负责、所在组织授权或本人申请的账号", "本人负责账号", "无最终审核权，可发起申请和提交材料", tag("移动", "success")],
+        [f'<b>学生用户</b>', "团支书、社团负责人、学生会负责人、志愿者协会负责人、新媒体学生骨干等", "本人负责、所在组织授权或本人申请的账号", "本人负责账号", "无最终审核权，可发起申请和提交材料", tag("PC", "primary") + " " + tag("移动", "success")],
     ])
     Y, N = '<span class="yes">√</span>', '<span class="no">—</span>'
 
@@ -245,7 +258,7 @@ def features():
         ("route", "学院任务分派", "单个 / 批量 / 按年级 / 按组织类别分配，统计每名教师工作量", ["批量分配规则", "教师工作量"], "pc/college/assign.html"),
         ("hand", "教师代办", "学生毕业、失联、组织撤销等情形由教师代办，记录发起方式", ["代办原因", "日志标记"], "pc/teacher/proxy.html"),
         ("chart", "驾驶舱与工作台", "学校数据驾驶舱 16 项指标；学院工作台；教师工作台", ["全校底数", "年审进度", "风险预警"], "pc/school/dashboard.html"),
-        ("upload", "数据导入导出", "2025 年度数据初始化导入并由学院确认；13 类台账导出；备案表自动生成", ["Excel 导入", "校验结果", "13 类台账", "Word / PDF"], "pc/school/export.html"),
+        ("upload", "数据导入导出", "从全校账号库导入 2025 年度底库，学院在本院账号中确认；13 类台账在数据导出中下载；备案表自动生成", ["从全校账号库导入", "校验结果", "13 类台账", "Word / PDF"], "pc/school/accounts.html"),
         ("bell", "消息待办与日志", "按身份生成待办；新建、变更、注销、年审、交接、整改、权限、导入导出、代办全部留痕", ["待办中心", "修改前后", "审核意见"], "pc/school/logs.html"),
         ("settings", "系统配置", "审核流程节点可配置；平台类型等数据字典；风险规则阈值", ["流程配置", "数据字典", "风险规则"], "pc/school/settings-workflow.html"),
     ]
@@ -355,7 +368,7 @@ def directory():
 
 def build():
     body = (hero() +
-            sec("entry", "grid", "演示入口", "一键进入各角色工作台，卡片内为实时页面预览", entries()) +
+            sec("entry", "grid", "演示入口", "一键进入各角色工作台，卡片下方为常用页面", entries()) +
             sec("scenario", "route", "演示剧本", "8 条业务路线贯穿学生、教师、学院、学校四类角色，按编号依次点击即可完整演示闭环", scenarios()) +
             sec("role", "users", "角色权限", "系统用户角色、数据范围与功能权限矩阵（依据《业务说明》第五章）", roles()) +
             sec("feature", "layers", "功能清单", "第一期建设范围核心功能模块，点击卡片查看对应页面", features()) +

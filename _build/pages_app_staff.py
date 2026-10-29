@@ -4,6 +4,7 @@
 """
 from base import *  # noqa: F401,F403
 from data import ACCOUNTS, PEOPLE, FLOWS, COLLEGE_STATS as CS, ANNUAL_TASK as T
+from mobile_archive import ARCH_JS, ARCHIVE_CSS, action_row, render_archive
 
 DT = "app/teacher/"
 DC = "app/college/"
@@ -19,8 +20,6 @@ STAFF_CSS = """
 .hero-stats b{display:block;font-size:20px;font-weight:700;line-height:1.3;font-variant-numeric:tabular-nums}
 .hero-stats b small{font-size:12px;font-weight:500;opacity:.8}
 .hero-stats span{font-size:11px;opacity:.85}
-.quick .qi{position:relative}
-.quick .qi .badge{position:absolute;top:-5px;right:-7px;transform:scale(.85)}
 .sec-t{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .sec-t::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--c-primary);flex:none}
 .sec-t .ml-auto{font-weight:400;font-size:12px}
@@ -248,7 +247,7 @@ def t_home():
             ("新建", "file-add", "", 1, "review-detail.html"), ("变更", "file-edit", "orange", 1, "review-change.html"),
             ("交接", "user-switch", "green", 1, "review-handover.html"), ("注销", "power", "red", 1, "todo.html"),
             ("年审", "calendar", "", 3, "review-annual.html"), ("僵尸号", "ghost", "red", 1, "review-zombie.html"),
-            ("整改", "wrench", "orange", 1, "review-rectify.html"), ("全部待审", "inbox", "purple", 0, "todo.html"),
+            ("整改", "wrench", "orange", 1, "review-rectify.html"),
         ])
     urgent = "".join([
         list_item("review-handover.html", "user-switch", "green", "计院街舞社 · 负责人交接", "李明 → 李四 · 拟 2026-10-01 生效", tag("明日生效", "danger")),
@@ -271,12 +270,11 @@ def t_home():
   </div>
 </div>
 <div class="alert alert-warning mt12">{icon('clock')}<div class="grow"><b>{T['name']}</b>：教师审核截止 <b>{T['teacher_end']}</b>，剩余 25 天，请及时处理年审记录。</div></div>
-<div class="m-card mt12"><div class="sec-t">待审分类<span class="ml-auto"><a class="muted" href="todo.html">共 9 项</a></span></div><div class="quick">{quick}</div></div>
+<div class="m-card mt12"><div class="sec-t">待审分类<span class="ml-auto"><a class="muted" href="todo.html">共 9 项</a></span></div><div class="quick pack7">{quick}</div></div>
 <a class="m-card batch-entry" href="review-batch.html"><span class="stat-ic green" style="width:40px;height:40px;border-radius:12px">{icon('check-circle', 22)}</span>
   <div class="grow"><div class="bold">批量审核年审（无异动 12 个）</div><div class="small muted">仅无异动、无风险且信息完整的账号可批量通过</div></div>{icon('chevron-right', cls='arrow')}</a>
 <div class="m-title">紧急待办<a href="todo.html">全部{icon('chevron-right', 14)}</a></div>
-<div class="m-card" style="padding:4px 14px">{urgent}</div>
-{pc_hint('复杂业务可在 PC 端办理', '代办、修改后确认、批量分配等 · 数据实时同步', '../../pc/teacher/workbench.html')}"""
+<div class="m-card" style="padding:4px 14px">{urgent}</div>"""
     page_t("teacher", DT + "home.html", "工作台", content, tab="home", nav_title="教师工作台",
            notes=["顶部三个身份标签对应王晓琳的三个授权范围，数据按授权范围自动汇总（共 18 个账号）",
                   "统计数字可点击：待审核进入待审列表，疑似僵尸号、待整改直达核实与整改审核页",
@@ -387,8 +385,8 @@ def t_messages():
            right='<button type="button" data-toast="已将 3 条未读消息标记为已读">全部已读</button>',
            notes=["消息按身份与授权范围生成：审核待办、风险预警、系统通知三类，可筛选",
                   "红点表示未读，点击消息直达对应审核 / 核实页面办理",
-                  "消息设置可在“我的”中开关，截止前系统自动提醒"],
-           flow=[("剧本三：交接审核", "review-handover.html"), ("僵尸号核实", "review-zombie.html"), ("消息设置", "mine.html")])
+                  "年审截止等提醒保留在消息列表中，点击进入对应办理页"],
+           flow=[("剧本三：交接审核", "review-handover.html"), ("僵尸号核实", "review-zombie.html")])
 
 
 def t_mine():
@@ -408,71 +406,104 @@ def t_mine():
 </div>
 {sec('我的授权范围', scopes, '<span class="muted">共 18 个账号</span>')}
 <div class="m-group">
-  {cell(icon('user-switch') + ' 切换身份', '<span class="small">当前：业务教师</span>', '../common/identity-switch.html')}
   {cell(icon('file-check') + ' 已审核记录', '23 条', 'done.html')}
   {cell(icon('bell') + ' 消息提醒', '<span class="badge">3</span>', 'messages.html')}
-  {cell(icon('monitor') + ' PC 端入口', '<span class="small">xmt.csu.edu.cn</span>', '../../pc/teacher/workbench.html')}
 </div>
-<div class="m-group-title">消息设置</div>
-<div class="m-group">
-  {cell('审核待办提醒', '<span class="switch on" role="switch" aria-label="审核待办提醒"></span>')}
-  {cell('年审截止提醒', '<span class="switch on" role="switch" aria-label="年审截止提醒"></span>')}
-  {cell('风险预警提醒', '<span class="switch on" role="switch" aria-label="风险预警提醒"></span>')}
-  {cell('系统通知', '<span class="switch" role="switch" aria-label="系统通知"></span>')}
-</div>
-<div class="alert alert-info">{icon('info')}<div class="grow">PC 和移动端同一账号体系、同一数据库、同一业务状态；移动端可完成主要审核工作。</div></div>
-<a class="btn btn-danger mt12" href="../common/login.html" style="width:100%;height:44px">{icon('logout')}退出登录</a>"""
+<div class="alert alert-info">{icon('info')}<div class="grow">PC 和移动端同一账号体系、同一数据库、同一业务状态；移动端可完成主要审核工作。</div></div>"""
     page_t("teacher", DT + "mine.html", "我的", content, tab="mine", nav_title="我的",
            notes=["展示一人多身份：宣传工作辅导员、2021级辅导员、街舞社指导教师及各自授权账号数",
-                  "切换身份进入身份选择页；PC 端入口跳转教师工作台，数据与移动端实时一致",
-                  "消息设置开关即时生效并给出提示；退出登录返回统一身份认证页"],
-           flow=[("切换身份", "../common/identity-switch.html"), ("PC 端教师工作台", "../../pc/teacher/workbench.html"),
-                 ("退出登录", "../common/login.html")])
+                  "已审核记录和消息提醒可从本页进入"],
+           flow=[("已审核记录", "done.html"), ("消息提醒", "messages.html"),
+                 ("PC 端教师工作台", "../../pc/teacher/workbench.html")])
+
+
+def teacher_rows():
+    """教师手机账号清单。状态与原来的卡片一致，档案正文另按同一账号补全。"""
+    def rec(key, cat, name, platform, meta, run, sub, href, act, src=None, **over):
+        src = src or {}
+        level = over.get("level") or src.get("level") or meta.split(" · ")[0]
+        return dict(
+            key=key, cat=cat, name=name, platform=platform, pid=over.get("pid") or src.get("pid") or "—",
+            org=over.get("org") or src.get("org") or name, level=level,
+            org_type=over.get("org_type") or src.get("org_type") or "",
+            college="计算机学院", teacher=over.get("teacher") or src.get("teacher") or "王晓琳",
+            student=over.get("student") or src.get("student") or "—",
+            run=run, filing=over.get("filing") or src.get("filing") or "已备案",
+            annual=sub or src.get("annual") or "—", last=over.get("last") or src.get("last_post") or "",
+            opened=src.get("opened") or "", fans=src.get("fans") or "",
+            change=src.get("change") or "", idle_days=over.get("idle_days", src.get("idle_days")),
+            meta=meta, act=act, href=href,
+        )
+    return [
+        rec("an", "xc", A_AN["name"], A_AN["platform"], "二级平台 · 院级学生组织", "正常运行", "待指导教师审核", "review-annual.html", "审核年审", A_AN, last="2026-09-17"),
+        rec("nw", "xc", A_NEW["name"], A_NEW["platform"], "二级平台 · 院级学生组织", "备案申请中", "", "review-detail.html", "审核新建", A_NEW),
+        rec("rn", "xc", A_REN["name"], A_REN["platform"], "二级平台 · 院级学生组织", "正常运行", "变更申请中", "review-change.html", "审核变更", A_REN, last="2026-09-18"),
+        rec("id", "xc", ACCOUNTS["idchange"]["name"], "哔哩哔哩", "二级平台 · 院级学生组织", "正常运行", "待填报", "", "", ACCOUNTS["idchange"]),
+        rec("re", "xc", A_RE["name"], A_RE["platform"], "二级平台 · 院级学生组织", "整改中", "整改复核中", "", "", A_RE, last="2026-09-26"),
+        rec("ph", "xc", A_PH["name"], A_PH["platform"], "社团平台 · 社团组织", "不活跃", "整改复核中", "review-rectify.html", "审核整改", A_PH),
+        rec("px", "xc", ACCOUNTS["proxy"]["name"], "QQ", "社团平台 · 负责人已毕业", "正常运行", "待填报", "../../pc/teacher/proxy.html", "PC 代办", ACCOUNTS["proxy"], last="2026-09-24"),
+        rec("gs", "xc", "计院研究生会", "视频号", "二级平台 · 院级学生组织", "正常运行", "待指导教师审核", "review-annual.html", "审核年审", student="刘佳宁"),
+        rec("xl", "xc", "计院心理协会", "微博", "社团平台 · 社团组织", "正常运行", "待学院审核", "", ""),
+        rec("cx", "xc", "计院创新创业协会", "抖音", "社团平台 · 社团组织", "正常运行", "待学院审核", "", ""),
+        rec("zb", "fd", A_ZB["name"], A_ZB["platform"], "三级平台 · 停更 412 天", "不活跃", "疑似僵尸号", "review-zombie.html", "去核实", A_ZB),
+        rec("ne", "fd", "2021级网络工程2班团支部", "QQ", "三级平台 · 班级团支部", "申请注销", "注销申请中", "../../pc/teacher/review-cancel.html", "PC 审核", org="2021级网络工程2班团支部", level="三级平台", org_type="班级团支部"),
+        rec("ai", "fd", "2021级人工智能1班团支部", "QQ", "三级平台 · 停更 236 天", "不活跃", "疑似僵尸号", "", "", org="2021级人工智能1班团支部", level="三级平台", org_type="班级团支部", idle_days=236),
+        rec("cs2", "fd", "2021级计算机科学2班团支部", "QQ", "三级平台 · 班级团支部", "不活跃", "待填报", "", "", org="2021级计算机科学2班团支部", level="三级平台", org_type="班级团支部"),
+        rec("is", "fd", "2021级信息安全1班团支部", "微信公众号", "三级平台 · 班级团支部", "申请注销", "注销申请中", "", "", org="2021级信息安全1班团支部", level="三级平台", org_type="班级团支部"),
+        rec("cs1", "fd", "2021级计算机科学1班团支部", "微信公众号", "三级平台 · 班级团支部", "已注销", "本年度注销", "", "", org="2021级计算机科学1班团支部", level="三级平台", org_type="班级团支部", filing="已注销"),
+        rec("se2", "fd", "2021级软件工程2班团支部", "微信公众号", "三级平台 · 班级团支部", "已注销", "本年度注销", "", "", org="2021级软件工程2班团支部", level="三级平台", org_type="班级团支部", filing="已注销"),
+        rec("ho", "jw", A_HO["name"], A_HO["platform"], "社团平台 · 社团组织", "正常运行", "交接审核中", "review-handover.html", "审核交接", A_HO, last="2026-09-12"),
+    ]
 
 
 def t_accounts():
-    data = [
-        ("xc", A_AN["name"], "微信公众号", "二级平台 · 院级学生组织", "正常运行", "待指导教师审核", "review-annual.html", "审核年审"),
-        ("xc", A_NEW["name"], "微信公众号", "二级平台 · 院级学生组织", "备案申请中", "", "review-detail.html", "审核新建"),
-        ("xc", A_REN["name"], "微博", "二级平台 · 院级学生组织", "正常运行", "变更申请中", "review-change.html", "审核变更"),
-        ("xc", ACCOUNTS["idchange"]["name"], "哔哩哔哩", "二级平台 · 院级学生组织", "正常运行", "待填报", "", ""),
-        ("xc", A_RE["name"], "小红书", "二级平台 · 院级学生组织", "整改中", "整改复核中", "", ""),
-        ("xc", A_PH["name"], "视频号", "社团平台 · 社团组织", "不活跃", "整改复核中", "review-rectify.html", "审核整改"),
-        ("xc", ACCOUNTS["proxy"]["name"], "QQ", "社团平台 · 负责人已毕业", "正常运行", "待填报", "../../pc/teacher/proxy.html", "PC 代办"),
-        ("xc", "计院研究生会", "视频号", "二级平台 · 院级学生组织", "正常运行", "待指导教师审核", "review-annual.html", "审核年审"),
-        ("xc", "计院心理协会", "微博", "社团平台 · 社团组织", "正常运行", "待学院审核", "", ""),
-        ("xc", "计院创新创业协会", "抖音", "社团平台 · 社团组织", "正常运行", "待学院审核", "", ""),
-        ("fd", A_ZB["name"], "微信公众号", "三级平台 · 停更 412 天", "不活跃", "疑似僵尸号", "review-zombie.html", "去核实"),
-        ("fd", "2021级网络工程2班团支部", "QQ", "三级平台 · 班级团支部", "申请注销", "注销申请中", "../../pc/teacher/review-cancel.html", "PC 审核"),
-        ("fd", "2021级人工智能1班团支部", "QQ", "三级平台 · 停更 236 天", "不活跃", "疑似僵尸号", "", ""),
-        ("fd", "2021级计算机科学2班团支部", "QQ", "三级平台 · 班级团支部", "不活跃", "待填报", "", ""),
-        ("fd", "2021级信息安全1班团支部", "微信公众号", "三级平台 · 班级团支部", "申请注销", "注销申请中", "", ""),
-        ("fd", "2021级计算机科学1班团支部", "微信公众号", "三级平台 · 班级团支部", "已注销", "本年度注销", "", ""),
-        ("fd", "2021级软件工程2班团支部", "微信公众号", "三级平台 · 班级团支部", "已注销", "本年度注销", "", ""),
-        ("jw", A_HO["name"], "抖音", "社团平台 · 社团组织", "正常运行", "交接审核中", "review-handover.html", "审核交接"),
-    ]
     items = []
-    for cat, n, p, meta, run, sub, href, act in data:
+    for r in teacher_rows():
+        sub = r["annual"] if r["annual"] != "—" else ""
         sub_tag = st(sub, False) if sub in STATUS_KIND else tag(sub, "warning")
-        action = (btn(act, href, "light", size="sm") if href
-                  else btn("查看摘要", None, "light", size="sm", toast="详细档案请在 PC 端查看"))
+        action = btn(r["act"], r["href"], "light", size="sm") if r["href"] else ""
         items.append(
-            f'<div class="m-card" data-cat="{cat}"><div class="tc-top top-align">{pf(p)}<div class="grow" style="min-width:0">'
-            f'<div class="bold ellipsis">{n}</div><div class="small muted ellipsis">{p} · {meta}</div>'
-            f'<div class="flex gap6 wrap mt4">{st(run)}{sub_tag if sub else ""}</div></div></div>'
-            f'<div class="tc-ft" style="justify-content:flex-end">{btn("PC 档案", "../../pc/common/archive-basic.html", "default", size="sm")}{action}</div></div>')
-    content = f"""
-<label class="search-box">{icon('search')}<input placeholder="搜索账号名称 / 组织" data-search="#acct-list" aria-label="搜索账号"></label>
-{chips([('全部 18', 'all'), ('宣传工作 10', 'xc'), ('2021级 7', 'fd'), ('街舞社 1', 'jw')], target='#acct-list').replace('class="chips"', 'class="chips scroll-x"')}
-<div id="acct-list">{''.join(items)}</div>
-<div class="small muted" style="text-align:center;padding:4px 0 8px">移动端展示摘要，完整一账号一档案请在 PC 端查看</div>"""
+            '<div class="m-card" data-cat="' + r["cat"] + '"><div class="tc-top top-align">' + pf(r["platform"])
+            + '<div class="grow" style="min-width:0"><div class="bold ellipsis">' + r["name"] + '</div>'
+            + '<div class="small muted ellipsis">' + r["platform"] + " · " + r["meta"] + '</div>'
+            + '<div class="flex gap6 wrap mt4">' + st(r["run"]) + (sub_tag if sub else "") + '</div></div></div>'
+            + '<div class="tc-ft" style="justify-content:flex-end">'
+            + btn("查看档案", "archive.html?c=" + r["key"], "default", size="sm") + action + '</div></div>'
+        )
+    content = (
+        '<label class="search-box">' + icon("search") + '<input placeholder="搜索账号名称 / 组织" data-search="#acct-list" aria-label="搜索账号"></label>'
+        + chips([("全部 18", "all"), ("宣传工作 10", "xc"), ("2021级 7", "fd"), ("街舞社 1", "jw")], target="#acct-list").replace('class="chips"', 'class="chips scroll-x"', 1)
+        + '<div id="acct-list">' + "".join(items) + '</div>'
+    )
     page_t("teacher", DT + "accounts.html", "负责账号", content, tab="accounts", nav_title="我负责的账号",
            notes=["按授权范围（宣传工作 / 2021级 / 街舞社）筛选，搜索框按名称实时过滤",
                   "每个账号展示运行状态与当前业务状态，有待办的账号可直接进入审核",
-                  "移动端不提供完整档案，“PC 档案”跳转 PC 端账号档案；其余点击“查看摘要”提示到 PC 端查看",
-                  "毕业学生负责的账号（如计院ACM协会）引导到 PC 代办中心办理"],
-           flow=[("PC 账号档案", "../../pc/common/archive-basic.html"), ("PC 代办中心（剧本八）", "../../pc/teacher/proxy.html"),
+                  "查看档案打开与 PC 相同分区的手机档案，原有审核和代办按钮仍留在卡片上",
+                  "毕业学生负责的账号（如计院ACM协会）仍可进入教师代办"],
+           flow=[("手机档案", "archive.html?c=rn"), ("教师代办（剧本八）", "../../pc/teacher/proxy.html"),
                  ("PC 我负责的账号", "../../pc/teacher/accounts.html")])
+
+
+def t_archive():
+    cases = []
+    for i, r in enumerate(teacher_rows()):
+        flags = st(r["run"])
+        if r["annual"] and r["annual"] != "—":
+            flags += st(r["annual"], False) if r["annual"] in STATUS_KIND else tag(r["annual"], "warning")
+        act = action_row([(r["act"], r["href"], "primary")]) if r["href"] else ""
+        cls = "hidden" if i else ""
+        cases.append(
+            '<div data-case="' + r["key"] + '" class="' + cls + '">'
+            + head(r["name"], r["platform"], r["org"], flags)
+            + render_archive(r) + act + "</div>"
+        )
+    page_t("teacher", DT + "archive.html", "账号档案", "".join(cases), back="accounts.html",
+           css=ARCHIVE_CSS, js=ARCH_JS, nav_title="账号档案",
+           notes=["分区与 PC 账号档案一致：基本信息、平台信息、归属、负责人与管理员、年审、变更、整改、操作记录",
+                  "从负责账号进入，状态与那张卡片一致",
+                  "卡片上原有的审核、核实、代办按钮在档案底部保留"],
+           flow=[("返回负责账号", "accounts.html"), ("审核年审", "review-annual.html"),
+                 ("审核交接", "review-handover.html"), ("PC 账号档案", "../../pc/common/archive-staff.html")])
 
 
 def _review_bottom(pass_text, pass_href, pass_toast, reject_id="#dlg-reject", return_href="review-return.html"):
@@ -487,19 +518,25 @@ def _reject_dialog(case_desc):
 
 
 def t_review_detail():
-    org = rows([("所属学院", "计算机学院"), ("团学组织", A_NEW["org"]), ("组织类别", A_NEW["org_type"]), ("平台层级", A_NEW["level"])])
-    plat = rows([("平台类型", A_NEW["platform"]), ("平台名称", A_NEW["name"]), ("平台 ID", A_NEW["pid"]),
-                 ("开通时间", A_NEW["opened"]), ("认证主体", "中南大学（组织认证）")])
+    org = rows([("所属学院", "计算机学院"), ("所属团学组织", A_NEW["org"]), ("组织类别", A_NEW["org_type"]), ("平台管理层级", A_NEW["level"])])
+    plat = rows([("平台类型", A_NEW["platform"]), ("账号名称", A_NEW["name"]), ("曾用名", "无"), ("平台ID", A_NEW["pid"]),
+                 ("是否认证", "否"), ("粉丝数", "0"), ("运营团队规模（单位：人）", "6"),
+                 ("开通时间", A_NEW["opened"]), ("主页链接", "mp.weixin.qq.com/csu_cs_youth"),
+                 ("平台头像", "已上传"), ("二维码", "未上传（非必填）"), ("信息发布范围", "学院团学活动相关信息。")])
     plat += (f'<div class="flex between mt8"><span class="small muted">平台介绍</span>{tag("本次修改 · 326 字", "warning")}</div>'
              f'<div class="intro">{INTRO}</div>'
-             f'<div class="small muted mt8">四项机制</div><div class="mech">'
-             + "".join(f'<span>{icon("check-circle", 14)}{m}</span>' for m in ["信息发布审核", "舆情应对处置", "账号安全管理", "应急值守"])
-             + "</div>")
-    run = rows([("更新频率", "每周更新（≥1次/周）"), ("主要栏目", "青春计院 / 学术前沿 / 榜样力量 等 5 个"),
-                ("发布范围", "计算机学院团学工作相关内容"), ("运营团队", "学生编辑 12 人")])
-    lm, zw = PEOPLE["李明"], PEOPLE["张卫东"]
-    staff = rows([("第一责任人", f"张卫东 · {zw['job']}"), ("管理教师", "王晓琳 · 宣传工作辅导员"),
-                  ("学生负责人", f"李明 · {lm['no']}"), ("联系电话", lm["phone"]), ("学生管理员", "赵晨曦、王子涵")])
+             f'<div class="small muted mt8">平台信息确认</div>{mechanism_blocks()}')
+    run = rows([("最近一次公开内容发布时间", "2026-09-22"), ("更新频率", "每周更新（≥1次/周）"),
+                ("运行状态", "正常运行"), ("异常情况", "无"), ("备注", "无")])
+    lm, wx, zw = PEOPLE["李明"], PEOPLE["王晓琳"], PEOPLE["张卫东"]
+    zj, cj = PEOPLE["周建华"], PEOPLE["陈静"]
+    staff = rows([("当前管理教师", f"王晓琳 · {wx['no']} · 宣传工作辅导员 · 专职 · {wx['phone']}"),
+                  ("具体负责人", f"李明 · {lm['no']} · {lm['phone']}"),
+                  ("管理员", "陈可欣（8209230221）、刘子涵（8209240133）"),
+                  ("一审负责人", f"王晓琳 · {wx['no']} · {wx['phone']}"),
+                  ("二审负责人", f"周建华 · {zj['no']} · {zj['phone']}"),
+                  ("三审负责人", f"陈静 · {cj['no']} · {cj['phone']}"),
+                  ("第一责任人", f"张卫东 · {zw['job']}")])
     content = f"""
 {head(A_NEW['name'], A_NEW['platform'], F_NEW['no'] + ' · 李明 2026-09-26 重新提交', tag('新建备案', 'primary') + tag('二次提交', 'warning') + st('待审核'))}
 {m_steps(['学生提交', '教师审核', '学院审核', '校级审核'], 1)}
@@ -842,10 +879,9 @@ def c_home():
     pct = round(CS["done"] / CS["total"] * 100)
     quick = "".join(f'<a href="{h}"><span class="qi {c}">{icon(ic)}{badge(n)}</span>{t}</a>'
                     for t, ic, c, n, h in [
-                        ("学院审核", "file-check", "", 4, "todo.html"), ("年审进度", "chart", "green", 0, "annual-progress.html"),
+                        ("年审进度", "chart", "green", 0, "annual-progress.html"),
                         ("提交校团委", "send", "purple", 0, "annual-submit.html"), ("整改跟踪", "wrench", "orange", 2, "rectify.html"),
                         ("僵尸号预警", "ghost", "red", 3, "zombie.html"), ("消息待办", "bell", "", 0, "../../pc/college/messages.html"),
-                        ("PC 工作台", "monitor", "", 0, "../../pc/college/workbench.html"), ("我的", "user", "green", 0, "mine.html"),
                     ])
     colors = ["#ABB0BA", "#E6A23C", "#2A8DC7", "#F56C6C", "#67C23A"]
     nodes = [("待填报", 5), ("待教师审核", 4), ("待学院审核", 4), ("整改中", 2), ("已完成", 21)]
@@ -863,7 +899,7 @@ def c_home():
     <a href="todo.html" style="position:relative" aria-label="待审">{icon('bell', 22)}<span class="badge" style="position:absolute;top:-6px;right:-8px">4</span></a>
   </div>
   <div class="hero-stats c3">
-    <a href="../../pc/college/accounts.html"><b>{CS['total']}</b><span>本院账号</span></a>
+    <a href="accounts.html"><b>{CS['total']}</b><span>本院账号</span></a>
     <a href="annual-progress.html"><b>{CS['done']}<small>/{CS['total']}</small></b><span>年审完成</span></a>
     <a href="todo.html"><b>4</b><span>待学院审核</span></a>
   </div>
@@ -877,14 +913,13 @@ def c_home():
   <div class="flex between"><span class="small sub">完成率 <b class="c-primary fs16">{pct}%</b></span><span class="small c-warning">{icon('clock', 12)} 学院提交截止 {T['college_end']}</span></div>
   <div class="funnel">{funnel}</div><div class="fn-grid">{fn}</div>
 </a>
-<div class="m-card"><div class="quick">{quick}</div></div>
+<div class="m-card"><div class="quick pack5">{quick}</div></div>
 <div class="m-title">待我处理<a href="todo.html">全部{icon('chevron-right', 14)}</a></div>
-<div class="m-card" style="padding:4px 14px">{todos}</div>
-{pc_hint('PC 端学院工作台', '任务分派、教师工作量、导入确认等请在 PC 端办理', '../../pc/college/workbench.html')}"""
+<div class="m-card" style="padding:4px 14px">{todos}</div>"""
     page_t("college", DC + "home.html", "学院看板", content, tab="home", nav_title="学院看板",
            notes=["汇总本院 36 个账号：年审完成 21/36、待学院审核 4、疑似僵尸号 3、待整改 2，数字可点击下钻",
                   "年审进度条按节点分色（待填报 5 / 待教师审核 4 / 待学院审核 4 / 整改中 2 / 已完成 21），显示学院提交截止 2026-11-05",
-                  "快捷入口含提交校团委、整改跟踪、僵尸号预警，复杂管理功能引导至 PC 工作台"],
+                  "快捷入口含提交校团委、整改跟踪、僵尸号预警；手机上办理审核和进度查看"],
            flow=[("学院审核新建备案", "review-detail.html"), ("剧本六：整改第二次提交", "rectify.html"),
                  ("年审进度与催办", "annual-progress.html"), ("提交校团委", "annual-submit.html"), ("PC 学院工作台", "../../pc/college/workbench.html")])
 
@@ -906,7 +941,7 @@ def c_todo():
   <div class="tc-meta"><span>{FLOWS['proxy']['no']}</span><span>王晓琳 · 2026-09-30 09:20 代办</span></div>
   <div class="tc-note">负责人交接：赵磊（已毕业）→ 孙悦。{FLOWS['proxy']['steps'][0][3]}</div>
   <div class="tc-ft"><a class="go" href="../../pc/school/log-detail.html">{icon('log', 14)}查看代办日志</a>
-    <button class="btn btn-primary btn-sm" type="button" data-href="review-result.html?c=handover" data-toast="已通过，孙悦接任负责人，交接生效">{icon('check')}审核通过</button></div></div>"""
+    <a class="btn btn-primary btn-sm" href="../../pc/college/approval-proxy.html">{icon('file-check')}去审核</a></div></div>"""
     content = f"""
 <div class="m-tabs" data-target="#c-todo">
   <button type="button" class="on" data-seg="all">全部 5</button><button type="button" data-seg="apply">申请 2</button>
@@ -918,11 +953,11 @@ def c_todo():
     page_t("college", DC + "todo.html", "待学院审核", content, tab="todo", nav_title="待学院审核",
            notes=["展示教师审核通过后流转到学院的事项，页签按申请 / 僵尸号 / 整改 / 代办筛选",
                   "新建备案可在移动端直接审核；名称变更含对比表、僵尸号核实含佐证，标注建议 PC 审核并直达 PC 页面",
-                  "教师代办交接可一键审核通过，同时可查看“发起方式：教师代办”的操作日志"],
+                  "教师代办交接进入 PC 审核页，通过后交接生效并写入账号操作日志"],
            flow=[("学院审核新建备案", "review-detail.html"), ("剧本六：整改复核", "rectify.html"),
                  ("剧本二：学院变更审核（PC）", "../../pc/college/approval-change.html"),
                  ("剧本七：僵尸号学院审核（PC）", "../../pc/college/zombie-verify-detail.html"),
-                 ("剧本八：代办日志", "../../pc/school/log-detail.html")])
+                 ("剧本八：学院审核代办交接", "../../pc/college/approval-proxy.html")])
 
 
 def c_review_detail():
@@ -1073,7 +1108,7 @@ def c_zombie():
         (A_ZB["name"], "微信公众号", "停更 412 天 · 最近发布 2025-08-14", "辅导员建议注销", "danger",
          btn("去审核（PC）", "../../pc/college/zombie-verify-detail.html", "primary", size="sm"), "cancel"),
         (A_PH["name"], "视频号", "停更 212 天 · 最近发布 2026-03-02", "学生核实中", "warning",
-         btn("查看进度", None, "light", size="sm", toast="学生李明核实中，截止 2026-10-08"), "verify"),
+         btn("查看进度", "../student/zombie-verify.html", "light", size="sm"), "verify"),
         ("2021级计算机科学3班团支部", "QQ", "停更 268 天 · 团支部已毕业", "待教师核实", "primary",
          btn("催办", None, "light", "bell", "sm", toast="已向王晓琳老师发送核实催办"), "verify"),
     ]
@@ -1141,27 +1176,79 @@ def c_mine():
 </div>
 {sec('管理范围', f'<div class="mini3"><div><b>{CS["total"]}</b><small>本院账号</small></div><div><b>{CS["teachers"]}</b><small>业务教师</small></div><div><b>28</b><small>团学组织</small></div></div>', '<span class="muted">计算机学院团委</span>')}
 <div class="m-group">
-  {cell(icon('user-switch') + ' 切换身份', '<span class="small">当前：学院管理员</span>', '../common/identity-switch.html')}
-  {cell(icon('monitor') + ' PC 工作台', '<span class="small">任务分派 · 教师工作量</span>', '../../pc/college/workbench.html')}
   {cell(icon('chart') + ' 年审进度', f'{CS["done"]}/{CS["total"]}', 'annual-progress.html')}
-</div>
-<div class="m-group-title">消息设置</div>
-<div class="m-group">
-  {cell('待学院审核提醒', '<span class="switch on" role="switch" aria-label="待学院审核提醒"></span>')}
-  {cell('年审节点提醒', '<span class="switch on" role="switch" aria-label="年审节点提醒"></span>')}
-  {cell('风险预警提醒', '<span class="switch" role="switch" aria-label="风险预警提醒"></span>')}
-</div>
-<a class="btn btn-danger mt12" href="../common/login.html" style="width:100%;height:44px">{icon('logout')}退出登录</a>"""
+</div>"""
     page_t("college", DC + "mine.html", "我的", content, tab="mine", nav_title="我的",
            notes=["展示学院管理员身份与管理范围（本院 36 个账号、6 名业务教师）",
-                  "切换身份进入身份选择；PC 工作台办理任务分派、教师工作量等管理功能",
-                  "消息设置开关即时生效；退出登录返回统一身份认证页"],
-           flow=[("切换身份", "../common/identity-switch.html"), ("PC 学院工作台", "../../pc/college/workbench.html"),
-                 ("退出登录", "../common/login.html")])
+                  "年审进度可从本页进入"],
+           flow=[("年审进度", "annual-progress.html"), ("PC 学院工作台", "../../pc/college/workbench.html")])
+
+
+def c_accounts():
+    from pages_college import college_accounts
+    cards = []
+    for a in college_accounts():
+        key = a["pid"]
+        act = ""
+        if a["name"] == A_NEW["name"]:
+            act = btn("审核新建", "review-detail.html", "light", size="sm")
+        elif a["name"] == A_RE["name"]:
+            act = btn("整改跟踪", "rectify.html", "light", size="sm")
+        flags = st(a["run"]) + st(a["filing"]) + st(a["annual"])
+        cards.append(
+            '<div class="m-card"><a href="archive.html?c=' + key + '" style="display:block"><div class="tc-top">'
+            + pf(a["platform"], "sm") + '<div class="grow" style="min-width:0"><div class="bold ellipsis">' + a["name"]
+            + '</div><div class="small muted">' + a["org"] + " · " + a["level"] + '</div>'
+            + '<div class="small muted">' + a["platform"] + " · " + a["teacher"] + " · " + a["student"] + '</div>'
+            + '<div class="flex gap6 wrap mt4">' + flags + '</div></div></div></a>'
+            + '<div class="tc-ft" style="justify-content:flex-end">'
+            + btn("查看档案", "archive.html?c=" + key, "default", size="sm") + act + '</div></div>'
+        )
+    content = (
+        '<div class="alert alert-info">' + icon("info") + '<div class="grow">本院在册 <b>' + str(CS["total"])
+        + '</b> 个账号。这里列出重点账号，点进档案查看与 PC 相同的分区。</div></div>'
+        + '<label class="search-box">' + icon("search")
+        + '<input placeholder="搜索账号名称、组织或负责人" data-search="#acct-list" aria-label="搜索账号"></label>'
+        + '<div id="acct-list">' + "".join(cards) + '</div>'
+    )
+    page_t("college", DC + "accounts.html", "本院账号", content, back="home.html", nav_title="本院账号",
+           notes=["首页“本院账号”进入本页，口径仍是本院 " + str(CS["total"]) + " 个",
+                  "重点账号可搜索，点进档案看到与 PC 相同的分区",
+                  "新建备案、整改跟踪仍从本页进入原来的办理页"],
+           flow=[("账号档案", "archive.html?c=" + A_NEW["pid"]), ("学院审核", "review-detail.html"),
+                 ("返回看板", "home.html")])
+
+
+def c_archive():
+    from pages_college import college_accounts
+    cases = []
+    for i, a in enumerate(college_accounts()):
+        rec = dict(a)
+        rec["college"] = "计算机学院"
+        rec["key"] = a["pid"]
+        act = ""
+        if a["name"] == A_NEW["name"]:
+            act = action_row([("审核新建", "review-detail.html", "primary")])
+        elif a["name"] == A_RE["name"]:
+            act = action_row([("整改跟踪", "rectify.html", "primary")])
+        cls = "hidden" if i else ""
+        cases.append(
+            '<div data-case="' + a["pid"] + '" class="' + cls + '">'
+            + head(a["name"], a["platform"], a["org"], st(a["run"]) + st(a["filing"]) + st(a["annual"]))
+            + render_archive(rec) + act + "</div>"
+        )
+    page_t("college", DC + "archive.html", "账号档案", "".join(cases), back="accounts.html",
+           css=ARCHIVE_CSS, js=ARCH_JS, nav_title="账号档案",
+           notes=["学院手机档案与 PC 账号档案同一套分区，字段来自同一份演示数据",
+                  "新建备案和整改跟踪的原有入口留在档案底部",
+                  "本页查看档案，不在这里做导入、导出或分配教师"],
+           flow=[("返回本院账号", "accounts.html"), ("审核新建", "review-detail.html"),
+                 ("整改跟踪", "rectify.html")])
 
 
 def build():
-    for fn in (t_home, t_todo, t_done, t_messages, t_mine, t_accounts, t_review_detail, t_review_change, t_review_handover,
+    for fn in (t_home, t_todo, t_done, t_messages, t_mine, t_accounts, t_archive, t_review_detail, t_review_change, t_review_handover,
                t_review_annual, t_review_zombie, t_review_rectify, t_review_return, t_review_batch, t_review_result,
-               c_home, c_todo, c_review_detail, c_review_result, c_annual_progress, c_annual_submit, c_zombie, c_rectify, c_mine):
+               c_home, c_todo, c_review_detail, c_review_result, c_annual_progress, c_annual_submit, c_zombie, c_rectify, c_mine,
+               c_accounts, c_archive):
         fn()

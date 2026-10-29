@@ -1,8 +1,9 @@
-"""我的待办（统一待办）：待办 / 已办 / 已发起 / 催办/抄送 / 批量审批，三个 PC 角色各一套，表头对齐正式系统。"""
-from base import (pc_page, filter_bar, field, inp, sel, table, pager, tag, icon, esc, WF_MENU)
+"""我的待办（统一待办）：待办 / 已办 / 已发起 / 催办/抄送 / 批量审批。教师、学院、学校、学生各一套，表头对齐正式系统。"""
+from base import (pc_page, filter_bar, field, inp, sel, table, pager, tag, icon, esc, WF_MENU, page_hd, card, kv, timeline)
+from data import ACCOUNTS as ACC, FLOWS as FL
 from wf import PROC, TODO, DONE, STARTED, URGE, CC, BATCH
 
-ROLES = ("teacher", "college", "school")
+ROLES = ("teacher", "college", "school", "student")
 STATUS_KIND = {"已完成": "success", "已提交": "primary", "审批中": "primary", "已终止": "danger", "已退回": "warning", "已撤销": "muted"}
 OP_KIND = {"同意": "success", "退回": "warning", "驳回": "danger"}
 PROC_NAME = dict(PROC, proxy=PROC["handover"])
@@ -56,9 +57,13 @@ def done(role):
 def started(role):
     rows = []
     for i, (k, sub, tm, node, status, href, revocable) in enumerate(STARTED[role]):
-        op = f'<a class="link" href="{href}">详情</a>'
-        if revocable:
-            op += ('<button class="link danger" type="button" data-toast="已撤销该流程，审批人待办已同步移除">撤销</button>')
+        if status == "已退回":
+            op = ('<a class="link" href="' + href + '">办理</a>'
+                  '<button class="link danger" type="button" data-toast="已撤销该流程，审批人待办已同步移除">撤销</button>')
+        else:
+            op = f'<a class="link" href="{href}">详情</a>'
+            if revocable:
+                op += '<button class="link danger" type="button" data-toast="已撤销该流程，审批人待办已同步移除">撤销</button>'
         rows.append([str(i + 1), name_cell(k, sub), tm, node or "—", tag(status, STATUS_KIND[status]), f'<div class="ops">{op}</div>'])
     rng = ('<div class="wf-range"><input class="input" type="text" placeholder="开始日期" onfocus="this.type=\'date\'" aria-label="开始日期"><span>至</span>'
            '<input class="input" type="text" placeholder="结束日期" onfocus="this.type=\'date\'" aria-label="结束日期"></div>')
@@ -98,7 +103,7 @@ def cc(role):
 
 
 def batch(role):
-    groups = BATCH[role]
+    groups = BATCH[role] or [(k, []) for k in PROC]
     total = sum(len(r) for _, r in groups)
     cats = []
     rows = []
@@ -116,14 +121,40 @@ def batch(role):
            '<button class="btn btn-nopass" type="button" data-toast="请先勾选需要审批的流程">批量不通过</button>'
            '<span class="small muted">已选 <b data-checked-count="#wf-batch-tbl">0</b> 项</span>'
            f'<span class="cur">当前流程 <span class="tag tag-primary" id="wf-cur">{first}</span></span></div>')
+    tbl = table(["序号", "流程名称", "学院名称", "学号", "当前任务", "发起人", "发起时间", "操作"], rows, check=True, id_="wf-batch-tbl")
+    if total == 0:
+        tbl = tbl.replace("<tbody></tbody>", '<tbody><tr><td colspan="9" class="wf-empty">暂无可批量审批的流程</td></tr></tbody>')
     content = (wf_filter([field("流程名称", inp("请输入流程名称")), field("学院名称", inp("请输入学院名称")), field("学号", inp("请输入学号"))],
                          '<button class="btn btn-default" type="button" data-toast="已展开更多查询条件">展开</button>')
                + f'<div class="wf-batch"><div class="wf-cats" data-target="#wf-batch-tbl"><h3>流程分类<span class="badge">{total}</span></h3>'
                + "".join(cats) + '</div>'
                + f'<div class="wf-list">{bar}'
-               + table(["序号", "流程名称", "学院名称", "学号", "当前任务", "发起人", "发起时间", "操作"], rows, check=True, id_="wf-batch-tbl")
+               + tbl
                + f'{pager(total, 1)}</div></div>')
     page(role, "batch", "批量审批", content)
+
+
+def student_views():
+    """已办 / 已发起的「详情」：流程弹窗的「表单信息」放当时填报的内容，流程图和审批记录仍在其余页签。"""
+    from pages_pc_student import _cancel_filled, _change_filled, _handover_filled
+    ren, ho, ph = ACC["rename"], ACC["handover"], ACC["photo"]
+    ch, jj = FL["rename"], FL["handover"]
+    views = [
+        ("pc/student/wf-detail-change.html", page_hd("信息变更", ren["name"] + " · " + ch["no"]) + _change_filled()),
+        ("pc/student/wf-detail-handover.html", page_hd("负责人交接", ho["name"] + " · " + jj["no"]) + _handover_filled()),
+        ("pc/student/wf-detail-cancel.html", page_hd("账号注销", ph["name"] + " · ZX20260930021")
+         + _cancel_filled(ph, "重复账号 / 长期无人运营",
+                          "该视频号长期未更新，协会已改用其他平台发布，申请注销。档案保留，不删除历史。",
+                          ["停更说明.pdf"])),
+        ("pc/student/wf-detail-annual.html", page_hd("年度年审", "计算机学院学生会 · NS2026-CS-0018")
+         + card("填报摘要", kv([("账号", "计算机学院学生会 · 微博"), ("发起人", "李明 · 8209230117"), ("年度异动", "无异动"),
+                              ("最近发布", "2026-09-18"), ("当前节点", "指导教师审核 · 王晓琳"), ("提交时间", "2026-09-22 21:05")], 2))
+         + card("进度", timeline([("done", "学生确认并提交", "李明 · 2026-09-22 21:05", "名称变更另行申请，年审确认账号仍在运营。"),
+                                ("now", "指导教师审核", "王晓琳", ""), ("wait", "学院团委审核", "周建华", ""),
+                                ("wait", "校团委审核", "陈静", "")]), cls="mt16")),
+    ]
+    for path, content in views:
+        pc_page(path, "student", "started", "流程详情", [("流程详情", None)], content)
 
 
 def build():
@@ -133,3 +164,4 @@ def build():
         started(role)
         cc(role)
         batch(role)
+    student_views()

@@ -248,15 +248,15 @@ button.is-done{opacity:.6;cursor:default;pointer-events:none}
 
 /* ===== 弹窗 / 抽屉 ===== */
 .mask{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px}
-.modal{width:600px;max-width:100%;background:#fff;border-radius:12px;box-shadow:0 10px 20px 10px rgba(0,0,0,.05);display:flex;flex-direction:column;max-height:calc(100vh - 40px)}
+.modal{width:600px;max-width:100%;background:#fff;border-radius:12px;box-shadow:0 10px 20px 10px rgba(0,0,0,.05);display:flex;flex-direction:column;max-height:calc(100vh / var(--z, 1) - 40px)}
 .modal.lg{width:900px}.modal.sm{width:480px}
-.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #C8CAD1;font-size:18px;font-weight:700;color:var(--c-text)}
-.modal-bd{padding:20px;overflow:auto}
-.modal-ft{display:flex;justify-content:flex-end;gap:12px;padding:12px 20px 20px}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #C8CAD1;font-size:18px;font-weight:700;color:var(--c-text);flex:none}
+.modal-bd{padding:20px;overflow:auto;flex:1;min-height:0}
+.modal-ft{display:flex;justify-content:flex-end;gap:12px;padding:12px 20px 20px;flex:none}
 .x-btn{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;color:var(--c-text-3)}.x-btn:hover{color:var(--c-primary)}
 .drawer-mask{justify-content:flex-end;padding:0}
 .drawer{width:640px;max-width:100%;height:100%;background:#fff;box-shadow:-8px 0 24px rgba(0,0,0,.12);display:flex;flex-direction:column}
-.drawer .modal-bd{flex:1}
+.drawer .modal-bd{flex:1;min-height:0}
 .backdrop{pointer-events:none;user-select:none}
 
 /* ===== Toast（Element Message 样式）与原型悬浮导航 ===== */
@@ -331,8 +331,10 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
 .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
 .split{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start}
 .sticky{position:sticky;top:0}
-.actbar{position:sticky;bottom:0;z-index:20;background:#fff;border-radius:8px;box-shadow:0 -4px 16px rgba(42,141,199,.10);padding:12px 24px;display:flex;align-items:center;gap:12px;margin-top:16px}
-.actbar .grow{font-size:14px;color:var(--c-text-3)}
+.actbar{position:static;z-index:20;background:#fff;border-radius:8px;box-shadow:0 -4px 16px rgba(42,141,199,.10);padding:12px 24px;display:flex;align-items:center;gap:12px;margin-top:16px;flex:none}
+.actbar .grow{font-size:14px;color:var(--c-text-3);min-width:0}
+.zx-main>.actbar{margin:10px 0 0}
+.zx-main:has(>.actbar)>.content{padding-bottom:16px}
 .cm-content{width:100%}
 .zx-body.is-full .zx-main{max-width:1600px;margin:0 auto}
 /* 详情表格（低代码表单栅格） */
@@ -406,7 +408,8 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
 .wf-pane{padding-bottom:16px}
 .wf-pane .page-hd{padding:0 0 12px;border-radius:0;border-bottom:1px dashed #E4E7ED;margin-bottom:14px}
 .wf-pane .page-hd h1{font-size:16px}
-.wf-pane .actbar{margin:16px -24px 0;border-radius:0;box-shadow:0 -4px 16px rgba(42,141,199,.12)}
+.wf-dialog>.actbar{margin:0;border-radius:0;box-shadow:0 -4px 16px rgba(42,141,199,.12)}
+.wf-dialog:has(>.actbar)>.wf-bd{padding-bottom:16px}
 .wf-empty{text-align:center;color:var(--c-text-3);height:120px}
 .wf-cm{display:inline-block;max-width:420px;text-align:left}
 .wf-chart{position:relative;border:1px solid #E4E7ED;border-radius:6px;min-height:420px;background:#FAFCFE radial-gradient(#E4ECF3 1px,transparent 1px) 0 0/16px 16px;overflow:auto;padding:80px 40px}
@@ -453,11 +456,15 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
 .mech-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .mech-box{border:1px solid var(--c-line);border-radius:8px;padding:12px 14px;background:#FBFCFD}
 .mech-box .flex{justify-content:space-between}
-.mech{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:18px;align-items:center;padding:14px 0;border-bottom:1px dashed var(--c-line)}
+.mech{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:18px;align-items:flex-start;padding:14px 0;border-bottom:1px dashed var(--c-line)}
 .mech:last-child{border-bottom:none;padding-bottom:0}.mech:first-child{padding-top:0}
-.mech-t{font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
-.mech-t .no{width:20px;height:20px;border-radius:6px;background:var(--c-primary-light);color:var(--c-primary);display:grid;place-items:center;font-size:12px}
-.mech-h{font-size:12px;color:var(--c-text-3);margin-top:4px;line-height:1.7}
+.mech-t{font-weight:600;font-size:14px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.mech-t .no{width:20px;height:20px;border-radius:6px;background:var(--c-primary-light);color:var(--c-primary);display:grid;place-items:center;font-size:12px;flex:none;margin-top:1px}
+.mech-h{font-size:12px;color:var(--c-text-2);margin-top:6px;line-height:1.75}
+.picker{margin-top:12px;border:1px solid var(--c-line);border-radius:8px;padding:12px;background:#FBFCFD}
+.pick-list{display:grid;gap:6px;max-height:240px;overflow:auto;margin-top:8px}
+.pick-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:8px 10px;border:1px solid var(--c-line);border-radius:8px;background:#fff;text-align:left}
+.pick-item:hover{border-color:var(--c-primary-border)}
 /* 人员卡 */
 .person{display:flex;gap:12px;align-items:center;padding:14px 16px;border:1px solid var(--c-line);border-radius:10px;background:#fff}
 .person .nm{font-weight:600}.person .sub{font-size:12px;color:var(--c-text-3)}
@@ -522,6 +529,15 @@ a.li:hover .li-t{color:var(--c-primary)}
 .scope{display:flex;gap:6px;flex-wrap:wrap}
 .diff-side .table{table-layout:fixed}.diff-side td{word-break:break-all;font-size:12px}.diff-side td:first-child{font-size:13px}
 .dim{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:10px;background:var(--c-bg)}
+/* 新建备案弹窗叠在账号列表上时，补齐列表里用到的图标块，并让表单贴合大弹窗 */
+.tic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--c-primary-light);color:var(--c-primary);flex:none}
+.zx-main:has(.content>.backdrop>.page-hd:first-child) .zx-tabs{border-radius:8px 8px 0 0;margin-bottom:0;border-bottom:1px solid var(--c-bg)}
+.content>.backdrop>.page-hd:first-child{border-radius:0 0 8px 8px}
+.wf-dialog .page-hd{padding:0 0 12px;margin-bottom:14px;background:transparent;border-radius:0;border-bottom:1px dashed #E4E7ED}
+.wf-dialog .page-hd h1{font-size:16px}
+.wf-dialog .wiz-hd{padding:14px 18px}
+.wf-dialog>.actbar{margin:0;border-radius:0;box-shadow:0 -4px 16px rgba(42,141,199,.12)}
+.wf-dialog .split{grid-template-columns:minmax(0,1fr) 320px}
 </style><script>(function(){var d=document.documentElement;function f(){var z=Math.max(.6,Math.min(innerWidth/1920,1.6));d.style.zoom=z;d.style.setProperty('--z',z);}f();addEventListener('resize',f);})();</script>
 </head>
 <body class="pc">
@@ -536,7 +552,7 @@ a.li:hover .li-t{color:var(--c-primary)}
     <a class="zx-manual" href="../../index.html"><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></svg>原型导航</a>
   </div>
 </header>
-<div class="zx-body"><aside class="zx-aside"><div class="zx-group">工作台</div><a href="../teacher/workbench.html"><svg class="i " viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span class="ellipsis">教师工作台</span></a><a href="../teacher/messages.html"><svg class="i " viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span class="ellipsis">消息提醒</span><span class="badge">3</span></a><div class="zx-group">审核办理</div><a href="../teacher/todo.html"><svg class="i " viewBox="0 0 24 24"><path d="M3 13h5l1.5 3h5L16 13h5"/><path d="M5 5h14l2 8v6H3v-6z"/></svg><span class="ellipsis">审核待办</span><span class="badge">9</span></a><a href="../teacher/done.html"><svg class="i " viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 14.5 2 2 4-4"/></svg><span class="ellipsis">审核已办</span></a><div class="zx-group">账号管理</div><a href="../teacher/accounts.html" class="on"><svg class="i " viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v13c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-13"/><path d="M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></svg><span class="ellipsis">我负责的账号</span></a><a href="../teacher/proxy.html"><svg class="i " viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12"/><path d="M11 11V4.5a1.5 1.5 0 0 1 3 0V12"/><path d="M14 11.5V6a1.5 1.5 0 0 1 3 0v8c0 4-2.5 7-6.5 7-2.5 0-4-1-5.5-3L3 14.5a1.5 1.5 0 0 1 2.5-1.8L8 15.5"/></svg><span class="ellipsis">代办中心</span></a><a href="../teacher/../common/apply-create-basic.html"><svg class="i " viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9 14h6"/></svg><span class="ellipsis">发起申请</span></a></aside>
+<div class="zx-body"><aside class="zx-aside"><div class="zx-group">工作台</div><a href="../teacher/workbench.html"><svg class="i " viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span class="ellipsis">教师工作台</span></a><a href="../teacher/messages.html"><svg class="i " viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg><span class="ellipsis">消息提醒</span><span class="badge">3</span></a><div class="zx-group">账号管理</div><a href="../teacher/accounts.html" class="on"><svg class="i " viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v13c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-13"/><path d="M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></svg><span class="ellipsis">我负责的账号</span></a><a href="../teacher/proxy.html"><svg class="i " viewBox="0 0 24 24"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12"/><path d="M11 11V4.5a1.5 1.5 0 0 1 3 0V12"/><path d="M14 11.5V6a1.5 1.5 0 0 1 3 0v8c0 4-2.5 7-6.5 7-2.5 0-4-1-5.5-3L3 14.5a1.5 1.5 0 0 1 2.5-1.8L8 15.5"/></svg><span class="ellipsis">代办中心</span></a></aside>
 <section class="zx-main">
   <div class="zx-tabs"><button class="zx-back" type="button" data-back="../teacher/accounts.html"><svg class="i " viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>返回上一步</button><a class="zx-tab" href="../teacher/accounts.html">我负责的账号</a><span class="zx-tab on">计院ACM协会 · 操作日志<button class="zx-x" type="button" data-back="../teacher/accounts.html" aria-label="关闭页签"><svg class="i " viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span><button class="zx-fold" type="button" data-toast="已收起其他页签" aria-label="页签操作"><svg class="i " viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button></div>
   <div class="content"><div class="card ah-card">
@@ -548,7 +564,7 @@ a.li:hover .li-t{color:var(--c-primary)}
     </div>
     <div class="ah-ops"><a class="btn btn-primary btn-sm" href="apply-change.html" ><svg class="i " viewBox="0 0 24 24"><path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4"/><path d="M13 3v5h5v3"/><path d="m14 21 .6-2.6 5-5a1.4 1.4 0 0 1 2 2l-5 5z"/></svg>发起变更</a><a class="btn btn-default btn-sm" href="apply-handover.html" ><svg class="i " viewBox="0 0 24 24"><circle cx="8" cy="7" r="3"/><path d="M2.5 18c1-3 3-4.5 5.5-4.5"/><circle cx="16" cy="11" r="3"/><path d="M10.5 22c1-3 3-4.5 5.5-4.5s4.5 1.5 5.5 4.5"/><path d="M14 3h5l-1.5-1.5M19 3l-1.5 1.5"/></svg>负责人交接</a><a class="btn btn-danger btn-sm" href="apply-cancel.html" ><svg class="i " viewBox="0 0 24 24"><path d="M12 3v8"/><path d="M6.5 6.5a8 8 0 1 0 11 0"/></svg>注销</a><a class="btn btn-ghost btn-sm" href="../school/filing-form.html" ><svg class="i " viewBox="0 0 24 24"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M4 20h16"/></svg>导出备案表</a></div>
   </div>
-  <div class="ah-tabs"><div class="ptabs"><a href="archive-basic.html">基本信息</a><a href="archive-staff.html">责任人员</a><a href="archive-audit.html">年审记录</a><a href="archive-changes.html">变更记录</a><a href="archive-rectify.html">整改记录</a><a href="archive-cancel.html">注销信息</a><a href="archive-logs.html" class="on">操作日志</a></div><span class="tip">原型演示：各页签分别展示对应剧本账号的档案</span></div>
+  <div class="ah-tabs"><div class="ptabs"><a href="archive-basic.html">基本信息</a><a href="archive-staff.html">责任人员</a><a href="archive-audit.html">年审记录</a><a href="archive-changes.html">变更记录</a><a href="archive-rectify.html">整改记录</a><a href="archive-cancel.html">注销信息</a><a href="archive-logs.html" class="on">操作日志</a></div><span class="tip">各页签分别展示对应剧本账号的档案</span></div>
 </div><div class="mt16"><div class="hl-box"><div class="flex gap12"><span class="role-ic "><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V12"/><path d="M11 11V4.5a1.5 1.5 0 0 1 3 0V12"/><path d="M14 11.5V6a1.5 1.5 0 0 1 3 0v8c0 4-2.5 7-6.5 7-2.5 0-4-1-5.5-3L3 14.5a1.5 1.5 0 0 1 2.5-1.8L8 15.5"/></svg></span><div class="grow"><div class="bold">教师代办留痕 · 负责人交接</div><div class="small sub mt4">王晓琳于 2026-09-30 09:20 代办交接，日志记录“发起方式：教师代办”，并留存代办原因；学院管理员周建华 13:45 审核通过后生效。</div></div><a class="btn btn-primary btn-sm" href="../school/log-detail.html" ><svg class="i " viewBox="0 0 24 24"><path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>查看日志详情</a></div></div><div class="card mt16"><div class="card-hd"><div class="card-title">操作日志</div><div class="flex gap8"><button class="btn btn-default btn-sm" type="button" data-toast="已导出计院ACM协会操作日志" ><svg class="i " viewBox="0 0 24 24"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M4 20h16"/></svg>导出日志</button></div></div><div class="card-bd"><div class="toolbar"><div><div class="seg" data-target="#log-tbl"><button type="button" data-seg="all" class="on">全部</button><button type="button" data-seg="apply">业务申请</button><button type="button" data-seg="review">审核</button><button type="button" data-seg="sys">系统</button><button type="button" data-seg="view">查看 / 导出</button></div></div><label class="top-search" style="width:260px"><svg class="i " viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input placeholder="搜索操作人 / 操作内容" data-search="#log-tbl"></label></div><div class="table-wrap "><table class="table" id="log-tbl"><thead><tr><th>操作时间</th><th>操作人</th><th>身份</th><th>操作类型</th><th>操作内容</th><th>发起方式</th><th>终端 / IP</th><th>操作</th></tr></thead><tbody><tr data-href="../school/log-detail.html" data-cat="review"><td><span class="num nowrap">2026-09-30 13:45</span></td><td><b>周建华</b></td><td><span class="small sub">学院管理员</span></td><td>审核通过</td><td>负责人交接生效：赵磊 → 孙悦（JJ20260930006）</td><td><span class="muted">本人办理</span></td><td><span class="small muted">10.96.12.37</span></td><td><div class="ops"><a class="link" href="../school/log-detail.html">详情</a></div></td></tr><tr data-href="../school/log-detail.html" data-cat="apply" class="sel"><td><span class="num nowrap">2026-09-30 09:20</span></td><td><b>王晓琳</b></td><td><span class="small sub">业务教师 · 宣传工作辅导员</span></td><td>发起负责人交接</td><td>原负责人赵磊已于 2025 年 6 月毕业，无法本人办理，由教师代为发起</td><td><span class="tag tag-primary tag-dot">教师代办</span></td><td><span class="small muted">10.96.8.114</span></td><td><div class="ops"><a class="link" href="../school/log-detail.html">详情</a></div></td></tr><tr data-href="../school/log-detail.html" data-cat="view"><td><span class="num nowrap">2026-09-30 09:12</span></td><td><b>王晓琳</b></td><td><span class="small sub">业务教师 · 宣传工作辅导员</span></td><td>查看档案</td><td>查看账号档案 · 责任人员</td><td><span class="muted">本人办理</span></td><td><span class="small muted">10.96.8.114</span></td><td><div class="ops"><a class="link" href="../school/log-detail.html">详情</a></div></td></tr><tr data-href="../school/log-detail.html" data-cat="sys"><td><span class="num nowrap">2026-09-15 09:00</span></td><td><b>系统</b></td><td><span class="small sub">—</span></td><td>生成年审记录</td><td>2026 年度年审任务发布，自动生成年审记录 NS2026-CS-0027</td><td><span class="muted">系统自动</span></td><td><span class="small muted">—</span></td><td><div class="ops"><a class="link" href="../school/log-detail.html">详情</a></div></td></tr><tr data-href="../school/log-detail.html" data-cat="sys"><td><span class="num nowrap">2026-07-01 02:00</span></td><td><b>系统</b></td><td><span class="small sub">—</span></td><td>负责人预警</td><td>学生负责人赵磊（2021级）已毕业离校，负责人信息待更新</td><td><span class="muted">系统自动</span></td><td><span class="small muted">—</span></td><td><div class="ops"><a class="link" href="../school/log-detail.html">详情</a></div></td></tr><tr data-href="../school/log-detail.html" data-cat="review"><td><span class="num nowrap">2026-06-11 10:26</span></td><td><b>王晓琳</b></td><td><span class="small sub">业务教师 · 宣传工作辅导员</span></td><td>审核通过</td><td>信息变更：更新二维码（BG20260610004）</td><td><span class="muted">本人办理</span></td><td><span class="small muted">10.96.8.114</span></td><td><div class="ops"><a class="link" href="../school/log-detail.html">详情</a></div></td></tr><tr data-href="../school/log-detail.html" data-cat="apply"><td><span class="num nowrap">2026-06-10 21:03</span></td><td><b>赵磊</b></td><td><span class="small sub">学生用户</span></td><td>发起信息变更</td><td>更新 QQ 群二维码与主页链接</td><td><span class="muted">本人办理</span></td><td><span class="small muted">APP</span></td><td><div class="ops"><a class="link" href="../school/log-detail.html">详情</a></div></td></tr><tr data-href="../school/log-detail.html" data-cat="view"><td><span class="num nowrap">2026-04-18 15:40</span></td><td><b>王晓琳</b></td><td><span class="small sub">业务教师 · 宣传工作辅导员</span></td><td>导出备案表</td><td>导出《新媒体公众平台备案表》PDF</td><td><span class="muted">本人办理</span></td><td><span class="small muted">10.96.8.114</span></td><td><div class="ops"><a class="link" href="../school/log-detail.html">详情</a></div></td></tr><tr data-href="../school/log-detail.html" data-cat="review"><td><span class="num nowrap">2026-03-02 11:15</span></td><td><b>周建华</b></td><td><span class="small sub">学院管理员</span></td><td>确认导入数据</td><td>补充确认组织类别、管理教师，确认建档</td><td><span class="muted">本人办理</span></td><td><span class="small muted">10.96.12.37</span></td><td><div class="ops"><a class="link" href="../school/log-detail.html">详情</a></div></td></tr><tr data-href="../school/log-detail.html" data-cat="sys"><td><span class="num nowrap">2026-01-10 09:30</span></td><td><b>陈静</b></td><td><span class="small sub">学校管理员</span></td><td>历史数据导入</td><td>以 2025 年度底库初始化建档（导入批次 IMP20260110）</td><td><span class="muted">系统自动</span></td><td><span class="small muted">10.96.1.8</span></td><td><div class="ops"><a class="link" href="../school/log-detail.html">详情</a></div></td></tr></tbody></table></div><div class="pager"><span>共 27 条</span><button type="button" data-nav="prev" aria-label="上一页"><svg class="i " viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button><button type="button" class="on">1</button><button type="button" class="">2</button><button type="button" class="">3</button><button type="button" data-nav="next" aria-label="下一页"><svg class="i " viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button><select class="select pager-size" aria-label="每页条数"><option>15条/页</option><option>30条/页</option><option>50条/页</option></select></div></div></div></div></div>
 </section>
 </div>
@@ -590,7 +606,9 @@ a.li:hover .li-t{color:var(--c-primary)}
     if(t.dataset.seg!==undefined){
       var g=t.parentElement;g.querySelectorAll('[data-seg]').forEach(function(b){b.classList.remove('on');});t.classList.add('on');
       var target=g.dataset.target&&document.querySelector(g.dataset.target);
-      if(target){var v=t.dataset.seg;target.querySelectorAll('[data-cat]').forEach(function(row){row.classList.toggle('hidden',!(v==='all'||(' '+row.dataset.cat+' ').indexOf(' '+v+' ')>-1));});}
+      if(target){var v=t.dataset.seg;var catHide=function(row){return !(v==='all'||(' '+(row.dataset.cat||'')+' ').indexOf(' '+v+' ')>-1);};
+        target.querySelectorAll('[data-cat]').forEach(function(row){row.classList.toggle('hidden',catHide(row));});
+        document.querySelectorAll('.zx-main>.actbar[data-cat],.wf-dialog>.actbar[data-cat]').forEach(function(row){if(!target.contains(row))row.classList.toggle('hidden',catHide(row));});}
       if(!t.dataset.toast)return;
     }
     if(t.dataset.choice!==undefined){
@@ -611,7 +629,9 @@ a.li:hover .li-t{color:var(--c-primary)}
     if(t.dataset.copy){if(navigator.clipboard)navigator.clipboard.writeText(t.dataset.copy);toast('已复制到剪贴板');return;}
     if(t.dataset.back!==undefined){e.preventDefault();if(history.length>1&&document.referrer){history.back();}else{go(t.dataset.back);}return;}
     if(t.dataset.submit){
-      e.preventDefault();var scope=t.closest('[data-form]')||document;
+      e.preventDefault();var scope=t.closest('[data-form]');
+      if(!scope){var own=t.closest('[data-form-owner]');if(own)scope=document.querySelector('[data-form-id="'+own.getAttribute('data-form-owner')+'"]');}
+      if(!scope)scope=document;
       if(!validate(scope))return;
       if(t.dataset.toast){toast(t.dataset.toast);go(t.dataset.submit,700);}else{go(t.dataset.submit);}
       return;
@@ -676,6 +696,40 @@ a.li:hover .li-t{color:var(--c-primary)}
     }
     var box=el.closest('.field.invalid,.cell.invalid');if(box&&String(el.value).trim())box.classList.remove('invalid');
   });
+
+  // 把表单操作条挪到滚动区外面：PC 贴在主内容区底部，流程弹窗贴在弹窗底部，内容单独滚
+  (function pinBars(){
+    var seq=0;
+    function mark(bar){
+      var form=bar.closest('[data-form]');
+      if(!form)return;
+      if(!form.getAttribute('data-form-id')){seq+=1;form.setAttribute('data-form-id','dock-'+seq);}
+      bar.setAttribute('data-form-owner',form.getAttribute('data-form-id'));
+    }
+    function carry(bar, host){
+      var node=bar.parentElement, hide=bar.classList.contains('hidden');
+      while(node&&node!==host){
+        if(node.classList.contains('hidden'))hide=true;
+        if(node.hasAttribute('data-cat')&&!bar.hasAttribute('data-cat'))bar.setAttribute('data-cat',node.getAttribute('data-cat'));
+        node=node.parentElement;
+      }
+      if(hide)bar.classList.add('hidden');
+      mark(bar);
+      host.appendChild(bar);
+    }
+    document.querySelectorAll('.wf-dialog').forEach(function(dlg){
+      Array.prototype.slice.call(dlg.querySelectorAll('.actbar')).forEach(function(bar){
+        if(bar.parentElement===dlg||bar.closest('.modal,.drawer'))return;
+        carry(bar, dlg);
+      });
+    });
+    document.querySelectorAll('.zx-main>.content').forEach(function(content){
+      Array.prototype.slice.call(content.querySelectorAll('.actbar')).forEach(function(bar){
+        if(bar.closest('.wf-dialog,.modal,.drawer,.mask'))return;
+        carry(bar, content.parentNode);
+      });
+    });
+  })();
 })();
 </script>
 </body>

@@ -272,24 +272,15 @@ INTRO_V2 = ("“中南计算机青年”是中南大学计算机学院团委指�
             "“院团通知”发布团学工作通知、活动报名与评优公示。"
             "信息发布范围限于计算机学院团学工作相关内容，不发布任何商业广告及与学院无关的转载信息。"
             "平台严格执行“先审后发”三级审核，由学生编辑初审、新媒体中心主任复审、指导教师终审后发布，计划每周更新不少于两次推送。")
-MECHS = ["团学组织宣传联动工作机制", "信息发布审查机制", "应急预案处理机制", "信息安全管理制度"]
-
-
 def mech_grid(bad=()):
-    out = []
-    for m in MECHS:
-        if m in bad:
-            out.append(f'<div class="bad"><span class="bold">{m}</span>{tag("未建立", "danger", True)}</div>')
-        else:
-            out.append(f'<div><span class="bold">{m}</span>{tag("已建立", "success", True)}</div>')
-    return f'<div class="mech">{"".join(out)}</div>'
+    return mechanism_blocks(bad)
 
 
 def review_create():
     a = A["new"]
     ver = ('<div class="seg" data-single=".v-ver"><button type="button" class="on" data-choice=".v-first">首次提交 · 09-24</button>'
            '<button type="button" data-choice=".v-resub">重新提交 · 09-26</button></div>')
-    demo = (f'<div class="alert alert-info" style="align-items:center">{icon("info")}<div class="grow"><b>演示说明：</b>'
+    demo = (f'<div class="alert alert-info" style="align-items:center">{icon("info")}<div class="grow"><b>两次提交对照：</b>'
             f'首次审核选择退回；学生重提后再次进入本页选择通过。切换右侧页签查看两次提交的差异。</div>{ver}</div>')
     head = head_card(a["platform"], a["name"],
                      tag("新建备案") + st(a["filing"]) + '<span class="v-ver v-first">' + tag("第 1 次提交", "muted") + '</span>'
@@ -299,7 +290,7 @@ def review_create():
     dup = alert('<b>重复检查通过：</b>未发现同平台同 ID（csu_cs_youth）账号；名称与已备案账号“中南计院团委”相似度 58%，'
                 '申请人已确认二者为不同账号。 <a class="link" href="../common/apply-similar.html">查看比对详情</a>', "success", "shield")
     belong = card("归属信息", kv([("所属学校", "中南大学"), ("所属学院", "计算机学院"), ("所属团学组织", a["org"]),
-                              ("组织类别", a["org_type"]), ("平台层级", a["level"]), ("上级团组织", "计算机学院团委")]))
+                              ("组织类别", a["org_type"]), ("平台管理层级", a["level"]), ("上级团组织", "计算机学院团委")]))
     intro_v1 = (f'<div class="v-ver v-first"><div class="intro-hd"><span class="field-label">平台介绍</span>'
                 f'{tag(icon("alert", 12) + str(len(INTRO_V1)) + " 字，少于 100 字要求", "warning")}</div>'
                 f'<div class="intro-box warn">{INTRO_V1}</div>'
@@ -313,18 +304,26 @@ def review_create():
     platform = card("平台信息", kv([
         ("平台类型", f'<span class="flex gap6">{pf(a["platform"], "sm")}{a["platform"]}</span>'), ("账号名称", a["name"]), ("曾用名", "—"),
         ("平台 ID", f'{a["pid"]} <button class="link small" type="button" data-copy="{a["pid"]}">复制</button>'),
-        ("是否认证", "是（中南大学计算机学院）"), ("粉丝数", "1,056"), ("开通时间", a["opened"]), ("运营团队规模", "8 人"),
-        ("主页链接", '<span class="link">mp.weixin.qq.com/csu_cs_youth</span>'),
+        ("是否认证", "否"), ("粉丝数", "0"), ("开通时间", a["opened"]), ("运营团队规模（单位：人）", "6"),
+        ("主页链接", '<span class="link">mp.weixin.qq.com/csu_cs_youth</span>', True),
+        ("平台头像", "已上传"), ("二维码", "未上传（非必填）"),
     ]) + f'<div class="divider"></div>{intro_v1}{intro_v2}{scope}'
-       + f'<div class="mt16"><div class="field-label mb8">四项机制</div>{mech_grid()}</div>')
-    run = card("运行信息", kv([("更新频率", UPDATE_FREQ[0]), ("主要栏目", "青年学习社 / 科创前沿 / 榜样力量 / 院团通知"),
-                            ("内容来源", "原创为主，转载须注明来源"), ("二维码", "已上传"), ("备注", "—", True)]))
-    staff = card("责任人员", kv([("第一责任人", "张卫东（学院党委副书记）"), ("管理教师", "王晓琳（宣传工作辅导员）"),
-                              ("学生负责人", f'李明（{P["李明"]["no"]} · {P["李明"]["phone"]}）'),
-                              ("学生管理员", "陈子墨、刘佳怡"), ("负责人职务", "新媒体中心主任"), ("所在班级", P["李明"]["grade"])]))
-    audit = card("审核信息", kv([("一审教师", "王晓琳（学生自选）"), ("审核流程", "指导教师 → 学院团委 → 校团委"), ("审核时限", "每个节点 5 个工作日")])
-                 + '<div class="mt16"><div class="field-label mb8">附件材料</div>'
-                 + files("新媒体平台备案承诺书.pdf", "四项机制制度汇编.pdf", "账号主页截图.png") + "</div>")
+       + f'<div class="mt16"><div class="field-label mb8">平台信息确认</div>{mech_grid()}</div>')
+    run = card("运行信息", kv([("最近一次公开内容发布时间", "2026-09-22"), ("更新频率", UPDATE_FREQ[0]),
+                            ("运行状态", st("正常运行")), ("异常情况", "无"),
+                            ("主要栏目", "青年学习社 / 科创前沿 / 榜样力量 / 院团通知"), ("备注", "—", True)]))
+    staff = card("责任人员", kv([
+        ("当前管理教师 · 姓名", "王晓琳"), ("工号", P["王晓琳"]["no"]), ("职务", "宣传工作辅导员"),
+        ("手机号", P["王晓琳"]["phone"]), ("是否为专职教师", "是"),
+        ("具体负责人 · 姓名", "李明"), ("学号", P["李明"]["no"]), ("手机号", P["李明"]["phone"]),
+        ("管理员", "陈可欣（8209230221）、刘子涵（8209240133）", True),
+        ("第一责任人", "张卫东（学院党委副书记）"), ("所在班级", P["李明"]["grade"])]))
+    audit = card("审核信息", kv([
+        ("一审负责人", "王晓琳"), ("工号/学号", P["王晓琳"]["no"]), ("职务", "宣传工作辅导员"), ("手机号", P["王晓琳"]["phone"]),
+        ("二审负责人", "周建华"), ("工号/学号", P["周建华"]["no"]), ("职务", P["周建华"]["job"]), ("手机号", P["周建华"]["phone"]),
+        ("三审负责人", "陈静"), ("工号/学号", P["陈静"]["no"]), ("职务", P["陈静"]["job"]), ("手机号", P["陈静"]["phone"])])
+        + '<div class="mt16"><div class="field-label mb8">附件材料</div>'
+        + files("新媒体平台备案承诺书.pdf", "四项机制制度汇编.pdf", "账号主页截图.png") + "</div>")
     who = who_card("李明", f'{P["李明"]["grade"]} · 新媒体中心主任',
                    [("学号", P["李明"]["no"]), ("手机", P["李明"]["phone"]), ("所在组织", a["org"]), ("历史申请", "3 次 · 均已办结")],
                    extra=btn("提醒", None, "light", "bell", "sm", toast="已向李明发送站内提醒"))
@@ -686,7 +685,7 @@ MY_ACCOUNTS = [
 ]
 
 
-def accounts():
+def accounts_content(proxy_href="proxy.html"):
     rows = []
     for name, plat, pid, sc, lv, stu, run, ann, last, flag in MY_ACCOUNTS:
         if flag == "idchange":
@@ -713,13 +712,17 @@ def accounts():
     tip = alert("<b>剧本四：</b>“计院科协”（哔哩哔哩）已更换新平台 ID（386620915 → 1928840012），点击该行“变更”发起信息变更，系统将识别 ID 变化并转为新建办理。")
     content = f"""
 {page_hd('我负责的账号', '仅显示本人被授权范围内的账号；一人多身份时按授权来源分别统计',
-         btn('教师代办', 'proxy.html', 'default', 'hand') + btn('发起新建', '../common/apply-create-basic.html', 'primary', 'plus'))}
+         btn('教师代办', proxy_href, 'default', 'hand') + btn('发起新建', '../common/apply-create-basic.html', 'primary', 'plus'))}
 <div class="grid g3 mb16">{scope_cards}</div>
 {filters}
 {tip}
 {card('', f'<div class="toolbar">{chips(chip_items, target="#acctTbl")}{btn("导出清单", None, "default", "download", "sm", toast="已导出本人负责账号清单")}</div>'
       + table(['账号', '授权来源（身份）', '层级', '学生负责人', '运行 / 年审', '最近发布', '操作'], rows, id_='acctTbl') + pager(18, 2), cls='mt16')}"""
-    page("accounts.html", "accounts", "我负责的账号", [("账号管理", "accounts.html"), ("我负责的账号", None)], content)
+    return content
+
+
+def accounts():
+    page("accounts.html", "accounts", "我负责的账号", [("账号管理", "accounts.html"), ("我负责的账号", None)], accounts_content())
 
 
 # ---------------------------------------------------------------- 代办中心（剧本八第 1 步）
@@ -839,8 +842,7 @@ def messages():
         f'<div class="col" style="align-items:flex-end;gap:6px"><span class="small muted nowrap">{tm}</span>{icon("chevron-right")}</div></a>'
         for cat, unread, ic, c, t, d, tm, h in msgs)
     sg = seg([("全部 11", "all"), ("审核待办 5", "todo"), ("截止提醒 3", "deadline"), ("系统通知 3", "system")], target="#msgList")
-    extra = (btn("全部已读", None, "default", "check", "sm", toast="已将全部消息标记为已读")
-             + btn("提醒设置", None, "text", "settings", "sm", toast="已开启微信、短信双通道提醒"))
+    extra = btn("全部已读", None, "default", "check", "sm", toast="已将全部消息标记为已读")
     content = f"""
 {page_hd('消息提醒', '审核待办、截止提醒与系统通知，点击消息直达办理页面', btn('去审核', 'todo.html', 'primary', 'inbox'))}
 {card('', f'<div class="toolbar" style="padding:14px 20px 0">{sg}<div class="flex gap8">{extra}</div></div><div id="msgList">{items}</div>', bd_cls='')}"""

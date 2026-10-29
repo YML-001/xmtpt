@@ -1,7 +1,12 @@
 """移动端 · 学生用户页面（演示身份：李明）与移动端公共页（登录、身份选择）。"""
 from base import *  # noqa: F401,F403
 from data import (ACCOUNTS, PEOPLE, ANNUAL_TASK as T, FLOWS, CANCEL_REASONS, UPDATE_FREQ, PLATFORM_TYPES,
-                  ORG_TYPES, LEVELS, COLLEGES)
+                  ORG_TYPES, LEVELS, COLLEGES, MECHANISMS, LEVEL_TEXT, LEVEL_NOTE, ORG_HINT, ORG_PROMPTS,
+                  PLATFORM_TYPE_HINT, ACCOUNT_NAME_HINT, FORMER_NAME_HINT, PID_HINT, FANS_HINT, INTRO_HINT,
+                  QR_HINT, TEAM_LABEL, PUBLISH_TIME_LABEL, STUDENTS, RUN_STATUS)
+from mobile_archive import ARCH_JS, ARCHIVE_CSS, render_archive
+from pages_pc_common import FILL_JS, qr
+from student_pick import is_cancelled, liming_rows, page_js, pick_buttons, picked_input
 
 D = "app/student/"
 C = "app/common/"
@@ -50,7 +55,7 @@ CSS = """
 .st4>div{background:#F7F9FB;border-radius:8px;padding:8px 10px}
 .st4 small{display:block;font-size:11px;color:var(--c-text-3);margin-bottom:4px}
 .bb-grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr)}
-.bb-grid a{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--c-text-2)}
+.bb-grid a{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--c-text-2);white-space:nowrap}
 .bb-grid a .mi{width:36px;height:36px;border-radius:11px}
 .flow-hint{display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;font-size:12px;color:var(--c-text-3);margin-top:10px;padding-top:10px;border-top:1px dashed var(--c-line)}
 .flow-hint .i{width:12px;height:12px}
@@ -83,18 +88,25 @@ CSS = """
 .msg-txt{font-size:13px;color:var(--c-text-2);margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .hl{border:1px solid var(--c-danger-bd);background:#FFF8F8}
 .intro-box{font-size:13px;line-height:1.7;color:var(--c-text-2);background:#F7F8FA;border-radius:8px;padding:10px}
+.intro-box.warn{background:#FFF1F1;color:var(--c-danger)}
 .wide-btn .btn{width:100%;height:46px;border-radius:10px;font-size:16px}
 .biz{display:flex;gap:12px;align-items:flex-start}
 .biz .mi{width:42px;height:42px;border-radius:12px}.biz .mi .i{width:22px;height:22px}
-.lv-tip{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px;color:var(--c-text-2);background:#F7F9FB;border-radius:8px;padding:10px 12px}
+.lv-tip{display:grid;grid-template-columns:72px 1fr;gap:6px 10px;font-size:12px;color:var(--c-text-2);background:#F7F9FB;border-radius:8px;padding:10px 12px;line-height:1.6}
 .lv-tip b{color:var(--c-text);font-weight:600}
+.mech-item{padding:12px 0;border-bottom:1px solid #F0F2F5}
+.mech-item:last-child{border-bottom:none}
+.mech-item .t{font-weight:600;font-size:14px;line-height:1.5}
+.mech-item .d{font-size:12px;color:var(--c-text-2);line-height:1.7;margin:6px 0 8px}
+.dlg-bd{padding:18px 16px 8px}.dlg-bd b{font-size:16px}.dlg-bd p{font-size:13px;color:var(--c-text-2);margin-top:8px;line-height:1.6}
+.dlg-ft{display:flex;gap:10px;padding:8px 16px 16px}.dlg-ft .btn{flex:1;height:40px;border-radius:10px}
 .id-card{display:flex;align-items:center;gap:12px}
 .acct-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .mini-kv{display:flex;gap:14px;font-size:12px;color:var(--c-text-3);margin-top:10px;padding-top:10px;border-top:1px solid #F0F2F5}
 .mini-kv b{color:var(--c-text);font-weight:600;margin-left:2px}
 .m-search{display:flex;align-items:center;gap:8px;height:38px;padding:0 12px;border-radius:19px;background:#fff;color:var(--c-text-3);margin-bottom:12px}
 .m-search input{flex:1;min-width:0;border:none;outline:none;background:none;font-size:14px}
-.m-card .alert,.m-group .alert{font-size:12.5px}
+.m-card .alert,.m-group .alert{font-size:13px;line-height:1.65;color:#333}
 .logout{display:block;text-align:center;padding:14px;color:var(--c-danger);font-size:15px}
 .me-hero .avatar{border:2px solid rgba(255,255,255,.6)}
 /* 登录页 */
@@ -108,6 +120,25 @@ CSS = """
 .lg-card .wide-btn .btn{height:46px;border-radius:23px;font-size:16px}
 .lg-tip{display:flex;gap:6px;align-items:flex-start;font-size:12px;color:var(--c-text-3);margin-top:12px;line-height:1.6}
 .lg-tip .i{margin-top:2px;color:var(--c-success)}
+.pick-list{display:grid;gap:8px}
+.pick-item{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:12px;border:1px solid var(--c-line);border-radius:12px;background:#fff;text-align:left}
+.pick-item:active{border-color:var(--c-primary)}
+.pick-item>span:first-child{flex:1;min-width:0;line-height:1.5}
+.pick-item .pick-act{flex:none;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:28px;padding:0 10px;border:1px solid var(--c-primary);border-radius:8px;background:#fff;font-size:13px;line-height:1}
+.acct-ops{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #F0F2F5}
+.acct-ops .btn{flex:none;white-space:nowrap;min-width:52px;height:32px;padding:0 10px;font-size:13px}
+.hall-hero{background:linear-gradient(270deg,#469FFF,#065CF8);color:#fff;border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.hall-hero b{display:block;font-size:16px;line-height:1.3}
+.hall-hero p{font-size:12px;line-height:1.4;margin-top:2px;opacity:.92}
+.hall-list{display:flex;flex-direction:column;gap:6px}
+.hall-row{display:flex;align-items:center;gap:8px;background:#fff;border-radius:8px;padding:8px 10px;color:inherit}
+.hall-row .mi{width:28px;height:28px;border-radius:8px}
+.hall-row .mi .i{width:16px;height:16px}
+.hall-row b{display:block;font-size:14px;line-height:1.25}
+.hall-row .one{display:block;margin-top:1px;font-size:12px;line-height:1.35;color:#666}
+.hall-note{margin-top:8px}
+.claim-row .name{font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+.claim-row>.btn{flex:none;white-space:nowrap;min-width:52px}
 """
 
 
@@ -218,12 +249,25 @@ def login():
 <div class="m-card">
   <div class="small muted mb8" style="text-align:center">其他登录方式</div>
   <div class="grid g2" style="gap:10px">
-    <button type="button" class="btn btn-default" data-toast="请使用企业微信扫描二维码（演示）">{icon('qr')}企业微信扫码</button>
-    <button type="button" class="btn btn-default" data-toast="验证码已发送至 151****2233（演示）">{icon('phone')}短信验证码</button>
+    <button type="button" class="btn btn-default" data-toggle="#wx-sheet">{icon('qr')}企业微信扫码</button>
+    <button type="button" class="btn btn-default" data-toggle="#sms-sheet">{icon('phone')}短信验证码</button>
   </div>
 </div>
 <div class="small muted" style="text-align:center;margin-top:6px">共青团中南大学委员会 · 宣传部</div>"""
-    app_page(C + "login.html", "common", "移动端登录", content, nav_title="", blue=True, css=CSS,
+    login_overlay = f"""<div class="sheet-mask hidden" id="wx-sheet"><div class="sheet" style="text-align:center">
+  <div class="sheet-hd"><b>企业微信扫码登录</b><button type="button" class="x-btn" data-toggle="#wx-sheet" aria-label="关闭">{icon('x')}</button></div>
+  <div style="display:flex;justify-content:center">{qr(168, 3)}</div>
+  <div class="small muted mt8">请使用企业微信扫描上方二维码</div>
+  <a class="btn btn-primary" href="identity-switch.html" style="margin-top:14px">我已完成扫码</a>
+</div></div>
+<div class="sheet-mask hidden" id="sms-sheet"><div class="sheet" data-form>
+  <div class="sheet-hd"><b>短信验证码登录</b><button type="button" class="x-btn" data-toggle="#sms-sheet" aria-label="关闭">{icon('x')}</button></div>
+  <div class="small muted mb8">验证码将发送至 151****2233</div>
+  <div class="m-group">{m_input('验证码', '请输入 6 位验证码', '', req=True)}</div>
+  <button type="button" class="btn btn-default" style="width:100%;margin-top:8px" onclick="var i=document.querySelector('#sms-sheet input');if(i)i.value='246810';" data-toast="验证码 246810 已发送至 151****2233">获取验证码</button>
+  {submit_btn('验证并登录', 'identity-switch.html', toast='验证通过')}
+</div></div>"""
+    app_page(C + "login.html", "common", "移动端登录", content, nav_title="", blue=True, css=CSS, overlay=login_overlay,
              notes=["学号 / 工号 + 统一认证密码登录，两项均为必填，留空点击登录会标红提示",
                     "“忘记密码”引导至学校统一身份认证平台，本系统不存储密码",
                     "明确告知不收集第三方平台（微信、抖音等）的登录密码，账号只做登记备案",
@@ -240,6 +284,8 @@ def identity_switch():
          "审核本人负责范围内的申请、年审、整改与僵尸号核实，学生无法办理时可代办", "../teacher/home.html", False),
         ("周建华", "学院管理员", "success", "计算机学院团委 · 学院团委书记",
          "学院审核、年审统一提交校团委、任务分派与风险督办", "../college/home.html", False),
+        ("陈静", "学校管理员", "primary", "校团委宣传部 · 宣传部部长",
+         "校级终审，以及全校账号、组织、年审节点、僵尸号的查看；批量审批与系统配置在 PC 端", "../school/home.html", False),
     ]
     cards = "".join(
         f'<a class="m-card id-card" href="{h}" style="{"box-shadow:inset 0 0 0 1.5px var(--c-primary)" if on else ""}">'
@@ -248,20 +294,22 @@ def identity_switch():
         for n, r, k, o, d, h, on in ids)
     content = f"""
 <div class="m-card flex gap12">{mi('user-switch')}<div class="grow"><div class="bold">请选择本次进入的身份</div>
-<div class="small muted">统一身份认证已通过 · 演示账号绑定 3 个身份</div></div></div>
+<div class="small muted">统一身份认证已通过 · 当前账号绑定 4 个身份</div></div></div>
 {cards}
 <div class="alert alert-info">{icon('info')}<div class="grow"><b>同一账号体系、同一套数据。</b>不同身份仅授权范围不同；PC 端与移动端业务状态实时一致，移动端提交的申请可在 PC 端继续审核。</div></div>
 <div class="m-group mt12">
-  {cell('在 PC 端打开', '<span class="c-primary">身份选择（PC）</span>', href='../../pc/common/identity-switch.html')}
   {cell('退出登录', '', href='login.html')}
 </div>"""
     app_page(C + "identity-switch.html", "common", "身份选择", content, back="login.html", css=CSS,
              notes=["一人多身份时按身份进入，各身份的数据范围与操作权限独立授权",
                     "学生身份仅能发起申请、提交材料，无最终审核权",
-                    "教师 / 学院管理员进入对应的移动审核工作台",
+                    "教师、学院管理员、学校管理员进入对应的移动端",
+                    "学校管理员在手机上办理校级终审和查看基础信息；批量审批与系统配置仍在 PC 端",
                     "PC 与移动端共用同一数据，状态实时同步"],
              flow=[("学生：李明 首页", "../student/home.html"), ("教师：王晓琳 工作台", "../teacher/home.html"),
-                   ("学院管理员：周建华 看板", "../college/home.html"), ("PC 端身份选择", "../../pc/common/identity-switch.html")])
+                   ("学院管理员：周建华 看板", "../college/home.html"),
+                   ("学校管理员：陈静 首页", "../school/home.html"),
+                   ("PC 端身份选择", "../../pc/common/identity-switch.html")])
 
 
 # ---------------------------------------------------------------- 学生：首页
@@ -272,14 +320,17 @@ def home():
         f'<div class="grow"><div class="bold fs13">{t}</div><div class="small muted">{m}</div></div>{tag(k, kc)}</a>'
         for t, m, ic, c, k, kc, h in [
             ("中南计院团委 · 年度年审", f"请于 {T['stu_end']} 前完成填报", "calendar", "", "待年审", "primary", "annual-fill.html"),
-            ("中南计算机青年 · 新建备案", "王晓琳老师退回：请补充平台介绍", "undo", "orange", "退回修改", "danger", "application-returned.html"),
+            ("计院街舞社 · 年度年审", "历史数据已继承，待确认后提交", "calendar", "", "待年审", "primary", "annual.html"),
+            ("中南计算机青年 · 新建备案", "王晓琳老师退回：请补充平台介绍", "undo", "orange", "退回修改", "danger", "application-edit.html"),
+            ("计院青年志愿者 · 年审整改", "第 2 轮材料待提交", "wrench", "orange", "待整改", "danger", "rectify-submit.html"),
             ("计院摄影协会 · 疑似僵尸号", "停更 212 天，请核实运营情况", "ghost", "red", "待核实", "warning", "zombie-verify.html"),
         ])
     my_accts = "".join(
         f'<a class="m-card flex gap12" href="{h}" style="margin-bottom:10px">{pf(a["platform"])}<div class="grow">'
         f'<div class="bold ellipsis">{a["name"]}</div><div class="small muted">{a["platform"]} · {a["level"]}</div></div>{st(s)}</a>'
-        for a, s, h in [(ACCOUNTS["annual"], "正常运行", "account-detail.html"), (ACCOUNTS["rename"], "变更申请中", "account-detail.html"),
-                        (ACCOUNTS["handover"], "正常运行", "account-detail.html")])
+        for a, s, h in [(ACCOUNTS["annual"], "正常运行", "account-detail.html?acct=annual"),
+                        (ACCOUNTS["rename"], "变更申请中", "account-detail.html?acct=rename"),
+                        (ACCOUNTS["handover"], "正常运行", "account-detail.html?acct=handover")])
     content = f"""
 <div class="m-hero">
   <div class="flex gap12" style="position:relative;z-index:1">{avatar('李明', 'lg')}
@@ -288,17 +339,16 @@ def home():
   </div>
   <div class="grid g3 mt16" style="position:relative;z-index:1;text-align:center;gap:0">
     <a href="accounts.html"><div class="fs18 bold num">5</div><div class="small" style="opacity:.8">我的账号</div></a>
-    <a href="applications.html" style="border-left:1px solid rgba(255,255,255,.2);border-right:1px solid rgba(255,255,255,.2)"><div class="fs18 bold num">2</div><div class="small" style="opacity:.8">进行中申请</div></a>
-    <a href="todo.html"><div class="fs18 bold num">3</div><div class="small" style="opacity:.8">待办事项</div></a>
+    <a href="my-apply.html" style="border-left:1px solid rgba(255,255,255,.2);border-right:1px solid rgba(255,255,255,.2)"><div class="fs18 bold num">2</div><div class="small" style="opacity:.8">进行中申请</div></a>
+    <a href="todo.html"><div class="fs18 bold num">5</div><div class="small" style="opacity:.8">待办事项</div></a>
   </div>
 </div>
-<div class="m-card mt12"><div class="quick">
+<div class="m-card mt12"><div class="quick pack7">
   <a href="apply-create-basic.html"><span class="qi">{icon('file-add')}</span>新建备案</a>
   <a href="apply-change.html"><span class="qi orange">{icon('file-edit')}</span>信息变更</a>
   <a href="apply-handover.html"><span class="qi green">{icon('user-switch')}</span>负责人交接</a>
   <a href="apply-cancel.html"><span class="qi red">{icon('power')}</span>账号注销</a>
   <a href="annual.html"><span class="qi">{icon('calendar')}</span>我的年审</a>
-  <a href="applications.html"><span class="qi purple">{icon('clipboard')}</span>我的申请</a>
   <a href="rectify.html"><span class="qi orange">{icon('wrench')}</span>整改任务</a>
   <a href="apply-claim.html"><span class="qi green">{icon('hand')}</span>账号认领</a>
 </div></div>
@@ -308,7 +358,7 @@ def home():
 <div class="m-title">我负责的账号<a href="accounts.html">全部 5 个{icon('chevron-right', 14)}</a></div>
 {my_accts}"""
     app_page(D + "home.html", "student", "首页", content, tab="home", nav_title="团学新媒体",
-             notes=["聚合本人待办：待年审、退回修改、疑似僵尸号核实，点击直达办理页",
+             notes=["聚合本人待办：待年审、退回修改、整改提交、疑似僵尸号核实，点击直达办理页",
                     "快捷入口覆盖新建、变更、交接、注销、认领五类业务及年审、整改",
                     "顶部统计分别跳转我的账号、我的申请、我的待办"],
              flow=[("剧本一：新建备案", "apply-create-basic.html"), ("剧本五：年审填报", "annual-fill.html"),
@@ -320,10 +370,9 @@ def todo():
     items = [
         ("annual", "中南计院团委 · 2026 年度年审", "确认本年度变化并提交", "calendar", "", "待年审", "primary", "annual-fill.html", "10-15 截止"),
         ("annual", "计院街舞社 · 2026 年度年审", "历史数据已继承，待确认", "calendar", "", "待年审", "primary", "annual.html", "10-15 截止"),
-        ("back", "中南计算机青年 · 新建备案", "王晓琳退回：平台介绍不足 100 字", "undo", "orange", "退回修改", "danger", "application-returned.html", "09-25 退回"),
-        ("rectify", "计院青年志愿者 · 年审整改", "第 2 轮整改材料待提交", "wrench", "orange", "待整改", "danger", "rectify.html", f"{RC['deadline'][5:]} 截止"),
+        ("back", "中南计算机青年 · 新建备案", "王晓琳退回：平台介绍不足 100 字", "undo", "orange", "退回修改", "danger", "application-edit.html", "09-25 退回"),
+        ("rectify", "计院青年志愿者 · 年审整改", "第 2 轮整改材料待提交", "wrench", "orange", "待整改", "danger", "rectify-submit.html", f"{RC['deadline'][5:]} 截止"),
         ("verify", "计院摄影协会 · 疑似僵尸号", "停更 212 天，请核实运营情况", "ghost", "red", "待核实", "warning", "zombie-verify.html", "10-10 截止"),
-        ("handover", "计院街舞社 · 负责人交接", "10 月起卸任，请交接给继任者", "user-switch", "green", "待交接", "primary", "apply-handover.html", "10-01 生效"),
     ]
     rows = "".join(
         f'<a class="todo-item" href="{h}" data-cat="{cat}">{mi(ic, c)}<div class="grow" style="min-width:0">'
@@ -334,12 +383,12 @@ def todo():
                    for t, v in [("全部", "all"), ("待年审", "annual"), ("退回修改", "back"), ("待整改", "rectify"), ("待核实", "verify")])
     content = f"""
 <div class="m-tabs" data-target="#todo-list">{tabs}</div>
-<div class="flex between small muted mb8" style="padding:0 2px"><span>共 {len(items)} 项待办</span><span>最早截止 2026-10-01</span></div>
+<div class="flex between small muted mb8" style="padding:0 2px"><span>共 {len(items)} 项待办</span><span>最早截止 2026-10-10</span></div>
 <div class="m-card" style="padding:4px 14px" id="todo-list">{rows}</div>
 <div class="alert alert-info">{icon('info')}<div class="grow">待办按“本人负责的账号”自动生成；学生可发起申请、提交材料，审核由指导教师、学院与校团委完成。</div></div>"""
     page("todo.html", "我的待办", content, back="home.html",
-         notes=["顶部页签按类型筛选：待年审 / 退回修改 / 待整改 / 待核实，“全部”额外包含待交接事项",
-                "每条待办显示业务、账号与截止时间，点击直达办理页面",
+         notes=["顶部页签按类型筛选：待年审 / 退回修改 / 待整改 / 待核实",
+                "条目与 PC 统一待办一致：年审填报、退回后修改重提、整改提交、僵尸号核实",
                 "待办随审核流转自动增减，教师退回、学院下发整改、系统僵尸号预警都会生成待办"],
          flow=[("办理年审填报", "annual-fill.html"), ("查看退回意见（剧本一）", "application-returned.html"),
                ("提交整改（剧本六）", "rectify.html"), ("核实疑似僵尸号", "zombie-verify.html"),
@@ -373,144 +422,157 @@ def messages():
                ("整改通知 → 整改任务", "rectify.html"), ("年审提醒 → 我的年审", "annual.html")])
 
 
-def mine():
-    me = PEOPLE["李明"]
-
-    def row(ic, color, label, value, href):
-        return (f'<a class="cell" href="{href}">{mi(ic, color)}<span class="cell-label">{label}</span>'
-                f'<span class="cell-value">{value}</span>{icon("chevron-right", cls="arrow")}</a>')
-
-    content = f"""
-<div class="m-hero me-hero">
-  <div class="flex gap12" style="position:relative;z-index:1">{avatar('李明', 'lg')}
-    <div class="grow"><div class="flex gap8"><span class="fs18 bold">李明</span><span class="tag" style="background:rgba(255,255,255,.2);border-color:transparent;color:#fff">学生用户</span></div>
-    <div class="small" style="opacity:.85">学号 {me['no']} · {me['grade']}</div>
-    <div class="small" style="opacity:.85">{me['org']} · {me['job']}</div></div>
-  </div>
-</div>
-<div class="alert alert-info mt12">{icon('shield')}<div class="grow">学生身份无最终审核权，可发起申请和提交材料；仅可查看本人负责的账号。</div></div>
-<div class="m-group mt12">
-  {row('database', '', '我的账号', '5 个', 'accounts.html')}
-  {row('clipboard', 'purple', '我的申请', '2 个进行中', 'applications.html')}
-  {row('calendar', '', '我的年审', '<span class="c-primary">3 个待填报</span>', 'annual.html')}
-  {row('wrench', 'orange', '整改任务', '<span class="c-danger">1 个待提交</span>', 'rectify.html')}
-  {row('inbox', 'green', '我的待办', '6 项', 'todo.html')}
-</div>
-<div class="m-group">
-  <div class="cell">{mi('bell', 'orange')}<span class="cell-label">审核结果提醒</span><button type="button" class="switch on ml-auto" aria-label="审核结果提醒"></button></div>
-  <div class="cell">{mi('message', 'green')}<span class="cell-label">企业微信消息推送</span><button type="button" class="switch on ml-auto" aria-label="企业微信消息推送"></button></div>
-  <div class="cell">{mi('clock', 'gray')}<span class="cell-label">截止前 3 天提醒</span><button type="button" class="switch ml-auto" aria-label="截止前提醒"></button></div>
-</div>
-<div class="m-group">
-  {row('user-switch', '', '切换身份', '学生用户', '../common/identity-switch.html')}
-  <div class="cell" data-toast="使用帮助：《学生用户操作指南》已发送至企业微信" style="cursor:pointer">{mi('help', 'gray')}<span class="cell-label">使用帮助</span><span class="cell-value"></span>{icon('chevron-right', cls='arrow')}</div>
-  <div class="cell" data-toast="已是最新版本 v1.0.0" style="cursor:pointer">{mi('info', 'gray')}<span class="cell-label">关于平台</span><span class="cell-value">v1.0.0</span>{icon('chevron-right', cls='arrow')}</div>
-</div>
-<div class="m-group"><a class="logout" href="../common/login.html">退出登录</a></div>"""
-    page("mine.html", "我的", content, tab="mine",
-         notes=["个人资料来自学校统一身份认证，不可在本系统修改",
-                "消息设置开关可即时切换，控制审核结果、企业微信推送与截止提醒",
-                "“切换身份”进入身份选择；“退出登录”回到统一认证登录页"],
-         flow=[("我的账号", "accounts.html"), ("我的申请", "applications.html"),
-               ("切换身份", "../common/identity-switch.html"), ("退出登录", "../common/login.html")])
-
-
 # ---------------------------------------------------------------- 学生：账号
+def _picker(verb):
+    tip = alert("请选择要办理的账号。下列账号均可直接办理，选中后出现填写。", "info")
+    return ('<div id="acct-pick">' + sec("选择账号", '<span class="small">点选后填写' + verb + "</span>")
+            + tip
+            + '<div class="pick-list">' + pick_buttons() + "</div></div>" + picked_input())
+
+
+def _now_card():
+    return ('<div class="m-card"><div class="small muted">当前办理账号</div>'
+            '<div class="bold" id="acct-now-name">—</div>'
+            '<div class="small muted" id="acct-now-meta"></div></div>')
+
+
+def _acct_step(verb, inner):
+    return _picker(verb) + '<div id="acct-form" class="hidden">' + _now_card() + inner + "</div>"
+
+
+def _app_ops(r):
+    view = btn("查看", r["app_view"], "ghost", size="sm")
+    if is_cancelled(r):
+        return '<div class="acct-ops">' + view + "</div>"
+    k = r["key"]
+    return ('<div class="acct-ops">' + view
+            + btn("变更", "apply-change.html?acct=" + k, "ghost", size="sm")
+            + btn("交接", "apply-handover.html?acct=" + k, "ghost", size="sm")
+            + btn("注销", "apply-cancel.html?acct=" + k, "danger", size="sm")
+            + "</div>")
+
+
 def accounts():
-    rows = [
-        (AN, [st("正常运行"), st("已备案")], "account-detail.html", "annual"),
-        (REN, [st("正常运行"), st("已备案")], "account-detail.html", "rename"),
-        (HO, [st("正常运行"), st("已备案"), tag("待交接", "primary")], "account-detail.html", "handover"),
-        (PH, [st("不活跃"), st("已备案"), st("疑似僵尸号")], "account-detail.html", "photo"),
-        (NEW, [st("备案申请中")], "application-detail.html", "new"),
-    ]
-    cards = "".join(
-        f'<a class="m-card" href="{h}" data-cat="{k}" style="display:block"><div class="flex gap12">{pf(a["platform"])}'
-        f'<div class="grow" style="min-width:0"><div class="bold ellipsis">{a["name"]}</div><div class="small muted ellipsis">{a["platform"]} · {a["level"]} · {a["org_type"]}</div></div>'
-        f'{icon("chevron-right", cls="arrow")}</div><div class="acct-tags">{"".join(tg)}</div>'
-        f'<div class="mini-kv"><span>粉丝<b class="num">{a["fans"]}</b></span><span>指导教师<b>{a["teacher"]}</b></span><span>开通<b class="num">{a["opened"]}</b></span></div></a>'
-        for a, tg, h, k in rows)
+    tags = {
+        "annual": [st("正常运行"), st("已备案")],
+        "rename": [st("正常运行"), st("已备案")],
+        "handover": [st("正常运行"), st("已备案"), tag("待交接", "primary")],
+        "photo": [st("不活跃"), st("已备案"), st("疑似僵尸号")],
+        "new": [st("备案申请中")],
+    }
+    cards = []
+    for r in liming_rows():
+        a = ACCOUNTS[r["key"]]
+        cards.append(
+            '<div class="m-card" data-cat="' + r["key"] + '">'
+            '<a href="' + r["app_view"] + '" style="display:block"><div class="flex gap12">' + pf(a["platform"])
+            + '<div class="grow" style="min-width:0"><div class="bold ellipsis">' + a["name"] + "</div>"
+            + '<div class="small muted ellipsis">' + a["platform"] + " · " + a["level"] + " · " + a["org_type"] + "</div></div>"
+            + icon("chevron-right", cls="arrow") + '</div><div class="acct-tags">' + "".join(tags[r["key"]]) + "</div>"
+            + '<div class="mini-kv"><span>粉丝<b class="num">' + str(a["fans"]) + "</b></span><span>指导教师<b>" + a["teacher"]
+            + '</b></span><span>开通<b class="num">' + a["opened"] + "</b></span></div></a>"
+            + _app_ops(r) + "</div>"
+        )
+    cards = "".join(cards)
     content = f"""
 <label class="m-search">{icon('search')}<input placeholder="搜索账号名称 / 平台" data-search="#acct-list"></label>
 <div class="flex between small muted mb8" style="padding:0 2px"><span>我负责的账号 · 共 5 个</span><span>仅显示本人负责</span></div>
 <div id="acct-list">{cards}</div>
 <a class="m-card flex gap12" href="apply-claim.html" style="border:1px dashed var(--c-primary-border)">{mi('hand', 'green')}<div class="grow"><div class="bold">找不到我的账号？</div><div class="small muted">学校已导入的历史账号可在线认领</div></div>{icon('chevron-right', cls='arrow')}</a>"""
-    page("accounts.html", "我的账号", content, back="mine.html",
+    page("accounts.html", "我的账号", content, back="home.html",
          right='<a href="apply-claim.html">认领</a>',
          bottom=btn("认领账号", "apply-claim.html", "ghost", "hand") + btn("新建备案", "apply-create-basic.html", ic="plus"),
          notes=["仅显示李明本人负责的 5 个账号，其他账号不可见",
-                "卡片展示运行状态、备案状态及风险标签（疑似僵尸号、待交接）",
+                "每张卡片可直接办理变更、交接、注销；已注销的账号只保留查看",
                 "搜索框按名称实时过滤；备案申请中的账号点击进入申请进度",
                 "找不到账号时可通过“认领账号”认领学校已导入的历史数据"],
          flow=[("账号详情（剧本二起点）", "account-detail.html"), ("备案申请中 → 申请进度", "application-detail.html"),
                ("认领账号", "apply-claim.html")])
 
 
+def _stu_case(key, hidden, more_href, more_label):
+    a = ACCOUNTS[key]
+    last = {"rename": "2026-09-18", "annual": "2026-09-17", "handover": "2026-09-12", "photo": a.get("last_post") or ""}[key]
+    rec = dict(name=a["name"], platform=a["platform"], pid=a["pid"], college="计算机学院", org=a["org"],
+               level=a["level"], org_type=a["org_type"], teacher=a["teacher"], student=a["student"],
+               run=a["run"] or "—", filing=a["filing"] or "—", annual=a["annual"] or "—",
+               change=a.get("change") or "", last=last, opened=a.get("opened") or "", fans=a.get("fans") or "",
+               scene=key, last_post=a.get("last_post"), idle_days=a.get("idle_days"))
+    st4 = "".join('<div><small>' + k + '</small>' + st(v) + '</div>' for k, v in
+                  [("运行状态", rec["run"]), ("备案状态", rec["filing"]), ("年审状态", rec["annual"]),
+                   ("年度异动", rec["change"] or "—")])
+    head = acct_head(a, tag(a["level"], "primary") + tag(a["org_type"], "muted"),
+                     extra='<div class="st4">' + st4 + '</div>')
+    hist = ""
+    if key == "rename":
+        hist = group(cell("账号历史", "历任负责人 · 年审 · 变更", href="account-history.html"))
+    cls = "hidden" if hidden else ""
+    return (
+        '<div data-case="' + key + '" class="' + cls + '" data-chg="apply-change.html?acct=' + key
+        + '" data-hand="apply-handover.html?acct=' + key + '" data-cancel="apply-cancel.html?acct=' + key
+        + '" data-more="' + more_href + '" data-more-label="' + more_label + '">'
+        + head + render_archive(rec) + hist
+        + '<div class="alert alert-info">' + icon("info")
+        + '<div class="grow">账号名称、负责人、指导教师等信息变化请通过“信息变更”办理；平台 ID 变化须重新新建备案。</div></div>'
+        + "</div>"
+    )
+
+
 def account_detail():
-    a = REN
-    st4 = "".join(f'<div><small>{k}</small>{st(v)}</div>' for k, v in
-                  [("运行状态", "正常运行"), ("备案状态", "已备案"), ("年审状态", "待指导教师审核"), ("年度异动", "无异动")])
-    head = acct_head(a, f'{tag(a["level"], "primary")}{tag(a["org_type"], "muted")}',
-                     extra=f'<div class="st4">{st4}</div>')
-    copy_btn = f'<button type="button" class="btn-text btn" data-copy="{a["pid"]}">{a["pid"]}{icon("copy", 14)}</button>'
-    content = f"""
-{head}
-{sec('基本信息')}
-{group(
-        cell('平台类型', a['platform']),
-        cell('平台 ID', copy_btn),
-        cell('粉丝数', f'<span class="num">{a["fans"]}</span>（2026-09-28 更新）'),
-        cell('平台层级', a['level']),
-        cell('所属组织', a['org']),
-        cell('开通时间', a['opened']),
-    )}
-{sec('责任人员')}
-{group(
-        cell('指导教师', f'{a["teacher"]} · 宣传工作辅导员'),
-        cell('具体负责人', '李明（本人）'),
-        cell('第一责任人', '张卫东 · 党委副书记'),
-    )}
-{sec('运行情况')}
-{group(
-        cell('最近发布', '2026-09-28'),
-        cell('更新频率', '每周更新（≥1次/周）'),
-        cell('历史记录', '历任负责人 · 年审 · 变更', href='account-history.html'),
-    )}
-<div class="alert alert-info">{icon('info')}<div class="grow">账号名称、负责人、指导教师等信息变化请通过“信息变更”办理；平台 ID 变化须重新新建备案。</div></div>"""
-    bottom = ('<div class="bb-grid">'
-              f'<a href="apply-change.html">{mi("file-edit", "orange")}信息变更</a>'
-              f'<a href="apply-handover.html">{mi("user-switch", "green")}负责人交接</a>'
-              f'<a href="apply-cancel.html">{mi("power", "red")}注销</a>'
-              f'<a href="annual.html">{mi("calendar")}年审</a></div>')
-    page("account-detail.html", "账号详情", content, back="accounts.html", bottom=bottom,
-         right='<button type="button" data-toast="已生成账号二维码名片（演示）">' + icon("qr", 20) + '</button>',
-         notes=["顶部集中展示四套状态：运行 / 备案 / 年审 / 年度异动",
-                "平台 ID 点击即可复制；历史记录查看历任负责人、历年年审与变更",
-                "底部业务入口：信息变更（剧本二下一步）、负责人交接、注销、年审",
-                "学生仅能发起申请，所有变更须经审核后才生效"],
-         flow=[("剧本二下一步：信息变更", "apply-change.html"), ("负责人交接", "apply-handover.html"),
-               ("账号历史", "account-history.html"), ("PC 端账号档案", "../../pc/common/archive-basic.html")])
+    cases = [
+        _stu_case("rename", False, "annual.html", "年审"),
+        _stu_case("annual", True, "annual-fill.html", "年审"),
+        _stu_case("handover", True, "annual.html", "年审"),
+        _stu_case("photo", True, "zombie-verify.html", "去核实"),
+    ]
+    content = "".join(cases)
+    bottom = (
+        '<div class="bb-grid">'
+        '<a id="op-chg" href="apply-change.html?acct=rename">' + mi("file-edit", "orange") + "信息变更</a>"
+        '<a id="op-hand" href="apply-handover.html?acct=rename">' + mi("user-switch", "green") + "负责人交接</a>"
+        '<a id="op-cancel" href="apply-cancel.html?acct=rename">' + mi("power", "red") + "注销</a>"
+        '<a id="op-more" href="annual.html">' + mi("calendar") + '<span id="op-more-tx">年审</span></a></div>'
+    )
+    qr_sheet = (
+        '<div class="sheet-mask hidden" id="qr-sheet"><div class="sheet" style="text-align:center">'
+        '<div class="sheet-hd"><b>账号二维码名片</b><button type="button" class="x-btn" data-toggle="#qr-sheet" aria-label="关闭">'
+        + icon("x") + '</button></div><div style="display:flex;justify-content:center">' + qr(168, 9) + '</div>'
+        '<div class="bold mt8">' + REN["name"] + '</div><div class="small muted">' + REN["platform"] + " · " + REN["pid"]
+        + '</div><button type="button" class="btn btn-primary" style="width:100%;margin-top:14px" data-toast="二维码名片已保存到相册">保存图片</button>'
+        '</div></div>'
+    )
+    page("account-detail.html", "账号详情", content, back="accounts.html", bottom=bottom, overlay=qr_sheet,
+         css=CSS + ARCHIVE_CSS, js=ARCH_JS,
+         right='<button type="button" data-toggle="#qr-sheet" aria-label="账号二维码">' + icon("qr", 20) + '</button>',
+         notes=["档案分区与 PC 一致：基本信息、平台信息、归属、负责人与管理员、年审、变更、整改、操作记录",
+                "李明负责的账号在本页切换，字段与 PC 档案、同一份演示数据一致",
+                "底部保留信息变更、负责人交接、注销、年审或核实，不删原有办理入口",
+                "学生只能发起申请，审核通过后才写入正式档案"],
+         flow=[("剧本二下一步：信息变更", "apply-change.html?acct=rename"), ("负责人交接", "apply-handover.html?acct=rename"),
+               ("年审填报", "annual-fill.html"), ("僵尸号核实", "zombie-verify.html"),
+               ("账号历史", "account-history.html"), ("PC 端账号档案", "../../pc/common/archive-changes.html")])
 
 
 def account_history():
     a = REN
     staff = timeline([
-        ("now", "李明（现任）", "2025-06-20 至今 · 2023级软件工程2班", "学生会换届后接任新媒体负责人"),
-        ("done", "周子豪", "2023-06-15 至 2025-06-20 · 2021级计算机科学1班", "毕业离任，交接给李明"),
-        ("done", "罗佳怡", "2021-06-10 至 2023-06-15 · 2019级软件工程3班", ""),
-        ("done", "唐嘉伟", "2016-03-12 至 2021-06-10 · 账号创建人", "历史补录，2024 年导入"),
+        ("now", "李明（现任）", "2025-09-20 至今 · 2023级软件工程2班", "交接单 JJ20250918004，王晓琳审核通过"),
+        ("done", "张涵", "至 2025-09-20", "交接给李明"),
+        ("done", "罗一鸣", "至 2024-09-12", "历史补录，交接给张涵"),
     ])
     annual = timeline([
-        ("now", "2026 年度 · 待指导教师审核", "2026-09-22 李明提交 · 王晓琳审核中", "无异动，账号正常运营"),
+        ("now", "2026 年度 · 待指导教师审核", "名称变更办理中", "年度异动：变更"),
         ("done", "2025 年度 · 年审通过", "2025-11-18 校团委审核通过", "年度异动：变更（负责人交接）"),
         ("done", "2024 年度 · 年审通过", "2024-11-20 校团委审核通过", "年度异动：变更（指导教师由刘洋变更为王晓琳）"),
         ("done", "2023 年度 · 年审通过", "2023-11-16 校团委审核通过", "年度异动：无异动"),
     ])
     changes = timeline([
-        ("done", "负责人交接：周子豪 → 李明", "2025-06-20 · 指导教师审核通过即生效", ""),
-        ("done", "指导教师变更：刘洋 → 王晓琳", "2024-03-05 · 学院团委审核通过", "学院宣传工作分工调整"),
-        ("done", "主页链接变更", "2022-09-01 · 学院团委审核通过", "微博主页短链更新"),
-        ("done", "历史补录建档", "2024-01-10 · 学校导入 · 学院确认", "原备案纸质材料已扫描归档"),
+        ("now", "账号名称：计算机学院学生会 → 中南计院学生会", "2026-09-26 · " + REN_STEPS[0][3], "待指导教师审核 · " + FLOWS["rename"]["no"]),
+        ("done", "学生负责人：张涵 → 李明", "2025-09-20 · 交接单 JJ20250918004", "王晓琳审核通过"),
+        ("done", "学生负责人：罗一鸣 → 张涵", "2024-09-12 · 历史补录", "刘洋审核"),
+        ("done", "指导教师：刘洋 → 王晓琳", "2024-03-05 · 历史补录", "周建华（学院）"),
+        ("done", "主页链接变更", "2023-06-18 · weibo.com/u/" + a["pid"], "历史补录"),
+        ("done", "曾用名：中南信息学院学生会", "2019-07-01 · 更名为计算机学院学生会", "历史补录"),
     ])
     content = f"""
 {mini_acct(a, st('正常运行'))}
@@ -519,9 +581,14 @@ def account_history():
   <button type="button" class="grow" data-choice="#hb-annual">历年年审</button>
   <button type="button" class="grow" data-choice="#hb-change">变更记录</button>
 </div>
-<div class="m-card hblk" id="hb-staff">{m_card_title('历任负责人', '<span class="small muted" style="font-weight:400">共 4 任</span>')}{staff}</div>
+<div class="m-card hblk" id="hb-staff">{m_card_title('历任负责人', '<span class="small muted" style="font-weight:400">共 3 任</span>')}{staff}</div>
 <div class="m-card hblk hidden" id="hb-annual">{m_card_title('历年年审', '<span class="small muted" style="font-weight:400">2023 - 2026</span>')}{annual}</div>
-<div class="m-card hblk hidden" id="hb-change">{m_card_title('变更记录', '<span class="small muted" style="font-weight:400">共 4 条</span>')}{changes}</div>
+<div class="m-card hblk hidden" id="hb-change">{m_card_title('变更记录', '<span class="small muted" style="font-weight:400">共 6 条</span>')}{changes}</div>
+<div class="m-card">{m_card_title('整改记录')}<div class="small" style="line-height:1.7;color:#333">无整改任务。本账号当前是名称变更申请，不在整改流程中。</div></div>
+<div class="m-card">{m_card_title('操作记录')}{timeline([
+    ("now", "待指导教师审核", "王晓琳 · 当前节点", REN_STEPS[0][3]),
+    ("done", "学生提交名称变更", "李明 · " + REN_STEPS[0][0], "拟用名「" + a["new_name"] + "」，平台 ID 不变"),
+])}</div>
 <div class="alert alert-info">{icon('archive')}<div class="grow">负责人任职起止时间、历年年审与全部变更永久保留，账号注销后数据也不删除。</div></div>"""
     page("account-history.html", "账号历史", content, back="account-detail.html",
          notes=["分段切换“历任负责人 / 历年年审 / 变更记录”三类历史",
@@ -534,42 +601,37 @@ def account_history():
 # ---------------------------------------------------------------- 学生：业务申请入口
 def apply():
     biz = [
-        ("新建备案", "file-add", "", "新开通的新媒体账号首次登记备案，填写归属、平台、负责人并自选审核老师", ["指导教师", "学院团委", "校团委"], "apply-create-basic.html"),
-        ("信息变更", "file-edit", "orange", "账号名称、负责人、指导教师、所属组织、主页链接等信息发生变化", ["指导教师", "学院团委", "重要变更报校团委"], "apply-change.html"),
-        ("负责人交接", "user-switch", "green", "换届或卸任时把账号交接给继任者，原负责人任职记录保留", ["指导教师审核", "通过即生效"], "apply-handover.html"),
-        ("账号注销", "power", "red", "组织撤销、社团停止运行、平台整合等，注销后数据永久保留", ["指导教师", "学院团委", "校团委"], "apply-cancel.html"),
-        ("账号认领 / 历史补录", "hand", "purple", "认领学校已导入的历史账号，或补录此前未备案的账号", ["指导教师", "学院团委确认"], "apply-claim.html"),
+        ("新建备案", "file-add", "", "新开账号首次登记备案", "apply-create-basic.html"),
+        ("信息变更", "file-edit", "orange", "名称、负责人或组织变化", "apply-change.html"),
+        ("负责人交接", "user-switch", "green", "交给继任者，任职历史保留", "apply-handover.html"),
+        ("账号注销", "power", "red", "停运申请，档案永久保留", "apply-cancel.html"),
+        ("账号认领", "hand", "purple", "认领导入账号或历史补录", "apply-claim.html"),
     ]
     cards = "".join(
-        f'<a class="m-card" href="{h}" style="display:block"><div class="biz">{mi(ic, c)}<div class="grow"><div class="flex between">'
-        f'<b class="fs16">{t}</b>{icon("chevron-right", cls="arrow")}</div><div class="small sub mt4">{d}</div></div></div>{flow_hint(n)}</a>'
-        for t, ic, c, d, n, h in biz)
-    ongoing = "".join(
-        f'<a class="todo-item" href="{h}">{pf(p, "sm")}<div class="grow" style="min-width:0"><div class="bold fs13 ellipsis">{t}</div>'
-        f'<div class="small muted ellipsis">{m}</div></div>{st(s)}</a>'
-        for t, m, p, s, h in [
-            ("新建备案 · 中南计算机青年", "当前节点：学院团委审核（周建华）", "微信公众号", "审核中", "application-detail.html"),
-            ("信息变更 · 计算机学院学生会", "当前节点：指导教师审核（王晓琳）", "微博", "审核中", "applications.html"),
-        ])
-    content = f"""
-<div class="m-hero"><div style="position:relative;z-index:1"><div class="fs18 bold">请选择要办理的业务</div>
-<div class="small mt4" style="opacity:.85">学生可发起申请、提交材料；审核由指导教师、学院团委与校团委逐级完成</div></div></div>
-<div class="mt12">{cards}</div>
-<div class="alert alert-warning">{icon('alert')}<div class="grow">平台 ID 发生变化不属于普通变更，须按“新建备案”办理，并同时注销原 ID 账号。</div></div>
-<div class="m-title mt12">进行中的申请<a href="applications.html">全部{icon('chevron-right', 14)}</a></div>
-<div class="m-card" style="padding:4px 14px">{ongoing}</div>"""
+        '<a class="hall-row" href="' + h + '">' + mi(ic, c)
+        + '<span class="grow"><b>' + t + '</b><span class="one">' + d + "</span></span>"
+        + icon("chevron-right", cls="arrow") + "</a>"
+        for t, ic, c, d, h in biz)
+    content = """
+<div class="hall-hero"><b>请选择要办理的业务</b>
+<p>提交材料后，由教师、学院、校团委审核</p></div>
+<div class="hall-list">""" + cards + """</div>
+<div class="alert alert-warning hall-note">""" + icon("alert") + """<div class="grow">平台 ID 变化须新建备案，并同时注销原账号。</div></div>"""
     page("apply.html", "业务申请", content, tab="apply",
-         notes=["五类业务入口：新建备案、信息变更、负责人交接、账号注销、账号认领 / 历史补录",
-                "每张卡片说明适用场景并预览审核流程，避免选错业务",
-                "下方展示进行中的申请及当前节点，点击查看进度",
-                "剧本一起点：点击“新建备案”进入四步填报向导"],
+         notes=["五个办理入口收在首屏：新建备案、信息变更、负责人交接、账号注销、账号认领",
+                "说明各一行，点击仍进入原来的办理页",
+                "平台 ID 提示在五个入口下面",
+                "全部申请在底部「我的申请」，可按状态筛选，退回的可修改重提"],
          flow=[("剧本一下一步：新建备案 ① 归属信息", "apply-create-basic.html"), ("信息变更（剧本二）", "apply-change.html"),
-               ("负责人交接（剧本三）", "apply-handover.html"), ("我的申请", "applications.html")])
+               ("负责人交接（剧本三）", "apply-handover.html"), ("我的申请", "my-apply.html")])
 
 
 # ---------------------------------------------------------------- 学生：新建备案向导（剧本一）
 def create_basic():
-    org_chips = chips([("计算机学院团委新媒体中心", "a"), ("计算机学院学生会", "b"), ("计院青年志愿者协会", "c"), ("2023级软件工程2班团支部", "d")])
+    org_chips = "".join(
+        f'<button class="chip" type="button" data-fill="{esc(x)}" data-fill-target="#org-input" data-toast="已填入：{esc(x)}">{x}</button>'
+        for x in [NEW["org"]] + ORG_PROMPTS)
+    level_rows = "".join(f'<b>{n}</b><span>{LEVEL_TEXT[n]}</span>' for n in LEVELS)
     content = f"""
 {m_steps(WIZ, 0)}
 <div data-form>
@@ -577,60 +639,66 @@ def create_basic():
 {group(
         ro('所属学校', '中南大学'),
         m_select('所属学院', COLLEGES, '计算机学院', req=True),
-        m_input('所属团学组织', '请输入组织全称', NEW['org'], req=True),
-        f'<div class="cell col-cell"><span class="small muted">本学院常用组织，点击快速填入</span>{org_chips}</div>',
+        f'<div class="cell"><span class="cell-label"><span class="req">*</span>所属团学组织</span><input class="m-input" id="org-input" placeholder="请输入组织全称" value="{esc(NEW["org"])}" required></div>',
+        f'<div class="cell col-cell"><span class="small muted">{ORG_HINT}</span><div class="chips mt8">{org_chips}</div></div>',
         m_select('组织类别', ORG_TYPES, NEW['org_type'], req=True),
-        m_select('平台层级', LEVELS, NEW['level'], req=True),
-        '<div class="cell col-cell"><div class="lv-tip"><b>一级平台</b><span>学校及校级职能部门官方账号</span>'
-        '<b>二级平台</b><span>学院及院级学生组织账号</span><b>三级平台</b><span>班级团支部账号</span>'
-        '<b>社团平台</b><span>学生社团账号</span></div></div>',
+        m_select('平台管理层级', LEVELS, NEW['level'], req=True),
+        f'<div class="cell col-cell"><div class="small sub" style="margin-bottom:8px">{LEVEL_NOTE}</div><div class="lv-tip">{level_rows}</div></div>',
     )}
 </div>
-<div class="alert alert-info">{icon('info')}<div class="grow">系统已根据你的身份预填学院与组织；所属组织须为已在册且存续的团学组织。</div></div>"""
+<div class="alert alert-info">{icon('info')}<div class="grow">系统已根据你的身份预填学院与组织。所属团学组织允许文本输入，也可点击提示词填入。</div></div>"""
     page("apply-create-basic.html", "新建 ① 归属信息", content, back="apply.html", nav_title="新建备案",
          right='<button type="button" data-toast="草稿已保存，可在“我的申请”中继续填写">存草稿</button>',
          bottom=back_btn("apply.html", "取消") + submit_btn("下一步", "apply-create-platform.html"),
          notes=["四步向导第 1 步：归属信息，已按李明身份预填计算机学院、新媒体中心",
-                "所属团学组织支持手动输入，也可点击常用组织标签快速填入",
-                "平台层级下方给出一级 / 二级 / 三级 / 社团平台的判定说明",
+                "所属团学组织支持手动输入，点击提示词写入输入框",
+                "平台管理层级下方为文档中的分级说明",
                 "必填项留空点击“下一步”会标红提示"],
+         js=FILL_JS,
          flow=[("剧本一下一步：② 平台信息", "apply-create-platform.html"), ("返回业务申请", "apply.html")])
 
 
 def create_platform():
+    mechs = "".join(
+        f'<div class="mech-item"><div class="t"><span class="req">*</span>（{m["no"]}）{m["title"]}</div>'
+        f'<div class="d">{m["body"]}</div>{radios(m["key"], ["是", "否"], "是", True)}</div>'
+        for m in MECHANISMS)
     content = f"""
 {m_steps(WIZ, 1)}
 <div data-form>
-{sec('平台基本信息')}
+{sec('平台信息')}
 {group(
         m_select('平台类型', PLATFORM_TYPES, NEW['platform'], req=True),
-        m_input('账号名称', '请输入平台上显示的名称', NEW['name'], req=True),
-        m_input('曾用名', '无则不填'),
-        m_input('平台 ID', '唯一标识，如微信号', NEW['pid'], req=True),
-        f'<div class="cell"><span class="cell-label">头像</span><span class="ml-auto flex gap8"><span class="pf pf-wx">团</span>'
+        f'<div class="cell col-cell"><span class="small muted">{PLATFORM_TYPE_HINT}</span></div>',
+        m_input('账号名称', ACCOUNT_NAME_HINT, NEW['name'], req=True),
+        m_input('曾用名', FORMER_NAME_HINT),
+        f'<div class="cell col-cell"><span class="small muted">非必填。{FORMER_NAME_HINT}</span></div>',
+        m_input('平台ID', PID_HINT, NEW['pid'], req=True),
+        f'<div class="cell"><span class="cell-label"><span class="req">*</span>平台头像</span><span class="ml-auto flex gap8"><span class="pf pf-wx">团</span>'
         f'<label class="upload" style="width:36px;height:36px;padding:0;display:grid;place-items:center;border-radius:9px">{icon("camera")}<input type="file" accept="image/*"></label></span></div>',
-        yn('是否认证', 'auth', '否', ('已认证', '否')),
-        m_input('粉丝数', '新开通账号可填 0', '0', typ='number'),
-        m_input('主页链接', '请输入主页链接', 'https://mp.weixin.qq.com/csu_cs_youth', req=True),
-        m_input('运营团队规模', '人数', '6 人'),
+        yn('是否认证', 'auth', '否'),
+        f'<div class="cell col-cell"><span class="small muted">单选，是 / 否</span></div>',
+        m_input('粉丝数', FANS_HINT, '0', True, 'number'),
+        m_input('主页链接', 'https://', 'https://mp.weixin.qq.com/csu_cs_youth', req=True),
+        m_input(TEAM_LABEL, '请输入人数', '6', typ='number'),
+        up_cell('二维码', QR_HINT),
         m_input('开通时间', '', NEW['opened'], req=True),
     )}
-{sec('四项机制', '<span class="small">未建立的机制须在备案后 30 日内补齐</span>')}
-{group(
-        yn('宣传联动机制', 'm1'), yn('信息发布审查机制', 'm2'), yn('应急处置预案', 'm3'), yn('信息安全管理制度', 'm4'),
-    )}
+{sec('平台信息确认', '<span class="small">（10）至（13）</span>')}
+<div class="m-card" style="padding:4px 14px">{mechs}</div>
 {sec('平台介绍与发布范围')}
 {group(
-        m_textarea('平台介绍', '请介绍内容定位、栏目设置、信息发布范围与审核机制（不少于 100 字）', INTRO_SHORT, req=True, maxlen=800),
-        m_radios('信息发布范围', 'scope', ['面向校内师生', '面向社会公众'], '面向校内师生'),
+        m_textarea('平台介绍', INTRO_HINT, INTRO_SHORT, req=True, maxlen=800),
+        m_textarea('信息发布范围', '请填写信息发布范围', '学院团学活动相关信息。', req=True),
+        m_input('备注', ''),
     )}
 </div>"""
     page("apply-create-platform.html", "新建 ② 平台信息", content, back="apply-create-basic.html", nav_title="新建备案",
          right='<button type="button" data-toast="草稿已保存">存草稿</button>',
          bottom=back_btn("apply-create-basic.html", "上一步") + submit_btn("下一步", "apply-duplicate.html", toast="正在进行重复检查…"),
-         notes=["平台类型、名称、平台 ID、主页链接、开通时间、平台介绍为必填",
-                "四项机制（宣传联动 / 信息发布审查 / 应急预案 / 信息安全制度）逐项选择是否建立",
-                "平台介绍限 800 字并实时计数；此处为第一次提交的简短版本（68 字），后续将被指导教师退回",
+         notes=["平台类型、账号名称、平台ID、平台头像、是否认证、粉丝数、主页链接、开通时间、平台介绍、信息发布范围为必填",
+                "曾用名、二维码为非必填；第 10 至 13 项确认须展示说明原文并选择是或否",
+                "平台介绍限 800 字并实时计数；此处为第一次提交的简短版本，后续将被指导教师退回",
                 "点击“下一步”后系统自动做重复检查（同平台同 ID、主页链接、相似名称）"],
          flow=[("剧本一下一步：重复检查结果", "apply-duplicate.html"), ("上一步：归属信息", "apply-create-basic.html")])
 
@@ -663,40 +731,87 @@ def duplicate():
                ("PC 端：同 ID 禁止提交示例", "../../pc/common/apply-duplicate.html")])
 
 
+ADMIN_JS = """
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-cap]');if(!b)return;
+  var max=+b.getAttribute('data-max');if(!max)return;
+  if(document.querySelectorAll(b.getAttribute('data-cap')).length>=max){
+    e.stopPropagation();toast('管理员最多 '+max+' 人，不能再添加');
+  }
+},true);
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-add-admin]');if(!b)return;
+  var box=document.getElementById('admin-box');
+  var no=b.getAttribute('data-no');
+  if(box.querySelector('[data-no="'+no+'"]')){toast('该学生已在管理员列表中');return;}
+  if(box.querySelectorAll('.staff-row').length>=5){toast('管理员最多 5 人，不能再添加');return;}
+  var name=b.getAttribute('data-name'),phone=b.getAttribute('data-phone'),meta=b.getAttribute('data-meta');
+  var row=document.createElement('div');
+  row.className='person staff-row';row.setAttribute('data-no',no);
+  row.innerHTML='<span class="avatar sm" style="display:grid;place-items:center;background:#E3F1F9;color:#2A8DC7;font-weight:600;font-size:12px">'+name.charAt(0)+'</span>'
+    +'<div class="grow"><div class="bold fs13">'+name+'<span class="small muted" style="font-weight:400"> · '+no+'</span></div>'
+    +'<div class="small muted">'+phone+' · '+meta+'</div></div>'
+    +'<button type="button" class="x-mini" data-remove=".staff-row" aria-label="删除">×</button>';
+  box.insertBefore(row, document.getElementById('open-admin'));
+  document.getElementById('admin-sheet').classList.add('hidden');
+  toast('已添加管理员：'+name);
+});
+"""
+
+
 def create_staff():
     li = PEOPLE["李明"]
-    admins = [("陈可欣", "8209230221", "2023级软件工程1班 · 编辑"), ("刘子涵", "8209240133", "2024级人工智能2班 · 美编")]
+    wx = PEOPLE["王晓琳"]
+    admins = [("陈可欣", "8209230221", "137 7310 4418", "2023级软件工程1班"), ("刘子涵", "8209240133", "158 7312 6609", "2024级人工智能2班")]
     admin_rows = "".join(
-        f'<div class="person staff-row">{face(n, "sm")}<div class="grow"><div class="bold fs13">{n}<span class="small muted" style="font-weight:400"> · {no}</span></div>'
-        f'<div class="small muted">{d}</div></div><button type="button" class="x-mini" data-remove=".staff-row" aria-label="删除">{icon("trash", 15)}</button></div>'
-        for n, no, d in admins)
+        f'<div class="person staff-row" data-no="{no}">{face(n, "sm")}<div class="grow"><div class="bold fs13">{n}<span class="small muted" style="font-weight:400"> · {no}</span></div>'
+        f'<div class="small muted">{phone} · {meta}</div></div><button type="button" class="x-mini" data-remove=".staff-row" aria-label="删除">{icon("trash", 15)}</button></div>'
+        for n, no, phone, meta in admins)
+    picks = "".join(
+        f'<button type="button" class="choice" data-choice="x" data-add-admin data-cat="{esc(n)} {no}" data-name="{esc(n)}" data-no="{no}" '
+        f'data-phone="{esc(phone)}" data-meta="{esc(meta)}">{face(n, "sm")}<div class="grow" style="text-align:left">'
+        f'<div class="bold fs13">{n}</div><div class="small muted">{no} · {phone}</div><div class="small muted">{meta}</div></div></button>'
+        for n, no, phone, meta in STUDENTS)
+    overlay = f"""<div class="sheet-mask hidden" id="admin-sheet"><div class="sheet">
+  <div class="sheet-hd"><b>添加管理员</b><button type="button" class="x-btn" data-toggle="#admin-sheet" aria-label="关闭">{icon('x')}</button></div>
+  <div class="small muted mb8">输入学号或姓名检索，选中后加入管理员列表，最多 5 人</div>
+  <label class="m-search" style="background:#F5F7FA">{icon('search')}<input placeholder="输入学号或姓名" data-search="#admin-pick"></label>
+  <div class="choices" id="admin-pick">{picks}</div>
+</div></div>"""
     content = f"""
 {m_steps(WIZ, 2)}
 <div data-form>
 {sec('运行信息')}
 {group(
-        m_input('最近发布时间', '', '2026-09-22', req=True),
+        m_input(PUBLISH_TIME_LABEL, '日期选择', '2026-09-22', req=True),
         m_select('更新频率', UPDATE_FREQ, UPDATE_FREQ[0], req=True),
+        m_select('运行状态', RUN_STATUS, '正常运行', req=True),
+        m_textarea('异常情况', '请填写异常情况'),
     )}
-{sec('管理教师')}
+{sec('当前管理教师', '<span class="small">姓名、工号、职务、手机号、是否为专职教师</span>')}
 {group(
-        f'<div class="person">{avatar("王晓琳")}<div class="grow"><div class="bold fs13">王晓琳 {tag("管理教师", "warning")}</div>'
-        f'<div class="small muted">计算机学院 · 宣传工作辅导员 · 139 7481 5520</div></div></div>',
+        m_input('姓名', '', '王晓琳', req=True),
+        m_input('工号', '', wx['no'], req=True),
+        m_input('职务', '', '宣传工作辅导员', req=True),
+        m_input('手机号', '', wx['phone'], req=True),
+        yn('是否为专职教师', 'fulltime', '是'),
     )}
-{sec('具体负责人')}
+{sec('当前学生运营负责人 · 具体负责人', '<span class="small">姓名、学号、手机号</span>')}
 {group(
-        f'<div class="person">{avatar("李明")}<div class="grow"><div class="bold fs13">李明 {tag("本人", "primary")}</div>'
-        f'<div class="small muted">{li["grade"]} · {li["no"]} · {li["phone"]}</div></div></div>',
+        m_input('姓名', '', '李明', req=True),
+        m_input('学号', '', li['no'], req=True),
+        m_input('手机号', '', li['phone'], req=True),
     )}
-{sec('管理员', '<span class="small">最多 5 人</span>')}
-<div class="m-group">{admin_rows}<button type="button" class="add-row" data-toast="已打开添加管理员：输入学号即可检索（演示）">{icon('user-add')}添加管理员</button></div>
+{sec('当前学生运营负责人 · 管理员', '<span class="small">最多 5 人 · 姓名、学号、手机号</span>')}
+<div class="m-group" id="admin-box">{admin_rows}<button type="button" class="add-row" id="open-admin" data-toggle="#admin-sheet" data-cap="#admin-box .staff-row" data-max="5">{icon('user-add')}添加管理员</button></div>
 </div>"""
     page("apply-create-staff.html", "新建 ③ 运行与负责人", content, back="apply-duplicate.html", nav_title="新建备案",
          right='<button type="button" data-toast="草稿已保存">存草稿</button>',
          bottom=back_btn("apply-duplicate.html", "上一步") + submit_btn("下一步", "apply-create-reviewer.html"),
-         notes=["填写最近发布时间与更新频率（7 档字典），用于后续僵尸号预警",
-                "管理教师默认带出所属组织的指导教师王晓琳",
-                "具体负责人为本人李明；管理员可添加、删除（点击垃圾桶移除该行）"],
+         overlay=overlay, js=ADMIN_JS,
+         notes=["填写最近一次公开内容发布时间、更新频率、运行状态与异常情况",
+                "当前管理教师收集姓名、工号、职务、手机号、是否为专职教师，已预填王晓琳",
+                "具体负责人为李明；管理员点击“添加管理员”检索学号或姓名后加入，最多 5 人，可删除"],
          flow=[("剧本一下一步：④ 选择审核老师", "apply-create-reviewer.html"), ("上一步：重复检查", "apply-duplicate.html")])
 
 
@@ -707,8 +822,18 @@ def create_reviewer():
         ("csy", "陈思远", "计算机学院团委 · 副书记", "", False),
         ("hj", "黄婧", "计算机学院 · 2022级辅导员", "", False),
     ]
-    picked = "".join(f'<span class="tpick t-{k}{"" if on else " hidden"}"><b class="c-primary">{n}</b> · {d.split(" · ")[1]}</span>'
-                     for k, n, d, _, on in teachers)
+    extra_id = {"陈思远": ("T20161108", "副书记", "139 7310 2288"), "黄婧": ("T20220318", "2022级辅导员", "158 7310 6620")}
+    picked_bits = []
+    for k, n, d, _, on in teachers:
+        if n in PEOPLE:
+            no, job, phone = PEOPLE[n]["no"], PEOPLE[n]["job"], PEOPLE[n]["phone"]
+        else:
+            no, job, phone = extra_id[n]
+        hid = "" if on else " hidden"
+        picked_bits.append(
+            f'<span class="tpick t-{k}{hid}"><b class="c-primary">{n}</b>'
+            f'<span class="small muted" style="display:block">工号/学号 {no} · 职务 {job} · 手机号 {phone}</span></span>')
+    picked = "".join(picked_bits)
     items = "".join(
         f'<button type="button" class="choice{" on" if on else ""}" data-choice=".t-{k}" data-cat="{n}">{face(n)}<div class="grow" style="text-align:left">'
         f'<div class="bold fs13">{n}</div><div class="small muted">{d}</div>{f"<div class=small style=color:var(--c-success)>{r}</div>" if r else ""}</div>'
@@ -728,9 +853,20 @@ def create_reviewer():
     content = f"""
 {m_steps(WIZ, 3)}
 <div data-form>
-{sec('一审指导老师')}
-<div class="m-group"><div class="cell" data-toggle="#t-sheet" style="cursor:pointer"><span class="cell-label"><span class="req">*</span>指导老师</span>
-<span class="cell-value">{picked}</span>{icon('chevron-right', cls='arrow')}</div></div>
+{sec('审核信息', '<span class="small">一审、二审、三审负责人</span>')}
+<div class="m-group"><div class="cell col-cell" data-toggle="#t-sheet" style="cursor:pointer"><span class="cell-label"><span class="req">*</span>一审负责人 · 姓名</span>
+<span class="cell-value" style="text-align:left">{picked}</span>{icon('chevron-right', cls='arrow')}</div>
+<div class="small muted" style="padding:0 14px 10px">指导教师审核阶段，允许任意选择审核老师。点击更换一审负责人。</div></div>
+{group(
+        cell('二审负责人 · 姓名', '周建华'),
+        cell('工号/学号', PEOPLE['周建华']['no']),
+        cell('职务', PEOPLE['周建华']['job']),
+        cell('手机号', PEOPLE['周建华']['phone']),
+        cell('三审负责人 · 姓名', '陈静'),
+        cell('工号/学号', PEOPLE['陈静']['no']),
+        cell('职务', PEOPLE['陈静']['job']),
+        cell('手机号', PEOPLE['陈静']['phone']),
+    )}
 {sec('审核流程预览')}
 <div class="m-card">{preview}</div>
 {sec('申请摘要')}
@@ -761,13 +897,24 @@ def apply_result():
     ])
     actions = btn("查看进度", "application-detail.html", "ghost") + btn("返回首页", "home.html")
     info = (f'<div class="m-group mt16" style="text-align:left;background:#F7F9FB">'
-            f'{cell("申请编号", f"<span class=num>{NEW_NO}</span>")}{cell("业务类型", "新建备案")}'
-            f'{cell("账号", NEW["name"])}{cell("当前节点", "指导教师审核 · 王晓琳")}</div>')
+            f'{cell("申请编号", "<span class=num id=res-no>" + NEW_NO + "</span>")}{cell("业务类型", "<span id=res-kind>新建备案</span>")}'
+            f'{cell("账号", "<span id=res-acct>" + NEW["name"] + "</span>")}{cell("当前节点", "<span id=res-node>指导教师审核 · 王晓琳</span>")}</div>')
     content = f"""
 <div class="m-card">{result('ok', '申请已提交', '已通知指导教师王晓琳审核，审核结果将通过消息提醒你', actions, info)}</div>
 <div class="m-card">{m_card_title('审核流程')}{mini}</div>
 <div class="alert alert-info">{icon('info')}<div class="grow">负责人交接、信息变更等申请提交后同样进入此页，可在“我的申请”随时查看进度或撤回。</div></div>"""
-    page("apply-result.html", "提交成功", content, back="home.html",
+    handover_js = (
+        "(function(){if((location.search||'').indexOf('from=handover')<0)return;"
+        "var h=document.querySelector('.result h2');var p=document.querySelector('.result p');"
+        "var k=document.getElementById('res-kind');var a=document.getElementById('res-acct');"
+        "var n=document.getElementById('res-no');var node=document.getElementById('res-node');"
+        "if(h)h.textContent='交接申请已提交';"
+        "if(p)p.textContent='已提交指导教师王晓琳审核，通过后交接生效，原负责人任职记录保留。';"
+        "if(k)k.textContent='负责人交接';if(a)a.textContent='" + HO["name"] + "';"
+        "if(n)n.textContent='" + FLOWS["handover"]["no"] + "';"
+        "if(node)node.textContent='指导教师审核 · 王晓琳';})();"
+    )
+    page("apply-result.html", "提交成功", content, back="home.html", js=handover_js,
          notes=["展示申请编号 " + NEW_NO + " 与当前节点（指导教师审核 · 王晓琳）",
                 "迷你时间线预览后续节点，“查看进度”进入申请详情",
                 "剧本一下一步切换到 PC 端教师待办；剧本三下一步为移动端教师交接审核"],
@@ -778,29 +925,29 @@ def apply_result():
 
 # ---------------------------------------------------------------- 学生：变更 / 交接 / 注销 / 认领
 def apply_change():
-    a = REN
     fields = ["账号名称", "负责人", "指导教师", "所属组织", "联系方式", "二维码", "主页链接", "运营用途", "其他"]
     chip_html = "".join(f'<button type="button" class="chip{" on" if f == "账号名称" else ""}" data-choice="">{f}</button>' for f in fields)
-    content = f"""
-{mini_acct(a, st('已备案'))}
+    inner = f"""
 <div data-form>
 {sec('选择变更项', '<span class="small">可多选</span>')}
 <div class="m-card"><div class="chips">{chip_html}</div></div>
-{sec('账号名称变更')}
+{sec('变更内容')}
 {group(
-        ro('原名称', a['name']),
-        m_input('新名称', '请输入新名称', a['new_name'], req=True),
-        m_textarea('变更原因', '请说明变更原因', REN_STEPS[0][3], req=True, maxlen=200),
+        m_input('变更账号', '', '', req=True, attrs='id="chg-acct" readonly'),
+        m_input('账号名称 · 变更前', '', '', attrs='id="chg-before" readonly'),
+        m_input('新名称', '请输入新名称', '', req=True, attrs='id="chg-after"'),
+        m_textarea('变更原因', '请说明变更原因', '', req=True, maxlen=200, attrs='id="chg-reason"'),
         up_cell('证明材料', '如换届决议、名称变更说明，支持 jpg / png / pdf', ['学生会第十届换届决议.pdf']),
     )}
 </div>
 <div class="alert alert-warning">{icon('alert')}<div class="grow"><b>平台 ID 变化不按普通变更办理</b>，需重新新建备案并注销原账号。<a class="link" href="apply-create-basic.html">去新建</a></div></div>"""
-    page("apply-change.html", "信息变更", content, back="account-detail.html",
-         bottom=back_btn("account-detail.html", "取消") + submit_btn("下一步", "apply-change-confirm.html"),
-         notes=["先勾选变更项（可多选），本例选择“账号名称”",
-                "原名称只读，新名称“中南计院学生会”必填，变更原因必填",
-                "平台 ID 变化不走普通变更，提示转新建",
-                "下一步自动生成变更前后对比供确认"],
+    page("apply-change.html", "信息变更", _acct_step("信息变更", inner), back="apply.html",
+         bottom=back_btn("apply.html", "取消") + submit_btn("下一步", "apply-change-confirm.html"),
+         js=page_js(),
+         notes=["从服务大厅进入时先选择账号，选中后才填写变更内容；未选账号不能提交",
+                "从账号列表或账号详情进入时已带上该账号，页面标明当前办理账号",
+                "选择「计算机学院学生会」后，新名称预填为「中南计院学生会」",
+                "平台 ID 变化不走普通变更，提示转新建"],
          flow=[("剧本二下一步：变更前后对比确认", "apply-change-confirm.html"), ("返回账号详情", "account-detail.html")])
 
 
@@ -831,22 +978,22 @@ def change_confirm():
 {sec('审核流程')}
 <div class="m-card">{preview}</div>"""
     page("apply-change-confirm.html", "变更确认", content, back="apply-change.html",
-         bottom=back_btn("apply-change.html", "返回修改") + submit_btn("确认提交", "apply-result.html", ic="send",
+         bottom=back_btn("apply-change.html", "返回修改") + submit_btn("确认提交", "apply-change-result.html", ic="send",
                                                                         toast="变更申请已提交，编号 " + FLOWS["rename"]["no"]),
          notes=["逐项展示变更前后对比：旧值删除线、新值绿色高亮，未变更字段单独列出",
                 "名称变更属于重要变更：教师 → 学院 → 校团委三级审核",
                 "生效后原名称自动记入曾用名，档案可追溯",
                 "确认提交后生成编号 " + FLOWS["rename"]["no"]],
-         flow=[("剧本二下一步：PC 教师变更审核", "../../pc/teacher/review-change.html"), ("提交成功", "apply-result.html"),
+         flow=[("提交成功", "apply-change-result.html"), ("剧本二下一步：PC 教师变更审核", "../../pc/teacher/review-change.html"),
                ("返回修改", "apply-change.html")])
 
 
 def apply_handover():
-    a = HO
     li, ls = PEOPLE["李明"], PEOPLE["李四"]
-    content = f"""
-{mini_acct(a, st('正常运行'))}
+    inner = f"""
 <div data-form>
+{sec('交接账号')}
+{group(m_input('交接账号', '', '', req=True, attrs='id="ho-acct" readonly'))}
 {sec('原负责人')}
 {group(ro('姓名', '李明'), ro('学号', li['no']), ro('任期', '2024-09-10 起 至 生效日'))}
 {sec('新负责人')}
@@ -865,25 +1012,26 @@ def apply_handover():
 </div>
 <div class="m-card flex gap12 top-align">{mi('route', 'green')}<div class="grow small sub"><b class="fs13" style="color:var(--c-text)">交接流程</b><br>
 学生提交 → 具体管理教师审核 → 生效。原负责人任职起止时间将保留在账号历史中，账号密码请线下当面交接。</div></div>"""
-    page("apply-handover.html", "负责人交接", content, back="account-detail.html",
-         bottom=back_btn("account-detail.html", "取消") + submit_btn("提交申请", "apply-result.html", ic="send",
-                                                                    toast="交接申请已提交，编号 " + FLOWS["handover"]["no"]),
-         notes=["剧本三起点：计院街舞社（抖音）负责人由李明交接给李四",
-                "原负责人信息只读，任期自 2024-09-10 起；新负责人姓名、学号、联系方式、生效时间必填",
+    page("apply-handover.html", "负责人交接", _acct_step("负责人交接", inner), back="apply.html",
+         bottom=back_btn("apply.html", "取消") + submit_btn("提交申请", "apply-result.html?from=handover", ic="send",
+                                                            toast="交接申请已提交，编号 " + FLOWS["handover"]["no"]),
+         js=page_js(),
+         notes=["从服务大厅进入时先选择账号；从列表进入已带上该账号",
+                "选中后填写继任者。计院街舞社示例仍由李明交接给李四",
+                "未选择账号时提交会提示先选账号",
                 "交接只需管理教师王晓琳审核，通过即生效，历史任职记录保留"],
          flow=[("剧本三下一步：提交成功", "apply-result.html"), ("教师移动端交接审核", "../teacher/review-handover.html"),
                ("PC 档案 · 责任人员历史", "../../pc/common/archive-staff.html")])
 
 
 def apply_cancel():
-    opts = ["计院摄影协会（视频号）", "计院街舞社（抖音）", "计算机学院学生会（微博）", "中南计院团委（微信公众号）"]
-    content = f"""
+    inner = f"""
 <div data-form>
 {sec('注销账号')}
 {group(
-        m_select('选择账号', opts, opts[0], req=True),
-        cell('平台 ID', PH['pid']),
-        cell('当前状态', st('不活跃') + ' ' + st('已备案')),
+        m_input('注销账号', '', '', req=True, attrs='id="cancel-acct" readonly'),
+        cell('平台 ID', '<span id="cancel-pid">—</span>'),
+        cell('运行状态', '<span id="cancel-run">—</span>'),
     )}
 {sec('注销原因')}
 {group(
@@ -894,14 +1042,48 @@ def apply_cancel():
 </div>
 <div class="alert alert-info">{icon('archive')}<div class="grow">审核完成后<b>账号不删除</b>，状态改为“已注销”，历史档案与年审记录永久保留。</div></div>
 <div class="m-card small sub">{flow_hint(['指导教师', '学院团委', '校团委'])}</div>"""
-    page("apply-cancel.html", "账号注销", content, back="account-detail.html",
-         bottom=back_btn("account-detail.html", "取消") + submit_btn("提交申请", "apply-result.html", ic="send", toast="注销申请已提交"),
-         notes=["从本人负责的账号中选择要注销的账号",
+    page("apply-cancel.html", "账号注销", _acct_step("账号注销", inner), back="apply.html",
+         bottom=back_btn("apply.html", "取消") + submit_btn("提交申请", "apply-cancel-result.html", ic="send", toast="注销申请已提交"),
+         js=page_js(),
+         notes=["从服务大厅进入时先点选账号，再填写注销原因；未选账号不能提交",
+                "从账号列表进入时已带上该账号，顶部显示名称、平台和编号",
                 "注销原因使用数据字典（团支部毕业、社团停止运行、平台整合等 9 项）",
-                "情况说明为必填，留空提交会标红提示",
                 "审核完成后账号不删除，状态改为已注销"],
-         flow=[("提交成功", "apply-result.html"), ("教师注销审核（PC）", "../../pc/teacher/review-cancel.html"),
+         flow=[("提交成功", "apply-cancel-result.html"), ("教师注销审核（PC）", "../../pc/teacher/review-cancel.html"),
                ("PC 档案 · 注销信息", "../../pc/common/archive-cancel.html")])
+
+
+CLAIM_JS = """
+function claimAcct(i){
+  var a=CLAIMS[i];
+  if(!a)return;
+  var browse=document.getElementById('claim-browse');
+  var form=document.getElementById('claim-form');
+  if(browse)browse.classList.add('hidden');
+  if(form)form.classList.remove('hidden');
+  var key=document.getElementById('claim-key');
+  if(key)key.value=a.name;
+  var name=document.getElementById('claim-name');
+  if(name)name.textContent=a.name;
+  var meta=document.getElementById('claim-meta');
+  if(meta)meta.textContent=a.platform+' · 编号 '+a.pid;
+  var note=document.getElementById('claim-note');
+  if(note){note.value='';var box=note.closest('.cell');if(box)box.classList.remove('invalid');}
+  var go=document.getElementById('claim-go');
+  if(go)go.setAttribute('data-submit','apply-claim-result.html?name='+encodeURIComponent(a.name));
+  toast('请填写认领说明：'+a.name);
+}
+function resetClaim(){
+  var browse=document.getElementById('claim-browse');
+  var form=document.getElementById('claim-form');
+  if(browse)browse.classList.remove('hidden');
+  if(form)form.classList.add('hidden');
+  var key=document.getElementById('claim-key');
+  if(key)key.value='';
+  var note=document.getElementById('claim-note');
+  if(note)note.value='';
+}
+"""
 
 
 def apply_claim():
@@ -911,38 +1093,109 @@ def apply_claim():
         ("计院辩论队", "微信公众号", "csu_cs_debate", "院级学生组织", ""),
         ("计院青年之声", "微博", "6630912204", "院级学生组织", ""),
     ]
-    rows = "".join(
-        f'<div class="m-card flex gap12" data-cat="c{i}">{pf(p)}<div class="grow" style="min-width:0"><div class="bold ellipsis">{n}</div>'
-        f'<div class="small muted ellipsis">{p} · {pid}</div><div class="small muted">{o} · 2026-09-10 学校导入</div>'
-        f'{f"<div class=small style=color:var(--c-success)>{m}</div>" if m else ""}</div>'
-        f'<button type="button" class="btn btn-ghost btn-sm" data-toast="已加入认领清单：{n}">认领</button></div>'
-        for i, (n, p, pid, o, m) in enumerate(items))
-    content = f"""
-<label class="m-search">{icon('search')}<input placeholder="搜索账号名称 / 平台 ID" data-search="#claim-list"></label>
-<div class="alert alert-info">{icon('info')}<div class="grow">以下为学校导入、尚未认领的历史账号。认领后由指导教师确认，你将成为该账号负责人。</div></div>
-<div class="flex between small muted mt12 mb8" style="padding:0 2px"><span>待认领账号 · 共 {len(items)} 个</span><span>计算机学院</span></div>
-<div id="claim-list">{rows}</div>
-<a class="m-card flex gap12" href="apply-create-basic.html" style="border:1px dashed var(--c-primary-border)">{mi('file-add', 'purple')}
-<div class="grow"><div class="bold">历史补录</div><div class="small muted">此前开通但从未备案、也不在导入名单中的账号</div></div>{icon('chevron-right', cls='arrow')}</a>
-<div class="m-group">{m_textarea('认领说明', '如：本人为该团支部现任宣传委员', '本人为 2023级软件工程2班团支部宣传委员，负责班级 QQ 号日常运营。')}</div>"""
+    bits = []
+    rows = []
+    for i, (n, p, pid, o, m) in enumerate(items):
+        bits.append('{"name":"' + n + '","platform":"' + p + '","pid":"' + pid + '"}')
+        match = ('<div class="small" style="color:var(--c-success)">' + m + "</div>") if m else ""
+        rows.append(
+            '<div class="m-card flex gap12 claim-row" data-cat="' + n + " " + pid + '">' + pf(p)
+            + '<div class="grow"><div class="name">' + n + "</div>"
+            + '<div class="small muted">' + p + " · " + pid + "</div>"
+            + '<div class="small muted">' + o + " · 2026-09-10 学校导入</div>" + match + "</div>"
+            + '<button type="button" class="btn btn-ghost btn-sm pick-act" onclick="claimAcct(' + str(i) + ')">认领</button></div>'
+        )
+    form = (
+        '<div id="claim-form" class="hidden">'
+        + '<div class="m-card"><div class="small muted">当前认领账号</div>'
+        + '<div class="bold" id="claim-name">—</div><div class="small muted" id="claim-meta"></div></div>'
+        + "<div data-form>"
+        + group(
+            m_textarea("认领说明", "请说明你与该账号的关系，例如现任职务", "", req=True, maxlen=200, attrs='id="claim-note"'),
+            up_cell("证明材料", "如任职证明、组织确认截图，可不传", ()),
+        )
+        + "</div>"
+        + '<button type="button" class="btn btn-default" style="width:100%;margin-top:8px" onclick="resetClaim()">重选账号</button></div>'
+    )
+    content = (
+        '<input type="hidden" id="claim-key" value="" required>'
+        + '<div id="claim-browse"><label class="m-search">' + icon("search")
+        + '<input placeholder="搜索账号名称 / 平台 ID" data-search="#claim-list"></label>'
+        + alert("点右侧「认领」后填写说明。未选账号、未填说明不能提交。", "info")
+        + '<div class="flex between small muted mt12 mb8" style="padding:0 2px"><span>待认领账号 · 共 '
+        + str(len(items)) + ' 个</span><span>计算机学院</span></div>'
+        + '<div id="claim-list">' + "".join(rows) + "</div>"
+        + '<a class="m-card flex gap12" href="apply-create-basic.html" style="border:1px dashed var(--c-primary-border)">'
+        + mi("file-add", "purple")
+        + '<div class="grow"><div class="bold">历史补录</div><div class="small muted">此前开通但从未备案、也不在导入名单中的账号</div></div>'
+        + icon("chevron-right", cls="arrow") + "</a></div>"
+        + form
+    )
+    go = ('<button id="claim-go" class="btn btn-primary" type="button" data-submit="apply-claim-result.html" '
+          'data-toast="认领申请已提交，等待指导教师确认">' + icon("send") + "提交认领申请</button>")
     page("apply-claim.html", "账号认领", content, back="apply.html",
-         bottom=back_btn("apply.html", "取消") + submit_btn("提交认领申请", "apply-result.html", ic="send", toast="认领申请已提交，等待指导教师确认"),
-         notes=["列表为学校 Excel 导入、尚未认领的本学院历史账号，支持按名称 / ID 搜索",
-                "点击“认领”加入认领清单，填写认领说明后统一提交",
-                "不在导入名单中的历史账号走“历史补录”（复用新建备案表单）",
-                "同平台同 ID 已存在的账号禁止重复新建，须通过认领办理"],
-         flow=[("提交成功", "apply-result.html"), ("历史补录 → 新建表单", "apply-create-basic.html"),
+         bottom=back_btn("apply.html", "取消") + go,
+         js="var CLAIMS=[" + ",".join(bits) + "];" + CLAIM_JS,
+         notes=["列表为学校导入、尚未认领的本学院历史账号，支持按名称或 ID 搜索",
+                "点某个账号的「认领」后展开该账号的填写页，能看到认领的是哪个账号",
+                "认领说明必填，证明材料可选；未选账号或说明为空不能提交",
+                "提交后进入认领结果页；历史补录仍走新建备案"],
+         flow=[("提交成功", "apply-claim-result.html"), ("历史补录 → 新建表单", "apply-create-basic.html"),
                ("学院确认导入数据（PC）", "../../pc/college/import-confirm.html")])
 
 
 # ---------------------------------------------------------------- 学生：我的申请与进度
-def applications():
+SCOPE_SHORT = "学院团学活动相关信息。"
+SCOPE_FULL = "限于计算机学院团学工作相关内容：思想引领、团学活动、学术科创、评优公示。"
+REJECT_INTRO = "计院学生会拟开设抖音账号，用于发布招新通知、活动预告和院会信息。"
+REJECT_SCOPE = "计算机学院学生会活动通知与招新信息。"
+
+
+def _m_intro(label, text, warn=False):
+    cls = "intro-box warn" if warn else "intro-box"
+    return ('<div class="m-card"><b class="fs13">' + label + '</b><div class="' + cls + ' mt8">' + text
+            + '</div><div class="small muted mt8">共 ' + str(len(text)) + " 字</div></div>")
+
+
+def _m_new(a, intro, scope, warn=False, fans="0", team="6 人", publish="2026-09-22", run="正常运行", admins="陈可欣、刘子涵", freq=None):
+    freq = freq or UPDATE_FREQ[0]
+    return (
+        sec("归属信息") + group(
+            cell("所属学校", "中南大学"), cell("所属学院", "计算机学院"), cell("所属团学组织", a["org"]),
+            cell("组织类别", a["org_type"]), cell("平台管理层级", a["level"]), cell("开通时间", a["opened"]),
+        )
+        + sec("平台信息") + group(
+            cell("平台类型", a["platform"]), cell("账号名称", a["name"]), cell("平台 ID", a["pid"]),
+            cell("是否认证", "否"), cell("粉丝数", fans), cell("运营团队规模", team),
+        )
+        + _m_intro("平台介绍", intro, warn)
+        + _m_intro("信息发布范围", scope, False)
+        + sec("平台信息确认") + group(*[cell(m["title"], "已建立") for m in MECHANISMS])
+        + sec("运行与负责人") + group(
+            cell("最近一次公开内容发布时间", publish), cell("更新频率", freq), cell("运行状态", run),
+            cell("管理教师", "王晓琳"), cell("具体负责人", "李明"), cell("管理员", admins),
+            cell("一审", "王晓琳"), cell("二审 / 三审", "周建华 / 陈静"),
+        )
+    )
+
+
+def _m_diff(rows):
+    bits = []
+    for k, old, new in rows:
+        if old == new:
+            bits.append('<div class="cmp"><div class="small muted">' + k + '</div><div class="cmp-row"><span>' + new + '</span><span class="small muted">未变更</span></div></div>')
+        else:
+            bits.append('<div class="cmp"><div class="small muted">' + k + '</div><div class="cmp-row"><span class="old">' + old + "</span>" + icon("arrow-right", 14) + '<span class="new">' + new + "</span></div></div>")
+    return '<div class="m-card">' + "".join(bits) + "</div>"
+
+
+def _apply_records():
     apps = [
         ("ing", "新建备案", NEW_NO, NEW["name"], "微信公众号", "学院团委审核 · 周建华", "审核中", "2026-09-26 重新提交", "application-detail.html"),
-        ("ing", "信息变更", FLOWS["rename"]["no"], REN["name"], "微博", "指导教师审核 · 王晓琳", "审核中", "2026-09-26 提交", "application-detail.html"),
+        ("ing", "信息变更", FLOWS["rename"]["no"], REN["name"], "微博", "指导教师审核 · 王晓琳", "审核中", "2026-09-26 提交", "application-change.html"),
         ("back", "新建备案", NEW_NO, NEW["name"], "微信公众号", "第 1 次提交被退回 · 王晓琳", "已退回", "2026-09-25 退回", "application-returned.html"),
         ("pass", "新建备案", NEW_NO, NEW["name"], "微信公众号", "校团委终审通过 · 已生成备案表", "已通过", "2026-09-30 完成", "application-approved.html"),
-        ("pass", "负责人交接", FLOWS["handover"]["no"], HO["name"], "抖音", "指导教师审核通过，交接生效", "已通过", "2026-09-28 完成", "../../pc/common/archive-staff.html"),
+        ("pass", "负责人交接", FLOWS["handover"]["no"], HO["name"], "抖音", "指导教师审核通过，交接生效", "已通过", "2026-09-28 完成", "application-handover.html"),
         ("reject", "新建备案", "XJ20260912006", "计院学生会", "抖音", "指导教师驳回 · 与已备案账号重复", "已驳回", "2026-09-13 驳回", "application-rejected.html"),
     ]
     cards = "".join(
@@ -954,16 +1207,11 @@ def applications():
         for c, b, no, n, p, node, s, tm, h in apps)
     tabs = "".join(f'<button type="button" data-seg="{v}"{" class=on" if v == "all" else ""}>{t}</button>'
                    for t, v in [("全部", "all"), ("审核中", "ing"), ("已退回", "back"), ("已通过", "pass"), ("已驳回", "reject")])
-    content = f"""
-<div class="m-tabs" data-target="#app-list">{tabs}</div>
+    return f"""
+<div class="m-title mt12">我的申请</div>
+<div class="m-tabs" data-target="#app-list" style="margin:0 0 12px;position:static;border-radius:8px">{tabs}</div>
 <div id="app-list">{cards}</div>
-<div class="small muted" style="text-align:center;padding:4px 0 8px">“中南计算机青年”的退回 / 通过卡片演示同一申请在不同阶段的页面</div>"""
-    page("applications.html", "我的申请", content, back="home.html",
-         notes=["页签按状态筛选：审核中 / 已退回 / 已通过 / 已驳回",
-                "每张卡片展示业务类型、编号、账号、当前节点与状态",
-                "点击进入对应的进度页：审核中、退回修改、备案完成、驳回终止"],
-         flow=[("审核中 → 申请进度", "application-detail.html"), ("已退回 → 查看退回意见", "application-returned.html"),
-               ("已通过 → 备案完成", "application-approved.html"), ("已驳回 → 驳回原因", "application-rejected.html")])
+<div class="small muted" style="text-align:center;padding:4px 0 8px">“中南计算机青年”的退回 / 通过卡片分别对应同一申请的不同阶段</div>"""
 
 
 def application_detail():
@@ -985,22 +1233,23 @@ def application_detail():
         ('下一步操作', '无需操作，等待学院审核；如超时可点击“催办”', True),
     ], 2)}</div>
 <div class="m-card">{m_card_title('审核进度', '<span class="small muted" style="font-weight:400">共 6 个节点</span>')}{timeline(items)}</div>
-{sec('申请信息')}
-{group(
-        cell('所属组织', NEW['org']),
-        cell('平台层级', NEW['level']),
-        cell('平台介绍', '<span class="c-success">326 字（已补充）</span>'),
-        cell('一审老师', '王晓琳'),
-    )}"""
-    page("application-detail.html", "申请进度", content, back="applications.html",
-         bottom=btn("撤回申请", kind="default", ic="undo", toast="审核中的申请撤回后可修改再提交（演示）")
+{sec('填报内容', '<span class="small muted" style="font-weight:400">09-26 重提稿，只读</span>')}
+{_m_new(NEW, INTRO_FULL, SCOPE_FULL, fans='0')}"""
+    undo = f"""<div class="m-dialog-mask hidden" id="dlg-undo"><div class="m-dialog">
+  <div class="dlg-bd"><b>撤回这条申请？</b><p>撤回后流程停止在当前节点，你可以修改内容后重新提交。</p></div>
+  <div class="dlg-ft"><button type="button" class="btn btn-default" data-toggle="#dlg-undo">取消</button>
+  <button type="button" class="btn btn-primary" data-toggle="#dlg-undo,#undo-done" data-toast="申请已撤回，可修改后重新提交">确认撤回</button></div>
+</div></div>"""
+    content += f"""<div class="m-card hidden" id="undo-done">{result('ok', '申请已撤回', '可修改后重新提交', btn('去修改', 'application-edit.html', ic='edit') + btn('返回我的申请', 'my-apply.html', 'ghost'))}</div>"""
+    page("application-detail.html", "申请进度", content, back="my-apply.html", overlay=undo,
+         bottom=f'<button type="button" class="btn btn-default" data-toggle="#dlg-undo">{icon("undo")}撤回申请</button>'
          + btn("催办", kind="primary", ic="bell", toast="已向学院团委周建华老师发送催办提醒"),
          notes=["顶部显示状态“待学院审核”，节点进度条定位到学院团委",
                 "时间线完整记录：提交 → 教师退回（橙色） → 修改重提 → 教师通过 → 学院审核中",
                 "按文档展示当前节点、审核意见、是否退回、下一步操作",
                 "可撤回申请或向当前审核人催办"],
          flow=[("剧本一下一步：PC 教师再次审核通过", "../../pc/common/modal-approve.html"),
-               ("学院审核（PC）", "../../pc/college/approval-detail.html"), ("我的申请", "applications.html")])
+               ("学院审核（PC）", "../../pc/college/approval-detail.html"), ("我的申请", "my-apply.html")])
 
 
 def application_returned():
@@ -1013,22 +1262,25 @@ def application_returned():
   <div class="tl-comment" style="background:var(--c-danger-bg);border-left-color:var(--c-danger);margin-top:12px">退回意见：{back_step[3]}</div>
 </div>
 {mini_acct(NEW, tag('新建备案', 'primary'))}
-{sec('需修改的字段', '<span class="small c-danger">1 项</span>')}
-<div class="m-card hl"><div class="flex between"><b class="fs13">平台介绍</b>{tag('需修改', 'danger')}</div>
-<div class="intro-box mt8">{INTRO_SHORT}</div>
-<div class="small c-danger mt8">当前 {len(INTRO_SHORT)} 字，要求不少于 100 字，需补充内容定位、栏目设置和信息发布范围</div></div>
-{sec('无需修改')}
-{group(cell('归属信息', '<span class="c-success">无需修改</span>'), cell('平台信息（其余字段）', '<span class="c-success">无需修改</span>'),
-       cell('运行与负责人', '<span class="c-success">无需修改</span>'), cell('审核老师', '王晓琳'))}
+{sec('填报内容', '<span class="small c-danger">09-24 首稿，平台介绍需补充</span>')}
+{_m_new(NEW, INTRO_SHORT, SCOPE_SHORT, warn=True, fans='0')}
 <div class="m-card">{m_card_title('处理记录')}{timeline(items)}</div>"""
-    page("application-returned.html", "申请进度 · 已退回", content, back="applications.html", nav_title="申请已退回",
-         bottom=btn("撤销申请", kind="danger", toast="已撤销申请，流程终止（演示）") + btn("修改并重新提交", "application-edit.html", ic="edit"),
+    cancel_dlg = f"""<div class="m-dialog-mask hidden" id="dlg-cancel"><div class="m-dialog">
+  <div class="dlg-bd"><b>撤销这条申请？</b><p>撤销后流程终止，本次备案不再继续审核。如仍需备案，需重新发起。</p></div>
+  <div class="dlg-ft"><button type="button" class="btn btn-default" data-toggle="#dlg-cancel">取消</button>
+  <button type="button" class="btn btn-danger" data-toggle="#dlg-cancel,#cancel-done" data-toast="申请已撤销，流程终止">确认撤销</button></div>
+</div></div>"""
+    content += f"""<div class="m-card hidden" id="cancel-done">{result('warn', '申请已撤销', '流程已终止。如需备案请重新发起。', btn('返回我的申请', 'my-apply.html') + btn('重新发起', 'apply-create-basic.html', 'ghost'))}</div>"""
+    page("application-returned.html", "申请进度 · 已退回", content, back="my-apply.html", nav_title="申请已退回",
+         overlay=cancel_dlg,
+         bottom=f'<button type="button" class="btn btn-danger" data-toggle="#dlg-cancel">撤销申请</button>'
+         + btn("修改并重新提交", "application-edit.html", ic="edit"),
          notes=["顶部红色横幅展示退回人、时间与退回意见（FLOWS 剧本一第 2 步）",
-                "需修改字段“平台介绍”红框高亮，并给出当前字数与要求",
-                "其余字段标注“无需修改”，修改时只需关注标红项",
+                "填报内容是 09-24 首稿，平台介绍不足 100 字，只读展示",
+                "归属信息、平台信息、运行与负责人都能看到",
                 "“修改并重新提交”进入修改页；“撤销申请”终止流程"],
          flow=[("剧本一下一步：修改后重新提交", "application-edit.html"), ("PC 端退回弹窗（上一步）", "../../pc/common/modal-return.html"),
-               ("我的申请", "applications.html")])
+               ("我的申请", "my-apply.html")])
 
 
 def application_edit():
@@ -1069,9 +1321,11 @@ def application_approved():
     actions = btn("下载备案表", kind="ghost", ic="download", toast="《新媒体公众平台备案表》已开始下载") + btn("查看账号", "account-detail.html")
     content = f"""
 <div class="m-card">{result('ok', '备案完成', '校团委已审核通过，账号档案与备案表已自动生成', actions, info)}</div>
+{sec('填报内容', '<span class="small muted" style="font-weight:400">终审通过稿，只读</span>')}
+{_m_new(NEW, INTRO_FULL, SCOPE_FULL, fans='0')}
 <div class="m-card">{m_card_title('完整审核记录', '<span class="small muted" style="font-weight:400">6 个节点</span>')}{timeline(items)}</div>
 <div class="alert alert-success">{icon('check-circle')}<div class="grow">账号状态已更新为<b>正常运行 · 已备案</b>，将自动纳入 2027 年度年审。</div></div>"""
-    page("application-approved.html", "申请进度 · 已通过", content, back="applications.html", nav_title="备案完成",
+    page("application-approved.html", "申请进度 · 已通过", content, back="my-apply.html", nav_title="备案完成",
          notes=["成功态展示备案编号、申请编号与备案时间",
                 "完整时间线：提交、教师退回、修改重提、教师通过、学院通过、校团委通过",
                 "可下载自动生成的备案表，或查看已建立的账号"],
@@ -1090,14 +1344,81 @@ def application_rejected():
 <div class="m-card"><div class="flex gap12">{pf('抖音')}<div class="grow"><div class="bold">计院学生会</div>
 <div class="small muted">抖音 · ID csu_cs_su · 新建备案 · XJ20260912006</div></div>{st('已驳回')}</div></div>
 <div class="alert alert-danger">{icon('ban')}<div class="grow"><b>驳回原因：</b>与已备案账号重复，请通过认领办理。</div></div>
+{sec('填报内容', '<span class="small muted" style="font-weight:400">计院学生会新建稿，只读</span>')}
+{_m_new(dict(name='计院学生会', platform='抖音', pid='csu_cs_su', org='计算机学院学生会', org_type='院级学生组织', level='二级平台', opened='2026-09-08'), REJECT_INTRO, REJECT_SCOPE, warn=True, fans='0', team='4 人', publish='尚未发布', run='拟新开', admins='暂无', freq=UPDATE_FREQ[5])}
 <div class="m-card mt12">{m_card_title('处理记录')}{timeline(items)}</div>
 <div class="alert alert-info">{icon('info')}<div class="grow">“驳回”与“退回”不同：退回可修改后重新提交，驳回则流程终止，需按正确业务重新发起。</div></div>"""
-    page("application-rejected.html", "申请进度 · 已驳回", content, back="applications.html", nav_title="申请已驳回",
+    page("application-rejected.html", "申请进度 · 已驳回", content, back="my-apply.html", nav_title="申请已驳回",
          bottom=btn("重新发起", "apply.html", "default") + btn("申请认领", "apply-claim.html", ic="hand"),
          notes=["驳回示例：计院学生会（抖音）新建与已备案账号重复",
                 "展示驳回原因与处理记录，流程终止不可重提",
                 "引导通过“申请认领”办理，或重新发起其他业务"],
          flow=[("申请认领", "apply-claim.html"), ("重新发起", "apply.html"), ("PC 驳回弹窗", "../../pc/common/modal-reject.html")])
+
+
+def application_change():
+    ch = FLOWS["rename"]
+    items = [
+        ("done", "学生提交名称变更", "李明 · " + ch["steps"][0][0], ch["steps"][0][3]),
+        ("now", "指导教师审核", "王晓琳 · 处理中", ""),
+        ("wait", "学院团委审核", "周建华", ""),
+        ("wait", "校团委审核", "陈静 · 通过后原名称记入曾用名", ""),
+    ]
+    diff = _m_diff([
+        ("账号名称", REN["name"], REN["new_name"]),
+        ("平台类型", REN["platform"], REN["platform"]),
+        ("平台 ID", REN["pid"], REN["pid"]),
+        ("所属团学组织", REN["org"], REN["org"]),
+        ("学生负责人", "李明", "李明"),
+        ("管理教师", "王晓琳", "王晓琳"),
+    ])
+    content = f"""
+<div class="hd-card"><div class="flex between"><span class="small muted">信息变更 · <span class="num">{ch['no']}</span></span>{st('审核中')}</div>
+<div class="fs16 bold mt8">{REN['name']}</div>
+<div class="small muted">{REN['platform']} · 拟改为 {REN['new_name']}</div></div>
+{m_steps(['提交', '指导教师', '学院团委', '校团委'], 1)}
+{sec('填报内容', '<span class="small muted" style="font-weight:400">变更前后，只读</span>')}
+{diff}
+{_m_intro('变更原因', ch['steps'][0][3], False)}
+<div class="m-card"><b class="fs13">详细说明</b><div class="intro-box mt8">2026 年 9 月学生会完成换届，学院各新媒体平台统一使用「中南计院」品牌前缀，微博名称调整为「中南计院学生会」，账号主体与运营团队不变。</div>
+<div class="small muted mt8">佐证材料：学生会第十届换届决议.pdf、微博改名预览截图.png</div></div>
+{sec('账号原信息')}
+{group(cell('所属学院', '计算机学院'), cell('组织类别', REN['org_type']), cell('平台层级', REN['level']), cell('开通时间', REN['opened']), cell('粉丝数', REN['fans']))}
+<div class="m-card">{m_card_title('审批进度')}{timeline(items)}</div>"""
+    page("application-change.html", "变更进度", content, back="my-apply.html",
+         bottom=btn("返回我的申请", "my-apply.html", "ghost") + btn("催办", kind="primary", ic="bell", toast="已向王晓琳发送催办"),
+         notes=["名称从计算机学院学生会改为中南计院学生会，平台 ID 不变",
+                "变更原因、未变更字段和审批进度在同一页",
+                "当前停在指导教师王晓琳"],
+         flow=[("我的申请", "my-apply.html"), ("教师变更审核（PC）", "../../pc/teacher/review-change.html")])
+
+
+def application_handover():
+    jj = FLOWS["handover"]
+    items = [
+        ("done", "学生提交负责人交接", "李明 · " + jj["steps"][0][0], jj["steps"][0][3]),
+        ("done", "指导教师通过，交接生效", "王晓琳 · " + jj["steps"][1][0], jj["steps"][1][3]),
+    ]
+    content = f"""
+<div class="hd-card"><div class="flex between"><span class="small muted">负责人交接 · <span class="num">{jj['no']}</span></span>{st('已通过')}</div>
+<div class="fs16 bold mt8">{HO['name']}</div>
+<div class="small muted">{HO['platform']} · 已于 2026-10-01 生效</div></div>
+{m_steps(['提交', '指导教师', '生效'], 3)}
+{sec('填报内容', '<span class="small muted" style="font-weight:400">新旧负责人，只读</span>')}
+{sec('原负责人')}
+{group(cell('姓名', '李明'), cell('学号', PEOPLE['李明']['no']), cell('手机号', PEOPLE['李明']['phone']), cell('任期', '2024-09-10 ~ 2026-09-30'))}
+{sec('新负责人')}
+{group(cell('姓名', '李四'), cell('学号', PEOPLE['李四']['no']), cell('手机号', PEOPLE['李四']['phone']), cell('职务', PEOPLE['李四']['job']), cell('生效时间', '2026-10-01'))}
+{_m_intro('交接原因', jj['steps'][0][3], False)}
+{sec('账号')}
+{group(cell('账号', HO['name']), cell('平台', HO['platform']), cell('平台 ID', HO['pid']), cell('所属组织', HO['org']))}
+<div class="m-card">{m_card_title('审批进度')}{timeline(items)}</div>"""
+    page("application-handover.html", "交接已生效", content, back="my-apply.html",
+         bottom=btn("返回我的申请", "my-apply.html", "ghost") + btn("查看账号", "accounts.html"),
+         notes=["计院街舞社由李明交接给李四，生效时间 2026-10-01",
+                "原负责人任期保留，新负责人联系方式在填报内容里",
+                "指导教师已通过，流程结束"],
+         flow=[("我的申请", "my-apply.html"), ("责任人员历史（PC）", "../../pc/common/archive-staff.html")])
 
 
 # ---------------------------------------------------------------- 学生：年审（剧本五）
@@ -1227,7 +1548,7 @@ def rectify():
     page("rectify.html", "整改任务", content, back="todo.html",
          bottom=btn("联系学院", kind="default", ic="phone", toast="已复制学院团委电话 138 7310 2231") + btn("提交整改", "rectify-submit.html", ic="upload"),
          notes=["整改任务 " + RC["no"] + "：整改问题、整改要求、下发人、截止 " + RC["deadline"] + " 倒计时与附件",
-                "责任人为何雨桐，李明作为账号管理员可协助提交（演示身份）",
+                "责任人为何雨桐，李明作为该账号管理员可协助提交",
                 "整改记录显示第 1 轮被判定“继续整改”及学院意见",
                 "底部“提交整改”进入第 2 轮材料提交"],
          flow=[("剧本六下一步：提交整改材料", "rectify-submit.html"), ("学院下发整改（上一步）", "../../pc/college/rectify-create.html")])
@@ -1254,12 +1575,12 @@ def rectify_submit():
 <div class="m-group">{up_cell('上传材料', '支持 pdf / xlsx / jpg，单个不超过 10MB', ['《信息发布三审制度》签字盖章版.pdf', '7-9月审核台账.xlsx'], req=True)}</div>
 </div>"""
     page("rectify-submit.html", "提交整改", content, back="rectify.html",
-         bottom=back_btn("rectify.html", "取消") + submit_btn("提交整改", "rectify.html", ic="send", toast="已提交，等待学院审核"),
+         bottom=back_btn("rectify.html", "取消") + submit_btn("提交整改", "rectify-done.html", ic="send", toast="整改材料已提交，等待学院复核"),
          notes=["顶部回显上轮“继续整改”意见，对照补充材料",
                 "整改说明必填；整改结果、更新后信息（已建立信息发布审查机制）逐项确认",
                 "证明材料已预置签字盖章版制度与 7-9 月审核台账",
-                "提交后回到整改任务页，等待学院审核"],
-         flow=[("剧本六下一步：PC 学院整改审核", "../../pc/college/rectify-detail.html"),
+                "提交后进入整改结果页，可返回整改任务"],
+         flow=[("提交成功", "rectify-done.html"), ("剧本六下一步：PC 学院整改审核", "../../pc/college/rectify-detail.html"),
                ("APP 学院整改跟踪（第二次提交通过）", "../college/rectify.html"), ("返回整改任务", "rectify.html")])
 
 
@@ -1298,13 +1619,136 @@ def zombie_verify():
 <div class="m-card small sub">{flow_hint(['系统预警', '学生或教师核实', '学院审核', '正常 / 整改 / 注销'])}
 <div class="mt8">系统只做预警，<b>不会直接注销</b>任何账号。</div></div>"""
     page("zombie-verify.html", "僵尸号核实", content, back="todo.html",
-         bottom=back_btn("todo.html", "稍后处理") + submit_btn("提交核实", "todo.html", ic="send", toast="核实结果已提交，等待学院审核"),
+         bottom=back_btn("todo.html", "稍后处理") + submit_btn("提交核实", "zombie-result.html", ic="send", toast="核实结果已提交，等待学院审核"),
          notes=["计院摄影协会（视频号）停更 212 天（最近发布 2026-03-02），被系统标记为疑似僵尸号",
                 "核实结论三选一：仍在正常运营（默认）/ 需要整改 / 申请注销，切换时下方提示随之变化",
-                "填写说明、更新最近发布时间并上传截图，提交后回到待办",
-                "链路：系统预警 → 学生或教师核实 → 学院审核 → 正常 / 整改 / 注销，系统不会直接注销"],
-         flow=[("提交后回到我的待办", "todo.html"), ("学院僵尸号核实（PC）", "../../pc/college/zombie.html"),
+                "填写说明、更新最近发布时间并上传截图后提交",
+                "提交后进入核实结果页；系统只预警，不会直接注销"],
+         flow=[("提交成功", "zombie-result.html"), ("学院僵尸号核实（PC）", "../../pc/college/zombie.html"),
                ("教师核实（APP）", "../teacher/review-zombie.html")])
+
+
+def _done(filename, nav, headline, desc, cells, actions, steps, back, notes, flow, js=""):
+    info = '<div class="m-group mt16" style="text-align:left;background:#F7F9FB">' + "".join(
+        cell(k, v) for k, v in cells) + "</div>"
+    content = ('<div class="m-card">' + result("ok", headline, desc, actions, info) + "</div>"
+               + '<div class="m-card">' + m_card_title("后续流程") + timeline(steps) + "</div>")
+    page(filename, nav, content, back=back, notes=notes, flow=flow, js=js)
+
+
+def change_result():
+    ch = FLOWS["rename"]
+    _done("apply-change-result.html", "变更已提交", "变更申请已提交",
+          "名称变更已交给指导教师王晓琳。通过后还须学院和校团委审核，原名称记入曾用名。",
+          [("申请编号", '<span class="num">' + ch["no"] + "</span>"),
+           ("业务类型", "信息变更"),
+           ("账号", REN["name"] + " → " + REN["new_name"]),
+           ("当前节点", "指导教师审核 · 王晓琳")],
+          btn("查看进度", "application-change.html", "ghost") + btn("我的申请", "my-apply.html"),
+          [("done", "学生提交名称变更", "李明 · 刚刚", ""),
+           ("now", "指导教师审核", "王晓琳", ""),
+           ("wait", "学院团委审核", "周建华", ""),
+           ("wait", "校团委审核", "通过后原名称记入曾用名", "")],
+          "apply-change-confirm.html",
+          ["提交成功后可查看变更进度，或回到我的申请"],
+          [("查看变更进度", "application-change.html"),
+           ("PC 教师变更审核", "../../pc/teacher/review-change.html"),
+           ("我的申请", "my-apply.html")])
+
+
+def cancel_result():
+    _done("apply-cancel-result.html", "注销已提交", "注销申请已提交",
+          "审核完成前账号仍可查询。通过后状态改为已注销，档案与历史永久保留。",
+          [("申请编号", '<span class="num">ZX20260930021</span>'),
+           ("业务类型", "账号注销"),
+           ("账号", PH["name"] + " · " + PH["platform"]),
+           ("当前节点", "指导教师审核 · 王晓琳")],
+          btn("我的申请", "my-apply.html", "ghost") + btn("返回首页", "home.html"),
+          [("done", "学生提交注销", "李明 · 刚刚", ""),
+           ("now", "指导教师审核", "王晓琳", ""),
+           ("wait", "学院团委审核", "周建华", ""),
+           ("wait", "校团委确认", "陈静", "")],
+          "apply-cancel.html",
+          ["注销申请进入逐级审核，可从我的申请查看进度"],
+          [("我的申请", "my-apply.html"),
+           ("教师注销审核（PC）", "../../pc/teacher/review-cancel.html"),
+           ("返回首页", "home.html")])
+
+
+CLAIM_RES_JS = """
+(function(){
+  var m=(location.search||'').match(/[?&]name=([^&]*)/);
+  var el=document.getElementById('claim-res-name');
+  if(el&&m)el.textContent=decodeURIComponent(m[1]);
+})();
+"""
+
+
+def claim_result():
+    _done("apply-claim-result.html", "认领已提交", "认领申请已提交",
+          "指导教师王晓琳将确认你与该账号的责任关系。通过后，账号出现在我的账号中。",
+          [("申请编号", '<span class="num">RL20260930015</span>'),
+           ("业务类型", "账号认领"),
+           ("认领账号", '<span id="claim-res-name">计院青年之声</span>'),
+           ("当前节点", "指导教师确认 · 王晓琳")],
+          btn("返回认领", "apply-claim.html", "ghost") + btn("我的申请", "my-apply.html"),
+          [("done", "学生提交认领", "李明 · 刚刚", ""),
+           ("now", "指导教师确认", "王晓琳", ""),
+           ("wait", "写入责任人", "通过后可办理年审与变更", "")],
+          "apply-claim.html",
+          ["提交后可返回认领列表，或到我的申请查看"],
+          [("返回认领", "apply-claim.html"), ("我的申请", "my-apply.html"),
+           ("历史补录", "apply-create-basic.html")],
+          CLAIM_RES_JS)
+
+
+def my_apply():
+    content = alert("这里是全部申请。点进详情查看；已退回的可以修改后重新提交。", "info") + _apply_records()
+    page("my-apply.html", "我的申请", content, tab="records",
+         notes=["底部右下角「我的申请」进入此页",
+                "可按全部、审核中、已退回、已通过、已驳回筛选",
+                "每条都能打开详情；已退回的进入退回页，可修改并重新提交",
+                "服务大厅只保留五个办理入口"],
+         flow=[("审核中的申请", "application-detail.html"),
+               ("已退回，去修改", "application-returned.html"),
+               ("修改后重新提交", "application-edit.html"),
+               ("服务大厅", "apply.html")])
+
+
+def rectify_done():
+    _done("rectify-done.html", "整改已提交", "整改材料已提交",
+          "第 2 轮材料已提交，等待学院复核。复核前可在整改任务中查看记录。",
+          [("整改编号", '<span class="num">' + RC["no"] + "</span>"),
+           ("账号", RE["name"]),
+           ("轮次", "第 2 轮"),
+           ("当前节点", "学院复核")],
+          btn("返回整改任务", "rectify.html", "ghost") + btn("我的待办", "todo.html"),
+          [("done", "学生提交第 2 轮材料", "李明 · 刚刚", ""),
+           ("now", "学院复核", "周建华", ""),
+           ("wait", "整改通过或继续整改", "结果写入账号档案", "")],
+          "rectify-submit.html",
+          ["提交后进入结果页，可返回整改任务或待办"],
+          [("返回整改任务", "rectify.html"),
+           ("PC 学院整改审核", "../../pc/college/rectify-detail.html"),
+           ("我的待办", "todo.html")])
+
+
+def zombie_result():
+    _done("zombie-result.html", "核实已提交", "核实结果已提交",
+          "已按“仍在正常运营”提交。学院审核前预警仍在，系统不会直接注销账号。",
+          [("账号", PH["name"] + " · " + PH["platform"]),
+           ("核实结论", "仍在正常运营"),
+           ("最近发布", "2026-09-27"),
+           ("当前节点", "学院审核")],
+          btn("返回待办", "todo.html", "ghost") + btn("返回首页", "home.html"),
+          [("done", "学生提交核实", "李明 · 刚刚", "已恢复更新，并上传近期发布截图"),
+           ("now", "学院审核", "周建华", ""),
+           ("wait", "解除预警或转整改 / 注销", "系统不直接注销", "")],
+          "zombie-verify.html",
+          ["核实提交后进入结果页，可返回待办"],
+          [("返回待办", "todo.html"),
+           ("学院僵尸号（PC）", "../../pc/college/zombie.html"),
+           ("返回首页", "home.html")])
 
 
 def build():
@@ -1313,11 +1757,11 @@ def build():
     home()
     todo()
     messages()
-    mine()
     accounts()
     account_detail()
     account_history()
     apply()
+    my_apply()
     create_basic()
     create_platform()
     duplicate()
@@ -1326,18 +1770,24 @@ def build():
     apply_result()
     apply_change()
     change_confirm()
+    change_result()
     apply_handover()
     apply_cancel()
+    cancel_result()
     apply_claim()
-    applications()
+    claim_result()
     application_detail()
+    application_change()
     application_returned()
     application_edit()
     application_approved()
+    application_handover()
     application_rejected()
     annual()
     annual_fill()
     annual_result()
     rectify()
     rectify_submit()
+    rectify_done()
     zombie_verify()
+    zombie_result()

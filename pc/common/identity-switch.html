@@ -248,15 +248,15 @@ button.is-done{opacity:.6;cursor:default;pointer-events:none}
 
 /* ===== 弹窗 / 抽屉 ===== */
 .mask{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px}
-.modal{width:600px;max-width:100%;background:#fff;border-radius:12px;box-shadow:0 10px 20px 10px rgba(0,0,0,.05);display:flex;flex-direction:column;max-height:calc(100vh - 40px)}
+.modal{width:600px;max-width:100%;background:#fff;border-radius:12px;box-shadow:0 10px 20px 10px rgba(0,0,0,.05);display:flex;flex-direction:column;max-height:calc(100vh / var(--z, 1) - 40px)}
 .modal.lg{width:900px}.modal.sm{width:480px}
-.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #C8CAD1;font-size:18px;font-weight:700;color:var(--c-text)}
-.modal-bd{padding:20px;overflow:auto}
-.modal-ft{display:flex;justify-content:flex-end;gap:12px;padding:12px 20px 20px}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #C8CAD1;font-size:18px;font-weight:700;color:var(--c-text);flex:none}
+.modal-bd{padding:20px;overflow:auto;flex:1;min-height:0}
+.modal-ft{display:flex;justify-content:flex-end;gap:12px;padding:12px 20px 20px;flex:none}
 .x-btn{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;color:var(--c-text-3)}.x-btn:hover{color:var(--c-primary)}
 .drawer-mask{justify-content:flex-end;padding:0}
 .drawer{width:640px;max-width:100%;height:100%;background:#fff;box-shadow:-8px 0 24px rgba(0,0,0,.12);display:flex;flex-direction:column}
-.drawer .modal-bd{flex:1}
+.drawer .modal-bd{flex:1;min-height:0}
 .backdrop{pointer-events:none;user-select:none}
 
 /* ===== Toast（Element Message 样式）与原型悬浮导航 ===== */
@@ -331,8 +331,10 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
 .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
 .split{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start}
 .sticky{position:sticky;top:0}
-.actbar{position:sticky;bottom:0;z-index:20;background:#fff;border-radius:8px;box-shadow:0 -4px 16px rgba(42,141,199,.10);padding:12px 24px;display:flex;align-items:center;gap:12px;margin-top:16px}
-.actbar .grow{font-size:14px;color:var(--c-text-3)}
+.actbar{position:static;z-index:20;background:#fff;border-radius:8px;box-shadow:0 -4px 16px rgba(42,141,199,.10);padding:12px 24px;display:flex;align-items:center;gap:12px;margin-top:16px;flex:none}
+.actbar .grow{font-size:14px;color:var(--c-text-3);min-width:0}
+.zx-main>.actbar{margin:10px 0 0}
+.zx-main:has(>.actbar)>.content{padding-bottom:16px}
 .cm-content{width:100%}
 .zx-body.is-full .zx-main{max-width:1600px;margin:0 auto}
 /* 详情表格（低代码表单栅格） */
@@ -406,7 +408,8 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
 .wf-pane{padding-bottom:16px}
 .wf-pane .page-hd{padding:0 0 12px;border-radius:0;border-bottom:1px dashed #E4E7ED;margin-bottom:14px}
 .wf-pane .page-hd h1{font-size:16px}
-.wf-pane .actbar{margin:16px -24px 0;border-radius:0;box-shadow:0 -4px 16px rgba(42,141,199,.12)}
+.wf-dialog>.actbar{margin:0;border-radius:0;box-shadow:0 -4px 16px rgba(42,141,199,.12)}
+.wf-dialog:has(>.actbar)>.wf-bd{padding-bottom:16px}
 .wf-empty{text-align:center;color:var(--c-text-3);height:120px}
 .wf-cm{display:inline-block;max-width:420px;text-align:left}
 .wf-chart{position:relative;border:1px solid #E4E7ED;border-radius:6px;min-height:420px;background:#FAFCFE radial-gradient(#E4ECF3 1px,transparent 1px) 0 0/16px 16px;overflow:auto;padding:80px 40px}
@@ -453,11 +456,15 @@ body.pc{background:var(--c-bg);font-size:14px;color:rgba(0,0,0,.85);overflow:hid
 .mech-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .mech-box{border:1px solid var(--c-line);border-radius:8px;padding:12px 14px;background:#FBFCFD}
 .mech-box .flex{justify-content:space-between}
-.mech{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:18px;align-items:center;padding:14px 0;border-bottom:1px dashed var(--c-line)}
+.mech{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:18px;align-items:flex-start;padding:14px 0;border-bottom:1px dashed var(--c-line)}
 .mech:last-child{border-bottom:none;padding-bottom:0}.mech:first-child{padding-top:0}
-.mech-t{font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
-.mech-t .no{width:20px;height:20px;border-radius:6px;background:var(--c-primary-light);color:var(--c-primary);display:grid;place-items:center;font-size:12px}
-.mech-h{font-size:12px;color:var(--c-text-3);margin-top:4px;line-height:1.7}
+.mech-t{font-weight:600;font-size:14px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.mech-t .no{width:20px;height:20px;border-radius:6px;background:var(--c-primary-light);color:var(--c-primary);display:grid;place-items:center;font-size:12px;flex:none;margin-top:1px}
+.mech-h{font-size:12px;color:var(--c-text-2);margin-top:6px;line-height:1.75}
+.picker{margin-top:12px;border:1px solid var(--c-line);border-radius:8px;padding:12px;background:#FBFCFD}
+.pick-list{display:grid;gap:6px;max-height:240px;overflow:auto;margin-top:8px}
+.pick-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:8px 10px;border:1px solid var(--c-line);border-radius:8px;background:#fff;text-align:left}
+.pick-item:hover{border-color:var(--c-primary-border)}
 /* 人员卡 */
 .person{display:flex;gap:12px;align-items:center;padding:14px 16px;border:1px solid var(--c-line);border-radius:10px;background:#fff}
 .person .nm{font-weight:600}.person .sub{font-size:12px;color:var(--c-text-3)}
@@ -522,6 +529,15 @@ a.li:hover .li-t{color:var(--c-primary)}
 .scope{display:flex;gap:6px;flex-wrap:wrap}
 .diff-side .table{table-layout:fixed}.diff-side td{word-break:break-all;font-size:12px}.diff-side td:first-child{font-size:13px}
 .dim{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:10px;background:var(--c-bg)}
+/* 新建备案弹窗叠在账号列表上时，补齐列表里用到的图标块，并让表单贴合大弹窗 */
+.tic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--c-primary-light);color:var(--c-primary);flex:none}
+.zx-main:has(.content>.backdrop>.page-hd:first-child) .zx-tabs{border-radius:8px 8px 0 0;margin-bottom:0;border-bottom:1px solid var(--c-bg)}
+.content>.backdrop>.page-hd:first-child{border-radius:0 0 8px 8px}
+.wf-dialog .page-hd{padding:0 0 12px;margin-bottom:14px;background:transparent;border-radius:0;border-bottom:1px dashed #E4E7ED}
+.wf-dialog .page-hd h1{font-size:16px}
+.wf-dialog .wiz-hd{padding:14px 18px}
+.wf-dialog>.actbar{margin:0;border-radius:0;box-shadow:0 -4px 16px rgba(42,141,199,.12)}
+.wf-dialog .split{grid-template-columns:minmax(0,1fr) 320px}
 </style><script>(function(){var d=document.documentElement;function f(){var z=Math.max(.6,Math.min(innerWidth/1920,1.6));d.style.zoom=z;d.style.setProperty('--z',z);}f();addEventListener('resize',f);})();</script>
 </head>
 <body class="pc">
@@ -540,7 +556,7 @@ a.li:hover .li-t{color:var(--c-primary)}
 <section class="zx-main">
   <div class="zx-tabs"><button class="zx-back" type="button" data-back="login.html"><svg class="i " viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg>返回上一步</button><a class="zx-tab" href="login.html">统一身份认证</a><span class="zx-tab on">选择身份<button class="zx-x" type="button" data-back="login.html" aria-label="关闭页签"><svg class="i " viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span><button class="zx-fold" type="button" data-toast="已收起其他页签" aria-label="页签操作"><svg class="i " viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button></div>
   <div class="content"><div class="page-hd"><div><h1>选择本次进入的身份</h1><p>统一身份认证已通过 · 工号 T20180427 · 2026-09-30 16:30 · 一人多身份时，按本次办理事项选择身份进入</p></div><div class="flex gap8"><a class="btn btn-default btn-sm" href="../../app/common/identity-switch.html" ><svg class="i " viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M11 18h2"/></svg>移动端身份选择</a><a class="btn btn-default btn-sm" href="login.html" ><svg class="i " viewBox="0 0 24 24"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M9 16l-4-4 4-4"/><path d="M5 12h11"/></svg>退出登录</a></div></div>
-<div class="grid g3"><div class="card role-card"><div class="top"><img class="avatar lg" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=96&h=96&fit=crop&crop=faces&auto=format&q=70" alt="陈静的头像"><div class="grow"><div class="flex gap8"><b class="fs18">陈静</b><span class="tag tag-muted">演示账号</span></div><div class="small muted">校团委宣传部 · 宣传部部长</div></div><span class="role-ic "><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M4 21V5l8-2v18"/><path d="M12 8h8v13"/><path d="M7.5 8h1.5M7.5 12h1.5M7.5 16h1.5M15.5 12h1.5M15.5 16h1.5"/><path d="M2.5 21h19"/></svg></span></div><div class="flex gap8"><span class="tag tag-primary">学校管理员</span><span class="small muted">PC 端</span></div><ul><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>全校 35 个二级团组织、986 个账号</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>校级审核、年审发起与批量审核</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>僵尸号监管、数据导入导出、系统配置</span></li></ul><a class="btn btn-ghost" href="../school/dashboard.html" data-toast="已切换身份：学校管理员 · 陈静" ><svg class="i " viewBox="0 0 24 24"><path d="M4 12h16"/><path d="m14 6 6 6-6 6"/></svg>进入数据驾驶舱</a></div><div class="card role-card"><div class="top"><img class="avatar lg" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=96&h=96&fit=crop&crop=faces&auto=format&q=70" alt="周建华的头像"><div class="grow"><div class="flex gap8"><b class="fs18">周建华</b><span class="tag tag-muted">演示账号</span></div><div class="small muted">计算机学院团委 · 学院团委书记</div></div><span class="role-ic green"><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/></svg></span></div><div class="flex gap8"><span class="tag tag-primary">学院管理员</span><span class="small muted">PC 端</span></div><ul><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>计算机学院 36 个账号</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>学院审核、年审统一提交校团委</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>任务分派、整改下发、本院授权</span></li></ul><a class="btn btn-ghost" href="../college/workbench.html" data-toast="已切换身份：学院管理员 · 周建华" ><svg class="i " viewBox="0 0 24 24"><path d="M4 12h16"/><path d="m14 6 6 6-6 6"/></svg>进入学院工作台</a></div><div class="card role-card cur"><div class="top"><img class="avatar lg" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=96&h=96&fit=crop&crop=faces&auto=format&q=70" alt="王晓琳的头像"><div class="grow"><div class="flex gap8"><b class="fs18">王晓琳</b><span class="tag tag-success">当前登录</span></div><div class="small muted">计算机学院 · 3 项授权身份</div></div><span class="role-ic orange"><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span></div><div class="flex gap8"><span class="tag tag-primary">业务教师</span><span class="small muted">PC 端</span></div><ul><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>宣传工作辅导员 · 2021级辅导员 · 街舞社指导教师</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>审核本人授权范围内的申请与年审</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>学生毕业 / 失联时教师代办</span></li></ul><a class="btn btn-primary" href="../teacher/workbench.html" data-toast="已切换身份：业务教师 · 王晓琳" ><svg class="i " viewBox="0 0 24 24"><path d="M4 12h16"/><path d="m14 6 6 6-6 6"/></svg>进入教师工作台</a></div></div>
+<div class="grid g2"><div class="card role-card"><div class="top"><img class="avatar lg" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=96&h=96&fit=crop&crop=faces&auto=format&q=70" alt="陈静的头像"><div class="grow"><div class="flex gap8"><b class="fs18">陈静</b><span class="tag tag-muted">演示账号</span></div><div class="small muted">校团委宣传部 · 宣传部部长</div></div><span class="role-ic "><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M4 21V5l8-2v18"/><path d="M12 8h8v13"/><path d="M7.5 8h1.5M7.5 12h1.5M7.5 16h1.5M15.5 12h1.5M15.5 16h1.5"/><path d="M2.5 21h19"/></svg></span></div><div class="flex gap8"><span class="tag tag-primary">学校管理员</span><span class="small muted">PC 端</span></div><ul><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>全校 35 个二级团组织、986 个账号</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>校级审核、年审发起与批量审核</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>僵尸号监管、数据导入导出、系统配置</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>移动端可办理终审并查看账号、组织与年审节点</span></li></ul><div class="flex gap8 wrap"><a class="btn btn-ghost" href="../school/dashboard.html" data-toast="已切换身份：学校管理员 · 陈静" ><svg class="i " viewBox="0 0 24 24"><path d="M4 12h16"/><path d="m14 6 6 6-6 6"/></svg>进入数据驾驶舱</a><a class="btn btn-default" href="../../app/school/home.html" data-toast="已进入学校管理员移动端" ><svg class="i " viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M11 18h2"/></svg>移动端</a></div></div><div class="card role-card"><div class="top"><img class="avatar lg" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=96&h=96&fit=crop&crop=faces&auto=format&q=70" alt="周建华的头像"><div class="grow"><div class="flex gap8"><b class="fs18">周建华</b><span class="tag tag-muted">演示账号</span></div><div class="small muted">计算机学院团委 · 学院团委书记</div></div><span class="role-ic green"><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/></svg></span></div><div class="flex gap8"><span class="tag tag-primary">学院管理员</span><span class="small muted">PC 端</span></div><ul><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>计算机学院 36 个账号</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>学院审核、年审统一提交校团委</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>任务分派、整改下发、本院授权</span></li></ul><a class="btn btn-ghost" href="../college/workbench.html" data-toast="已切换身份：学院管理员 · 周建华" ><svg class="i " viewBox="0 0 24 24"><path d="M4 12h16"/><path d="m14 6 6 6-6 6"/></svg>进入学院工作台</a></div><div class="card role-card cur"><div class="top"><img class="avatar lg" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=96&h=96&fit=crop&crop=faces&auto=format&q=70" alt="王晓琳的头像"><div class="grow"><div class="flex gap8"><b class="fs18">王晓琳</b><span class="tag tag-success">当前登录</span></div><div class="small muted">计算机学院 · 3 项授权身份</div></div><span class="role-ic orange"><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span></div><div class="flex gap8"><span class="tag tag-primary">业务教师</span><span class="small muted">PC 端</span></div><ul><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>宣传工作辅导员 · 2021级辅导员 · 街舞社指导教师</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>审核本人授权范围内的申请与年审</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>学生毕业 / 失联时教师代办</span></li></ul><a class="btn btn-primary" href="../teacher/workbench.html" data-toast="已切换身份：业务教师 · 王晓琳" ><svg class="i " viewBox="0 0 24 24"><path d="M4 12h16"/><path d="m14 6 6 6-6 6"/></svg>进入教师工作台</a></div><div class="card role-card"><div class="top"><img class="avatar lg" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=96&h=96&fit=crop&crop=faces&auto=format&q=70" alt="李明的头像"><div class="grow"><div class="flex gap8"><b class="fs18">李明</b><span class="tag tag-muted">演示账号</span></div><div class="small muted">计算机学院 · 2023级软件工程2班 · 学号 8209230117</div></div><span class="role-ic "><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></span></div><div class="flex gap8"><span class="tag tag-primary">学生用户</span><span class="small muted">PC 端</span></div><ul><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>本人负责的 5 个新媒体账号</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>发起备案、变更、交接、注销与认领</span></li><li><svg class="i " viewBox="0 0 24 24" style="width:14px;height:14px"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16.5 9.5"/></svg><span>在线年审、整改提交与僵尸号核实</span></li></ul><a class="btn btn-ghost" href="../student/home.html" data-toast="已切换身份：学生用户 · 李明" ><svg class="i " viewBox="0 0 24 24"><path d="M4 12h16"/><path d="m14 6 6 6-6 6"/></svg>进入学生首页</a></div></div>
 <div class="split mt16" style="grid-template-columns:minmax(0,1fr) 380px">
   <div class="card "><div class="card-hd"><div class="card-title">王晓琳 · 授权范围明细</div><div class="flex gap8"><a class="btn btn-text btn-sm" href="../school/user-permission.html" >查看授权配置</a></div></div><div class="card-bd"><div class="table-wrap "><table class="table"><thead><tr><th>授权身份</th><th>组织范围</th><th>账号数</th><th>可执行操作</th><th>生效期限</th></tr></thead><tbody><tr><td><b>宣传工作辅导员</b></td><td>计算机学院团委及直属学生组织（学生会、研究生会、科协、青协等）</td><td>24 个</td><td><div class="scope"><span class="tag tag-primary">新建/变更审核</span><span class="tag tag-primary">年审审核</span><span class="tag tag-primary">教师代办</span></div></td><td>2023-09-01 至今</td></tr><tr><td><b>2021级辅导员</b></td><td>2021 级各班团支部（含已毕业团支部）</td><td>12 个</td><td><div class="scope"><span class="tag tag-primary">年审审核</span><span class="tag tag-warning">僵尸号核实</span><span class="tag tag-danger">注销建议</span></div></td><td>2021-09-01 至今</td></tr><tr><td><b>街舞社指导教师</b></td><td>计院街舞社</td><td>1 个</td><td><div class="scope"><span class="tag tag-primary">交接审核</span><span class="tag tag-primary">年审审核</span></div></td><td>2023-09-01 至今</td></tr></tbody></table></div><div class="small muted mt12">同一教师在不同身份下看到的数据范围不同：例如以“2021级辅导员”身份可核实 2021 级团支部僵尸号，但不一定能查看学院全部社团的负责人信息。</div></div></div>
   <div class="card "><div class="card-hd"><div class="card-title">一人多身份，按“组织 + 账号 + 操作”授权</div><div class="flex gap8"></div></div><div class="card-bd"><div class="grid" style="gap:10px"><div class="dim"><span class="role-ic "><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/></svg></span><div><div class="bold">组织维度</div><div class="small sub mt4">可管理哪些学院、团支部、学生组织、社团</div></div></div><div class="dim"><span class="role-ic green"><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><ellipse cx="12" cy="5.5" rx="7.5" ry="2.8"/><path d="M4.5 5.5v13c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8v-13"/><path d="M4.5 12c0 1.5 3.4 2.8 7.5 2.8s7.5-1.3 7.5-2.8"/></svg></span><div><div class="bold">账号维度</div><div class="small sub mt4">在组织范围内可查看、审核哪些具体账号</div></div></div><div class="dim"><span class="role-ic orange"><svg class="i " viewBox="0 0 24 24" style="width:20px;height:20px"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l2.5 2.5M14.5 8.5 17 11"/></svg></span><div><div class="bold">操作维度</div><div class="small sub mt4">可执行审核、代办、核实、导出等哪些操作</div></div></div></div></div></div>
@@ -585,7 +601,9 @@ a.li:hover .li-t{color:var(--c-primary)}
     if(t.dataset.seg!==undefined){
       var g=t.parentElement;g.querySelectorAll('[data-seg]').forEach(function(b){b.classList.remove('on');});t.classList.add('on');
       var target=g.dataset.target&&document.querySelector(g.dataset.target);
-      if(target){var v=t.dataset.seg;target.querySelectorAll('[data-cat]').forEach(function(row){row.classList.toggle('hidden',!(v==='all'||(' '+row.dataset.cat+' ').indexOf(' '+v+' ')>-1));});}
+      if(target){var v=t.dataset.seg;var catHide=function(row){return !(v==='all'||(' '+(row.dataset.cat||'')+' ').indexOf(' '+v+' ')>-1);};
+        target.querySelectorAll('[data-cat]').forEach(function(row){row.classList.toggle('hidden',catHide(row));});
+        document.querySelectorAll('.zx-main>.actbar[data-cat],.wf-dialog>.actbar[data-cat]').forEach(function(row){if(!target.contains(row))row.classList.toggle('hidden',catHide(row));});}
       if(!t.dataset.toast)return;
     }
     if(t.dataset.choice!==undefined){
@@ -606,7 +624,9 @@ a.li:hover .li-t{color:var(--c-primary)}
     if(t.dataset.copy){if(navigator.clipboard)navigator.clipboard.writeText(t.dataset.copy);toast('已复制到剪贴板');return;}
     if(t.dataset.back!==undefined){e.preventDefault();if(history.length>1&&document.referrer){history.back();}else{go(t.dataset.back);}return;}
     if(t.dataset.submit){
-      e.preventDefault();var scope=t.closest('[data-form]')||document;
+      e.preventDefault();var scope=t.closest('[data-form]');
+      if(!scope){var own=t.closest('[data-form-owner]');if(own)scope=document.querySelector('[data-form-id="'+own.getAttribute('data-form-owner')+'"]');}
+      if(!scope)scope=document;
       if(!validate(scope))return;
       if(t.dataset.toast){toast(t.dataset.toast);go(t.dataset.submit,700);}else{go(t.dataset.submit);}
       return;
@@ -671,6 +691,40 @@ a.li:hover .li-t{color:var(--c-primary)}
     }
     var box=el.closest('.field.invalid,.cell.invalid');if(box&&String(el.value).trim())box.classList.remove('invalid');
   });
+
+  // 把表单操作条挪到滚动区外面：PC 贴在主内容区底部，流程弹窗贴在弹窗底部，内容单独滚
+  (function pinBars(){
+    var seq=0;
+    function mark(bar){
+      var form=bar.closest('[data-form]');
+      if(!form)return;
+      if(!form.getAttribute('data-form-id')){seq+=1;form.setAttribute('data-form-id','dock-'+seq);}
+      bar.setAttribute('data-form-owner',form.getAttribute('data-form-id'));
+    }
+    function carry(bar, host){
+      var node=bar.parentElement, hide=bar.classList.contains('hidden');
+      while(node&&node!==host){
+        if(node.classList.contains('hidden'))hide=true;
+        if(node.hasAttribute('data-cat')&&!bar.hasAttribute('data-cat'))bar.setAttribute('data-cat',node.getAttribute('data-cat'));
+        node=node.parentElement;
+      }
+      if(hide)bar.classList.add('hidden');
+      mark(bar);
+      host.appendChild(bar);
+    }
+    document.querySelectorAll('.wf-dialog').forEach(function(dlg){
+      Array.prototype.slice.call(dlg.querySelectorAll('.actbar')).forEach(function(bar){
+        if(bar.parentElement===dlg||bar.closest('.modal,.drawer'))return;
+        carry(bar, dlg);
+      });
+    });
+    document.querySelectorAll('.zx-main>.content').forEach(function(content){
+      Array.prototype.slice.call(content.querySelectorAll('.actbar')).forEach(function(bar){
+        if(bar.closest('.wf-dialog,.modal,.drawer,.mask'))return;
+        carry(bar, content.parentNode);
+      });
+    });
+  })();
 })();
 </script>
 </body>

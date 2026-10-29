@@ -6,7 +6,9 @@ import random
 
 from base import *  # noqa: F401,F403
 from data import (ACCOUNTS, PEOPLE, FLOWS, COLLEGES, CANCEL_REASONS, UPDATE_FREQ, PLATFORM_TYPES, ORG_TYPES,
-                  RUN_STATUS, SCHOOL_STATS as S)
+                  RUN_STATUS, SCHOOL_STATS as S, MECHANISMS, LEVELS, LEVEL_TEXT, LEVEL_NOTE, ORG_HINT, ORG_PROMPTS,
+                  PLATFORM_TYPE_HINT, ACCOUNT_NAME_HINT, FORMER_NAME_HINT, PID_HINT, FANS_HINT, INTRO_HINT, QR_HINT,
+                  TEAM_LABEL, PUBLISH_TIME_LABEL, STUDENTS)
 
 D = "pc/common/"
 ACC_LIST = "../teacher/accounts.html"
@@ -35,11 +37,15 @@ CSS = """
 .mech-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .mech-box{border:1px solid var(--c-line);border-radius:8px;padding:12px 14px;background:#FBFCFD}
 .mech-box .flex{justify-content:space-between}
-.mech{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:18px;align-items:center;padding:14px 0;border-bottom:1px dashed var(--c-line)}
+.mech{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:18px;align-items:flex-start;padding:14px 0;border-bottom:1px dashed var(--c-line)}
 .mech:last-child{border-bottom:none;padding-bottom:0}.mech:first-child{padding-top:0}
-.mech-t{font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
-.mech-t .no{width:20px;height:20px;border-radius:6px;background:var(--c-primary-light);color:var(--c-primary);display:grid;place-items:center;font-size:12px}
-.mech-h{font-size:12px;color:var(--c-text-3);margin-top:4px;line-height:1.7}
+.mech-t{font-weight:600;font-size:14px;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.mech-t .no{width:20px;height:20px;border-radius:6px;background:var(--c-primary-light);color:var(--c-primary);display:grid;place-items:center;font-size:12px;flex:none;margin-top:1px}
+.mech-h{font-size:12px;color:var(--c-text-2);margin-top:6px;line-height:1.75}
+.picker{margin-top:12px;border:1px solid var(--c-line);border-radius:8px;padding:12px;background:#FBFCFD}
+.pick-list{display:grid;gap:6px;max-height:240px;overflow:auto;margin-top:8px}
+.pick-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:8px 10px;border:1px solid var(--c-line);border-radius:8px;background:#fff;text-align:left}
+.pick-item:hover{border-color:var(--c-primary-border)}
 /* 人员卡 */
 .person{display:flex;gap:12px;align-items:center;padding:14px 16px;border:1px solid var(--c-line);border-radius:10px;background:#fff}
 .person .nm{font-weight:600}.person .sub{font-size:12px;color:var(--c-text-3)}
@@ -104,6 +110,15 @@ a.li:hover .li-t{color:var(--c-primary)}
 .scope{display:flex;gap:6px;flex-wrap:wrap}
 .diff-side .table{table-layout:fixed}.diff-side td{word-break:break-all;font-size:12px}.diff-side td:first-child{font-size:13px}
 .dim{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:10px;background:var(--c-bg)}
+/* 新建备案弹窗叠在账号列表上时，补齐列表里用到的图标块，并让表单贴合大弹窗 */
+.tic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--c-primary-light);color:var(--c-primary);flex:none}
+.zx-main:has(.content>.backdrop>.page-hd:first-child) .zx-tabs{border-radius:8px 8px 0 0;margin-bottom:0;border-bottom:1px solid var(--c-bg)}
+.content>.backdrop>.page-hd:first-child{border-radius:0 0 8px 8px}
+.wf-dialog .page-hd{padding:0 0 12px;margin-bottom:14px;background:transparent;border-radius:0;border-bottom:1px dashed #E4E7ED}
+.wf-dialog .page-hd h1{font-size:16px}
+.wf-dialog .wiz-hd{padding:14px 18px}
+.wf-dialog>.actbar{margin:0;border-radius:0;box-shadow:0 -4px 16px rgba(42,141,199,.12)}
+.wf-dialog .split{grid-template-columns:minmax(0,1fr) 320px}
 """
 
 LOGIN_CSS = """
@@ -267,7 +282,7 @@ def arch_header(a, name, statuses, tab, dossier, cancelled=False):
     </div>
     <div class="ah-ops">{ops_html}</div>
   </div>
-  <div class="ah-tabs">{ptabs(ARCH_TABS, tab)}<span class="tip">原型演示：各页签分别展示对应剧本账号的档案</span></div>
+  <div class="ah-tabs">{ptabs(ARCH_TABS, tab)}<span class="tip">各页签分别展示对应剧本账号的档案</span></div>
 </div>"""
 
 
@@ -286,10 +301,7 @@ def archive_basic():
              "“实验室开放日”“学长学姐来了”“团学快讯”五个固定栏目，及时发布学院团学活动、主题团日、学科竞赛与"
              "科创成果、志愿服务及就业实习信息。平台严格执行“先审后发”三审制度，所有推文经学生编辑初审、新媒体中心"
              "主任复审、指导教师终审后发布，坚持正确政治方向和舆论导向，讲好计院青年成长故事。")
-    mech = "".join(f'<div class="mech-box"><div class="flex"><span class="bold fs13">{m}</span>{tag("是", "success")}</div>'
-                   f'<div class="small muted mt4">{d}</div></div>'
-                   for m, d in [("宣传联动工作机制", "重大事项统一口径发布"), ("信息发布审查机制", "三审“先审后发”"),
-                                ("应急预案处理机制", "舆情监测与研判预案"), ("信息安全管理制度", "账号与内容安全管理")])
+    mech = mechanism_blocks()
     belong = kv([("所属学院", "计算机学院"), ("所属团学组织", a["org"]), ("组织类别", a["org_type"]),
                  ("平台管理层级", f'{a["level"]} <span class="small muted">（二级团组织直属学生组织开设）</span>')], 4)
     platform = kv([
@@ -299,19 +311,19 @@ def archive_basic():
         ("平台头像", f'<span class="flex gap8">{pf(a["platform"])}<span class="small muted">已上传 · 2026-09-24</span></span>'),
         ("是否认证", f'{tag("是", "success")} <span class="small muted">微信认证 · 2026-09-22</span>'),
         ("粉丝数", '<span class="num">218</span> <span class="small muted">（2026-09-30 统计）</span>'),
-        ("运营团队规模", "12 人"), ("开通时间", a["opened"]),
+        (TEAM_LABEL, "12"), ("开通时间", a["opened"]),
         ("主页链接", f'<span class="flex gap4"><a class="link ellipsis" style="max-width:420px" href="https://mp.weixin.qq.com/">{home_url}</a>{copy_btn(home_url)}</span>', True),
     ], 3)
     run = kv([
-        ("最近发布时间", "2026-09-29 20:30 <span class='small muted'>《计院新生入学教育周圆满收官》</span>"),
-        ("更新频率", UPDATE_FREQ[0]), ("运行状态", st("正常运行")),
+        (PUBLISH_TIME_LABEL, "2026-09-29 20:30 <span class='small muted'>《计院新生入学教育周圆满收官》</span>"),
+        ("更新频率", UPDATE_FREQ[0]), ("运行状态", st("正常运行")), ("异常情况", "无"),
         ("管理教师", f'王晓琳 <span class="small muted">{t["no"]} · 宣传工作辅导员 · 专职 · {t["phone"]}</span>'),
         ("学生具体负责人", f'李明 <span class="small muted">{PEOPLE["李明"]["no"]} · {PEOPLE["李明"]["phone"]}</span>'),
         ("管理员", '陈思远、周可欣 <span class="small muted">共 2 人</span>'),
     ], 3)
     left = (card("归属信息", belong)
-            + card("平台信息", platform + '<div class="divider"></div><div class="field-label mb8">四项机制</div>'
-                   + f'<div class="mech-grid">{mech}</div><div class="divider"></div>'
+            + card("平台信息", platform + '<div class="divider"></div><div class="field-label mb8">平台信息确认</div>'
+                   + mech + '<div class="divider"></div>'
                    + kv([("平台介绍", f'<div class="txt">{intro}</div>', True),
                          ("信息发布范围", "学院团学活动与主题团日、青年思想引领、学科竞赛与科创成果、志愿服务、学院通知公告及就业实习信息", True),
                          ("备注", "由学生李明于 2026-09-24 发起新建备案，经指导教师、学院团委、校团委三级审核通过。", True)], 3),
@@ -545,9 +557,32 @@ def archive_logs():
     arch_page("archive-logs.html", "操作日志", a["name"], hd, body)
 
 
-# ---------------------------------------------------------------- 新建备案向导
+# ---------------------------------------------------------------- 新建备案向导（从「我负责的账号」打开放弹窗，不占侧栏）
 WIZ = ["归属信息", "平台信息", "运行与责任人", "审核人与流程"]
 IDC = ACCOUNTS["idchange"]
+
+
+def accounts_backdrop():
+    """弹窗背后的教师账号列表。代办按钮改成从 pc/common 能点到的地址，避免校验断链。"""
+    from pages_teacher import accounts_content
+    return f'<div class="backdrop">{accounts_content("../teacher/proxy.html")}</div>'
+
+
+def apply_dialog(title, body, close=None):
+    """居中大弹窗。关闭固定回到「我负责的账号」。"""
+    href = close or ACC_LIST
+    return (
+        f'<div class="mask wf-mask"><div class="wf-dialog" role="dialog" aria-modal="true" aria-label="{esc(title)}">'
+        f'<div class="wf-hd"><b>{title}</b><a class="x-btn" href="{href}" aria-label="关闭">{icon("x")}</a></div>'
+        f'<div class="wf-bd">{body}</div></div></div>'
+    )
+
+
+def filing_page(file, title, inner, js="", shell_back=None, dialog_title=None):
+    """保留原 html 路径，打开时是账号列表上的弹窗，侧栏高亮「我负责的账号」。"""
+    shell_back = shell_back or ACC_LIST
+    content = accounts_backdrop() + apply_dialog(dialog_title or title, inner)
+    pc_common_page(D + file, title, [("我负责的账号", None)], content, css=CSS, js=js, back=shell_back, active="accounts")
 
 
 def wiz_side(idx):
@@ -575,28 +610,25 @@ def wiz_side(idx):
 
 
 def wiz_page(idx, file, body, prev, nxt, nxt_text="下一步", nxt_toast=None, js=""):
-    prev_btn = back_btn(prev, "上一步") if prev else back_btn(ACC_LIST, "取消")
-    content = f"""<div data-form>
+    prev_btn = btn("上一步", prev, "default", "arrow-left") if prev else ""
+    cancel_btn = btn("取消", ACC_LIST, "default")
+    inner = f"""<div data-form>
 {page_hd('新建备案申请', '申请类型：新建备案 · 发起人：王晓琳（业务教师代为办理）· 草稿编号 CG20260930015',
          tag('草稿 · 自动保存于 15:21', 'muted') + btn('原型：剧本四说明', 'apply-change-id.html', 'text', 'info', 'sm'))}
 <div class="card wiz-hd">{steps(WIZ, idx)}</div>
-<div class="split mt16" style="grid-template-columns:minmax(0,1fr) 340px"><div>{body}</div><div class="sticky">{wiz_side(idx)}</div></div>
-{actbar(f'第 {idx + 1} / 4 步 · {WIZ[idx]}', btn('保存草稿', None, 'default', 'file', toast='草稿已保存，可在“我的申请”中继续填写') + prev_btn + submit_btn(nxt_text, nxt, ic='arrow-right' if idx < 3 else 'send', toast=nxt_toast))}
+<div class="split mt16"><div>{body}</div><div class="sticky">{wiz_side(idx)}</div></div>
+{actbar(f'第 {idx + 1} / 4 步 · {WIZ[idx]}', btn('保存草稿', None, 'default', 'file', toast='草稿已保存，可在“我的申请”中继续填写') + prev_btn + cancel_btn + submit_btn(nxt_text, nxt, ic='arrow-right' if idx < 3 else 'send', toast=nxt_toast))}
 </div>"""
-    pc_common_page(D + file, f"新建备案 {'①②③④'[idx]} {WIZ[idx]}", [("我负责的账号", ACC_LIST), ("发起申请", None), ("新建备案", None)],
-                   content, css=CSS, js=FILL_JS + js, back=ACC_LIST)
+    filing_page(file, f"新建备案 {'①②③④'[idx]} {WIZ[idx]}", inner, FILL_JS + js, dialog_title=f"新建备案申请 · {WIZ[idx]}")
 
 
 def apply_create_basic():
     sugg = "".join(f'<button class="chip" type="button" data-fill="{x}" data-fill-target="#org-input" data-toast="已填入：{x}">{x}</button>'
-                   for x in ["学生会", "研究生会", "青年志愿者协会", "宣传部", "组织部", "大学生科学技术协会"])
+                   for x in ORG_PROMPTS)
     levels = "".join(
         f'<div class="choice{" on" if n == IDC["level"] else ""}" data-choice style="align-items:flex-start"><span class="ck" style="margin-top:2px"></span>'
-        f'<div><div class="bold">{n}</div><div class="small muted mt4">{d}</div></div></div>'
-        for n, d in [("一级平台", "以校团委名义开设的官方平台，及校学生会、研究生会、学生社团联合会等以组织名义开设的平台"),
-                     ("二级平台", "二级团组织及其直属或指导的学生组织、学生社团以组织名义申请的平台"),
-                     ("三级平台", "各班团支部以集体名义申请的平台"),
-                     ("社团平台", "学生社团以社团名义开设、由社团指导教师负责的平台")])
+        f'<div><div class="bold">{n}</div>' + (f'<div class="small muted mt4">{d}</div>' if d else '') + '</div></div>'
+        for n, d in ((n, LEVEL_TEXT[n]) for n in LEVELS))
     banner = (f'<div class="hl-box"><div class="flex gap16">{role_ic("swap", "orange")}<div class="grow">'
               f'<div class="bold">剧本四 · 平台 ID 变更转新建：计院科协（哔哩哔哩）</div>'
               f'<div class="small sub mt4">原 ID <span class="num">{IDC["pid"]}</span> → 新 ID <span class="num bold c-primary">{IDC["new_pid"]}</span>，已按原档案预填归属与平台信息，请核对后提交。</div></div>'
@@ -605,11 +637,11 @@ def apply_create_basic():
     body = (banner
             + card("归属信息", f"""<div class="form-grid">
   {field('所属学院', sel(COLLEGES, '计算机学院', True), True)}
-  {field('所属团学组织', inp('请输入团学组织名称', IDC['org'], True, attrs='id="org-input"') + f'<div class="chips mt4">{sugg}</div>', True, '各学院学生组织名称不统一，可直接输入或点击提示词')}
+  {field('所属团学组织', inp('请输入团学组织名称', IDC['org'], True, attrs='id="org-input"') + f'<div class="chips mt4">{sugg}</div>', True, ORG_HINT)}
   <div class="full">{field('组织类别', radios('org_type', ORG_TYPES, IDC['org_type'], True), True)}</div>
 </div>""", cls="mt16")
-            + card("平台管理层级", f'<div class="field-label mb8"><span class="req">*</span>请选择平台管理层级</div><div class="choices g2 grid" data-single style="gap:10px">{levels}</div>'
-                   + '<div class="mt12">' + alert("校团委对新媒体公众平台实行分级管理；层级决定审核链路与年审口径，二级、三级、社团平台均通过统一账号主库筛选产生。", "info") + "</div>",
+            + card("平台管理层级", f'<div class="field-label mb8"><span class="req">*</span>平台管理层级：一级平台、二级平台、三级平台、社团平台</div><div class="choices g2 grid" data-single style="gap:10px">{levels}</div>'
+                   + '<div class="mt12">' + alert(LEVEL_NOTE, "info") + "</div>",
                    cls="mt16"))
     wiz_page(0, "apply-create-basic.html", body, None, "apply-create-platform.html")
 
@@ -623,35 +655,78 @@ def apply_create_platform():
     intro = ("计院科协哔哩哔哩官方账号由计算机学院大学生科学技术协会运营，面向全院本科生与研究生，主要发布学科竞赛经验分享、"
              "科创项目展示、技术讲座回放与实验室开放日等视频内容。账号设有“竞赛直通车”“代码一分钟”“实验室探访”“科创人物志”"
              "四个固定栏目，坚持“先审后发”，所有视频经学生初审、指导教师终审后发布，致力于营造浓厚的科技创新氛围，服务学生成长成才。")
-    mechs = "".join([
-        mech_row(1, "是否建立团学组织宣传联动工作机制", "在涉及学校重大事项或突发事件应对时，全校团学组织新媒体公众平台应按照学校要求统一发布相关信息，正确引导舆论氛围。", "m1"),
-        mech_row(2, "是否建立信息发布审查机制", "按照“先审后发”的原则，开设平台的单位对所发布信息内容负责，确保政治方向正确、内容健康向上、准确真实可靠，并预判可能造成的社会影响。", "m2"),
-        mech_row(3, "是否建立应急预案处理机制", "在特殊敏感时期、重点时段、重大舆情处置时做好舆情监测和研判并制定应急预案，发现不良信息和错误言论时带头斗争、勇于发声，并报校团委备案。", "m3"),
-        mech_row(4, "是否建立信息安全管理制度", "严格对信息发布进行审查和监督，确保发布信息的真实性、准确性、安全性，不得制作、复制、发布、传播、链接法律法规禁止及有损学校形象的信息。", "m4"),
-    ])
+    mechs = "".join(mech_row(m["no"], m["title"], m["body"], m["key"]) for m in MECHANISMS)
     dup = (f'<div class="flex gap8 wrap mt4">{btn("重复检查", None, "light", "search", "sm", toast="重复检查完成：未发现同平台同 ID 账号，发现 1 个名称相似账号")}'
            f'<a class="link small" href="apply-duplicate.html">模拟：ID 重复</a><span class="muted small">|</span>'
            f'<a class="link small" href="apply-similar.html">模拟：名称相似</a></div>')
-    body = (card("基础信息", f"""<div class="form-grid c3">
-  {field('平台类型', sel(PLATFORM_TYPES, IDC['platform'], True), True, '平台类型由后台数据字典配置')}
-  {field('账号名称', inp('如：中南小团子', IDC['name'], True), True)}
-  {field('曾用名', inp('多个曾用名用分号隔开'), hint='非必填，历史使用过的账号名称')}
-  <div class="span2">{field('平台ID', inp('公众号ID、微博UID等', IDC['new_pid'], True) + dup, True, '同一平台类型下平台 ID 唯一，提交前需完成重复检查')}</div>
-  {field('是否认证', radios('verify', ['是', '否'], '是', True), True)}
-  {field('粉丝数', inp('请输入整数', '126', True, 'number'), True, '限整数，以提交当日后台数据为准')}
-  {field('运营团队规模（人）', inp('请输入人数', '8', True, 'number'), True)}
+    body = (card("平台信息", f"""<div class="form-grid c3">
+  {field('平台类型', sel(PLATFORM_TYPES, IDC['platform'], True), True, PLATFORM_TYPE_HINT)}
+  {field('账号名称', inp(ACCOUNT_NAME_HINT, IDC['name'], True), True, ACCOUNT_NAME_HINT)}
+  {field('曾用名', inp(FORMER_NAME_HINT), hint='非必填。' + FORMER_NAME_HINT)}
+  <div class="span2">{field('平台ID', inp(PID_HINT, IDC['new_pid'], True) + dup, True, PID_HINT)}</div>
+  {field('是否认证', radios('verify', ['是', '否'], '是', True), True, '单选，是 / 否')}
+  {field('粉丝数', inp(FANS_HINT, '126', True, 'number'), True, FANS_HINT)}
+  {field(TEAM_LABEL, inp('请输入人数', '8', True, 'number'), True)}
   {field('开通时间', inp('', '2026-09-26', True, 'date'), True)}
   <div class="full">{field('主页链接', inp('https://', 'https://space.bilibili.com/' + IDC['new_pid'], True), True)}</div>
 </div>""")
-            + card("头像与二维码", f'<div class="grid g2">{field("平台头像", upload("上传平台头像", "建议 400×400 像素，jpg / png", ["计院科协头像.png"]), True)}'
-                   f'{field("二维码", upload("上传平台二维码", "非必填，jpg / png", []), hint="非必填")}</div>', cls="mt16")
-            + card("四项机制", mechs, tag("均为必填", "muted"), cls="mt16")
+            + card("平台头像与二维码", f'<div class="grid g2">{field("平台头像", upload("上传平台头像", "jpg / png", ["计院科协头像.png"]), True)}'
+                   f'{field("二维码", upload("上传平台二维码", "jpg / png", []), hint=QR_HINT)}</div>', cls="mt16")
+            + card("平台信息确认", mechs, tag("（10）至（13）", "muted"), cls="mt16")
             + card("平台介绍与发布范围", f"""<div class="form-grid c1">
-  {field('平台介绍', textarea('请介绍内容发布、平台特色等', intro, True, 800, 5), True, '内容发布、平台特色等，不少于 100 字')}
-  {field('信息发布范围', textarea('如：学院团学活动、学科竞赛、科创成果', '学科竞赛与科创成果展示、技术讲座与学术活动、实验室开放日、科协品牌活动及学院团学通知', True, 0, 2), True)}
-  {field('备注', inp('选填', '原 B 站账号 386620915 因实名主体变更无法继续使用，迁移至新账号运营'))}
+  {field('平台介绍', textarea(INTRO_HINT, intro, True, 800, 5), True, INTRO_HINT)}
+  {field('信息发布范围', textarea('请填写信息发布范围', '学科竞赛与科创成果展示、技术讲座与学术活动、实验室开放日、科协品牌活动及学院团学通知', True, 0, 2), True)}
+  {field('备注', inp('', '原 B 站账号 386620915 因实名主体变更无法继续使用，迁移至新账号运营'))}
 </div>""", cls="mt16"))
     wiz_page(1, "apply-create-platform.html", body, "apply-create-basic.html", "apply-create-staff.html")
+
+
+def people_picker(pid, into, rolecol, maxn):
+    cap = f"，最多 {maxn} 人" if maxn else ""
+    items = []
+    for name, no, phone, meta in STUDENTS:
+        items.append(
+            f'<button type="button" class="pick-item" data-cat="{esc(name)} {no}" onclick="pickStudent(this)" '
+            f'data-into="#{into}" data-max="{maxn}" data-rolecol="{rolecol}" data-name="{esc(name)}" data-no="{no}" '
+            f'data-phone="{esc(phone)}" data-extra="{esc(meta)}"><span><b>{name}</b> '
+            f'<span class="muted small">{no}</span></span><span class="small muted">{phone} · {meta}</span></button>'
+        )
+    return (f'<div id="{pid}" class="picker hidden"><div class="small muted">输入学号或姓名检索，选中后加入列表{cap}</div>'
+            f'<label class="top-search" style="width:100%;margin-top:8px">{icon("search")}'
+            f'<input placeholder="输入学号或姓名" data-search="#{pid}-list"></label>'
+            f'<div id="{pid}-list" class="pick-list">{"".join(items)}</div></div>')
+
+
+def add_people_btn(pid, into, maxn):
+    return (f'<button type="button" class="btn btn-light btn-sm" data-toggle="#{pid}" data-cap="#{into} tbody tr" '
+            f'data-max="{maxn}">{icon("plus")}添加</button>')
+
+
+STAFF_JS = """
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-cap]');if(!b)return;
+  var max=+b.getAttribute('data-max');if(!max)return;
+  var n=document.querySelectorAll(b.getAttribute('data-cap')).length;
+  if(n>=max){e.stopPropagation();toast('管理员最多 '+max+' 人，不能再添加');}
+},true);
+function pickStudent(btn){
+  var into=btn.getAttribute('data-into');
+  var max=+btn.getAttribute('data-max')||0;
+  var tb=document.querySelector(into+' tbody');
+  var no=btn.getAttribute('data-no');
+  if(tb.querySelector('[data-no="'+no+'"]')){toast('该学生已在列表中');return;}
+  if(max&&tb.querySelectorAll('tr').length>=max){toast('管理员最多 '+max+' 人，不能再添加');return;}
+  var name=btn.getAttribute('data-name'),phone=btn.getAttribute('data-phone'),extra=btn.getAttribute('data-extra')||'';
+  var tr=document.createElement('tr');
+  var cells='<td><b>'+name+'</b></td><td><span data-no="'+no+'">'+no+'</span></td><td>'+phone+'</td>';
+  if(btn.getAttribute('data-rolecol')==='leader'){cells+='<td>'+extra+'</td><td>成员</td><td>2026-09-30</td>';}
+  else{cells+='<td>'+extra+'</td>';}
+  cells+='<td><button class="link" type="button" data-remove>删除</button></td>';
+  tr.innerHTML=cells;tb.appendChild(tr);
+  var panel=btn.closest('.picker');if(panel)panel.classList.add('hidden');
+  toast('已添加：'+name);
+}
+"""
 
 
 def apply_create_staff():
@@ -659,17 +734,17 @@ def apply_create_staff():
     wx = PEOPLE["王晓琳"]
     rm = '<button class="link" type="button" data-remove>删除</button>'
     leaders = table(["姓名", "学号", "手机号", "所属组织", "学生职务", "任期开始", "操作"], [
-        ["<b>何雨桐</b>", hy["no"], hy["phone"], "计院科协", "新媒体部部长", "2025-09-15", rm],
-    ])
+        ["<b>何雨桐</b>", f'<span data-no="{hy["no"]}">{hy["no"]}</span>', hy["phone"], "计院科协", "新媒体部部长", "2025-09-15", rm],
+    ], id_="leader-table")
     admins = table(["姓名", "学号", "手机号", "负责内容", "操作"], [
-        ["彭俊熙", "8209240733", "180 7316 2285", "视频剪辑与发布", rm],
-        ["谢雨萌", "8209250412", "132 1738 5570", "评论区管理与数据统计", rm],
-    ])
-    add = btn("添加", None, "light", "plus", "sm", toast="已新增一行，请填写学生信息")
+        ["<b>彭俊熙</b>", '<span data-no="8209240733">8209240733</span>', "180 7316 2285", "视频剪辑与发布", rm],
+        ["<b>谢雨萌</b>", '<span data-no="8209250412">8209250412</span>', "132 1738 5570", "评论区管理与数据统计", rm],
+    ], id_="admin-table")
     body = (card("运行信息", f"""<div class="form-grid c3">
-  {field('最近一次公开发布时间', inp('', '2026-09-28', True, 'date'), True)}
+  {field(PUBLISH_TIME_LABEL, inp('', '2026-09-28', True, 'date'), True, '日期选择')}
   {field('更新频率', sel(UPDATE_FREQ, UPDATE_FREQ[0], True), True)}
-  {field('运行状态', sel(RUN_STATUS, '正常运行', True), True)}
+  {field('运行状态', sel(RUN_STATUS, '正常运行', True), True, '正常运行、不活跃、整改中、暂停运行、申请注销、已注销')}
+  <div class="full">{field('异常情况', textarea('请填写异常情况', '', False, 0, 2))}</div>
 </div>""")
             + card("当前管理教师", f"""<div class="form-grid c3">
   {field('姓名', inp('', '王晓琳', True), True)}
@@ -677,34 +752,45 @@ def apply_create_staff():
   {field('职务', inp('', '宣传工作辅导员', True), True)}
   {field('手机号', inp('', wx['phone'], True), True)}
   {field('是否为专职教师', radios('fulltime', ['是', '否'], '是', True), True)}
-</div>""", cls="mt16")
-            + card("学生具体负责人", leaders, add, cls="mt16")
-            + card("管理员", admins, add, cls="mt16")
+</div>""", "收集姓名、工号、职务、手机号、是否为专职教师", cls="mt16")
+            + card("当前学生运营负责人 · 具体负责人", leaders + people_picker("pick-leader", "leader-table", "leader", 0),
+                   add_people_btn("pick-leader", "leader-table", 0), cls="mt16")
+            + card("当前学生运营负责人 · 管理员", admins + people_picker("pick-admin", "admin-table", "admin", 5),
+                   add_people_btn("pick-admin", "admin-table", 5) + '<span class="small muted">最多 5 人</span>', cls="mt16")
             + card("制度责任人", f'<div class="grid g2">'
                    + person("张卫东", f'第一责任人 · 计算机学院党委 · {PEOPLE["张卫东"]["job"]}', tag("自动带出", "muted"))
                    + person("周建华", f'直接责任人 · 计算机学院团委 · {PEOPLE["周建华"]["job"]}', tag("自动带出", "muted"))
                    + '</div><div class="mt12">' + alert("二级、三级平台由所在单位党委统一指导：分管领导为第一责任人，二级团组织书记为直接责任人，按所属学院自动带出。", "info") + "</div>",
                    cls="mt16"))
-    wiz_page(2, "apply-create-staff.html", body, "apply-create-platform.html", "apply-create-reviewer.html")
+    wiz_page(2, "apply-create-staff.html", body, "apply-create-platform.html", "apply-create-reviewer.html", js=STAFF_JS)
+
+
+def audit_person(title, name):
+    p = PEOPLE[name]
+    return (f'<div style="border:1px solid var(--c-line);border-radius:8px;padding:12px 14px"><div class="bold mb8">{title}</div>'
+            f'{kv([("姓名", name), ("工号/学号", p["no"]), ("职务", p["job"]), ("手机号", p["phone"])], 2)}</div>')
 
 
 def apply_create_reviewer():
-    rv = person("王晓琳", f'宣传工作辅导员 · 计算机学院 · {PEOPLE["王晓琳"]["no"]} · 负责计院科协等 24 个账号',
+    rv = person("王晓琳", f'宣传工作辅导员 · 计算机学院 · {PEOPLE["王晓琳"]["no"]} · {PEOPLE["王晓琳"]["phone"]}',
                 btn("更换审核老师", "modal-reviewer.html", "ghost", "user-switch", "sm"), on=True)
     flow = timeline([
-        ("now", f'① 指导教师审核 {tag("王晓琳", "primary")}', "一审 · 核验信息完整性与四项机制", ""),
-        ("wait", f'② 学院团委审核 {tag("周建华", "muted")}', "二审 · 学院团委书记", ""),
-        ("wait", f'③ 校团委审核 {tag("陈静", "muted")}', "终审 · 通过后自动生成档案与备案表", ""),
+        ("now", f'① 指导教师审核 {tag("王晓琳", "primary")}', "一审负责人", ""),
+        ("wait", f'② 学院团委审核 {tag("周建华", "muted")}', "二审负责人", ""),
+        ("wait", f'③ 校团委审核 {tag("陈静", "muted")}', "三审负责人 · 通过后自动生成档案与备案表", ""),
     ])
+    mech_sum = "、".join(f'（{m["no"]}）{m["title"]}：是' for m in MECHANISMS)
     summary = kv([("所属学院", "计算机学院"), ("所属团学组织", IDC["org"]), ("组织类别 / 层级", f'{IDC["org_type"]} · {IDC["level"]}'),
                   ("平台类型", IDC["platform"]), ("账号名称", IDC["name"]), ("平台ID", f'<span class="num bold c-primary">{IDC["new_pid"]}</span>'),
-                  ("四项机制", "均已建立"), ("更新频率", UPDATE_FREQ[0]), ("管理教师 / 负责人", "王晓琳 / 何雨桐"),
+                  ("平台信息确认", mech_sum, True), ("更新频率", UPDATE_FREQ[0]), ("管理教师 / 负责人", "王晓琳 / 何雨桐"),
                   ("关联申请", f'原 ID {IDC["pid"]} 注销申请（同步提交） <a class="link" href="apply-cancel.html">查看</a>', True)], 3)
     promise = ('<label class="field promise" style="flex-direction:row;align-items:center;gap:8px;cursor:pointer">'
                '<input type="checkbox" id="promise" checked style="accent-color:var(--c-primary);width:16px;height:16px">'
                '<span class="fs13">本人承诺所填信息真实、准确、完整，平台将严格落实“先审后发”及信息安全管理要求。</span>'
                '<span class="err-msg" style="margin-left:8px">请勾选承诺</span></label>')
-    body = (card("一审指导教师", rv + '<div class="small muted mt8">系统按“组织 + 账号”授权范围自动推荐，也可点击更换。</div>')
+    body = (card("审核信息", '<div class="small muted mb12">一审、二审、三审负责人，收集姓名、工号/学号、职务、手机号。指导教师审核阶段，允许学生任意选择审核老师。</div>'
+                 + rv + '<div class="small muted mt8">一审负责人按“组织 + 账号”授权范围推荐，也可点击更换。</div>'
+                 + '<div class="grid g2 mt16">' + audit_person("二审负责人", "周建华") + audit_person("三审负责人", "陈静") + "</div>")
             + card("审核流程预览", flow, tag("新建备案 · 三级审核", "primary"), cls="mt16")
             + card("申请信息汇总", summary, btn("返回修改", "apply-create-basic.html", "text", "edit", "sm"), cls="mt16")
             + card("信息真实性承诺", promise, cls="mt16"))
@@ -732,8 +818,7 @@ def apply_duplicate():
   {card('系统中已存在的账号', exist + '<div class="mt12">' + alert('如该账号确属本组织但负责人信息缺失，可通过“申请认领”补充责任关系，无需重新新建。', 'info') + '</div>')}
   {card('重复检查比对结果', cmp_tbl + '<div class="small muted mt12">检查时间 2026-09-30 15:16 · 检查规则：平台类型 + 平台ID 完全一致即判定重复</div>')}
 </div>"""
-    pc_common_page(D + "apply-duplicate.html", "重复检查 · 禁止提交", [("新建备案", "apply-create-basic.html"), ("重复检查结果", None)],
-                   content, css=CSS, back="apply-create-platform.html")
+    filing_page("apply-duplicate.html", "重复检查 · 禁止提交", content, shell_back="apply-create-platform.html")
 
 
 def apply_similar():
@@ -754,8 +839,7 @@ def apply_similar():
   <div>{card('处理说明', '<ul class="small sub" style="list-style:none;display:grid;gap:10px">' + ''.join(f'<li class="flex top-align gap8">{icon("info", 14, "c-primary")}<span>{x}</span></li>' for x in ['名称相似不阻止提交，仅作提示；平台类型 + 平台 ID 一致才判定重复并禁止提交', '确认继续后，“相似提示已确认”将记入申请材料，供审核老师参考', '若为同一账号，请返回修改或改为认领已有账号']) + '</ul>')}
   {card('确认信息', kv([('确认人', '王晓琳'), ('确认时间', '2026-09-30 15:17'), ('相似账号数', '3 个'), ('最高相似度', '100%')], 2), cls='mt16')}</div>
 </div>"""
-    pc_common_page(D + "apply-similar.html", "重复检查 · 名称相似", [("新建备案", "apply-create-basic.html"), ("重复检查结果", None)],
-                   content, css=CSS, back="apply-create-platform.html")
+    filing_page("apply-similar.html", "重复检查 · 名称相似", content, shell_back="apply-create-platform.html")
 
 
 # ---------------------------------------------------------------- 信息变更
@@ -993,7 +1077,7 @@ def apply_success():
     items = (sub_item("file-add", "", "XJ20260930007", "新建备案", f'计院科协 · 新 ID {IDC["new_pid"]}', "哔哩哔哩 · 二级平台 · 2026-09-30 15:18 提交", "待学院团委审核")
              + sub_item("power", "red", "ZX20260930008", "账号注销", f'计院科协 · 原 ID {IDC["pid"]}', "注销原因：平台整合（因平台ID变更注销原账号）", "待学院团委审核"))
     proxy = sub_item("hand", "gray", FLOWS["proxy"]["no"], "负责人交接 · 教师代办", "计院ACM协会 · 赵磊 → 孙悦", "发起方式：教师代办 · 2026-09-30 09:20 提交", "待学院管理员审核",
-                     f'<a class="link small" href="../school/log-detail.html">查看代办日志</a>')
+                     '<a class="link small" href="../college/approval-proxy.html">去学院审核</a>')
     flow = timeline([
         ("done", "发起信息变更，系统识别平台 ID 变化", "王晓琳 · " + FLOWS["idchange"]["steps"][0][0], FLOWS["idchange"]["steps"][0][3]),
         ("done", FLOWS["idchange"]["steps"][1][2], "王晓琳 · " + FLOWS["idchange"]["steps"][1][0], "发起人为指导教师本人，一审自动确认"),
@@ -1144,7 +1228,7 @@ def login():
 </div>"""
     sms_form = f"""<div data-cat="sms" class="hidden" data-form>
   <label class="cas-in field">{icon('phone')}<input placeholder="请输入手机号" value="176****0432" required></label>
-  <label class="cas-in field">{icon('shield')}<input placeholder="请输入短信验证码" required><button class="sms" type="button" data-toast="验证码已发送（演示环境输入任意 6 位数字）">获取验证码</button></label>
+  <label class="cas-in field">{icon('shield')}<input id="sms-code" placeholder="请输入短信验证码" required><button class="sms" type="button" onclick="var i=document.getElementById('sms-code');if(i)i.value='246810';" data-toast="验证码 246810 已发送至绑定手机 151****2233">获取验证码</button></label>
   {submit_btn('登录', 'identity-switch.html', toast='验证码登录成功').replace('class="btn btn-primary"', 'class="btn btn-primary cas-btn"')}
 </div>"""
     qr_block = f"""<div data-cat="qr" class="hidden"><div class="cas-qr">{qr(176, 3)}
@@ -1171,20 +1255,27 @@ def login():
 def identity_switch():
     roles = [
         ("陈静", "学校管理员", "校团委宣传部 · 宣传部部长", "building", "", "../school/dashboard.html", "进入数据驾驶舱",
-         ["全校 35 个二级团组织、986 个账号", "校级审核、年审发起与批量审核", "僵尸号监管、数据导入导出、系统配置"], False),
+         ["全校 35 个二级团组织、986 个账号", "校级审核、年审发起与批量审核", "僵尸号监管、数据导入导出、系统配置",
+          "移动端可办理终审并查看账号、组织与年审节点"], False),
         ("周建华", "学院管理员", "计算机学院团委 · 学院团委书记", "hierarchy", "green", "../college/workbench.html", "进入学院工作台",
          ["计算机学院 36 个账号", "学院审核、年审统一提交校团委", "任务分派、整改下发、本院授权"], False),
         ("王晓琳", "业务教师", "计算机学院 · 3 项授权身份", "user", "orange", "../teacher/workbench.html", "进入教师工作台",
          ["宣传工作辅导员 · 2021级辅导员 · 街舞社指导教师", "审核本人授权范围内的申请与年审", "学生毕业 / 失联时教师代办"], True),
+        ("李明", "学生用户", "计算机学院 · 2023级软件工程2班 · 学号 8209230117", "user", "", "../student/home.html", "进入学生首页",
+         ["本人负责的 5 个新媒体账号", "发起备案、变更、交接、注销与认领", "在线年审、整改提交与僵尸号核实"], False),
     ]
     cards = []
     for n, r, org, ic, c, h, cta, pts, cur in roles:
         badge = tag("当前登录", "success") if cur else tag("演示账号", "muted")
         lis = "".join(f'<li>{icon("check-circle", 14)}<span>{p}</span></li>' for p in pts)
+        go = btn(cta, h, "primary" if cur else "ghost", "arrow-right", toast="已切换身份：" + r + " · " + n)
+        if n == "陈静":
+            go = (f'<div class="flex gap8 wrap">{go}'
+                  f'{btn("移动端", "../../app/school/home.html", "default", "smartphone", toast="已进入学校管理员移动端")}</div>')
         cards.append(f'<div class="card role-card{" cur" if cur else ""}"><div class="top">{avatar(n, "lg")}<div class="grow">'
                      f'<div class="flex gap8"><b class="fs18">{n}</b>{badge}</div><div class="small muted">{org}</div></div>{role_ic(ic, c)}</div>'
                      f'<div class="flex gap8">{tag(r, "primary")}<span class="small muted">PC 端</span></div><ul>{lis}</ul>'
-                     f'{btn(cta, h, "primary" if cur else "ghost", "arrow-right", toast="已切换身份：" + r + " · " + n)}</div>')
+                     f'{go}</div>')
     scope_rows = [
         ["<b>宣传工作辅导员</b>", "计算机学院团委及直属学生组织（学生会、研究生会、科协、青协等）", "24 个", '<div class="scope">' + tag("新建/变更审核", "primary") + tag("年审审核", "primary") + tag("教师代办", "primary") + "</div>", "2023-09-01 至今"],
         ["<b>2021级辅导员</b>", "2021 级各班团支部（含已毕业团支部）", "12 个", '<div class="scope">' + tag("年审审核", "primary") + tag("僵尸号核实", "warning") + tag("注销建议", "danger") + "</div>", "2021-09-01 至今"],
@@ -1196,7 +1287,7 @@ def identity_switch():
                                        ("操作维度", "可执行审核、代办、核实、导出等哪些操作", "key", "orange")])
     content = f"""{page_hd('选择本次进入的身份', '统一身份认证已通过 · 工号 T20180427 · 2026-09-30 16:30 · 一人多身份时，按本次办理事项选择身份进入',
          btn('移动端身份选择', '../../app/common/identity-switch.html', 'default', 'smartphone', 'sm') + btn('退出登录', 'login.html', 'default', 'logout', 'sm'))}
-<div class="grid g3">{''.join(cards)}</div>
+<div class="grid g2">{''.join(cards)}</div>
 <div class="split mt16" style="grid-template-columns:minmax(0,1fr) 380px">
   {card('王晓琳 · 授权范围明细', table(['授权身份', '组织范围', '账号数', '可执行操作', '生效期限'], scope_rows)
         + '<div class="small muted mt12">同一教师在不同身份下看到的数据范围不同：例如以“2021级辅导员”身份可核实 2021 级团支部僵尸号，但不一定能查看学院全部社团的负责人信息。</div>',

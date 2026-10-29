@@ -5,8 +5,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-MODULES = ["pages_index", "pages_pc_common", "pages_school", "pages_college", "pages_teacher", "pages_wf",
-           "pages_app_student", "pages_app_staff"]
+MODULES = ["pages_index", "pages_pc_common", "pages_school", "pages_college", "pages_teacher", "pages_pc_student", "pages_wf",
+           "pages_app_student", "pages_app_staff", "pages_app_school"]
 
 
 def main():
